@@ -67,7 +67,7 @@
 
 (defn on-open [ch op payload]
   (let [ws payload
-        uid (gensym "hanami-")
+        uid ((-> :idfn get-adb first))
         data {:uid uid
               :title "花見 Hanami"
               :logo "logo.png"
@@ -131,13 +131,13 @@
       #_(wrap-gzip)))
 
 
-(defn start-server [port dispatcher]
+(defn start-server [port & {:keys [idfn] :or {idfn (partial gensym "hanami-")}}]
   (let [ch (srv/start-server port :main-handler hanami-handler)]
     (printchan "Server start, reading msgs from " ch)
-    (update-adb :chan ch)
+    (update-adb :chan ch :idfn [idfn])
     (go-loop [msg (<! ch)]
       (let [{:keys [op payload]} msg]
-        (future (dispatcher ch op payload))
+        (future (server-dispatch ch op payload))
         (when (not= op :stop)
           (recur (<! ch)))))))
 

@@ -292,13 +292,6 @@
                   :layout {:size "auto"}}
            :specs [js/vglspec js/vglspec2
                    js/vglspec3 js/vglspec]}]}
-
-  (let [dopts (get-adb [:main :opts])
-        topts {:vgl {:renderer "svg"}
-               :layout {:size "auto"}}]
-    (sp/transform [(sp/submap [:vgl :layout]) sp/MAP-VALS]
-                  #(merge % (if (% :mode) (topts :vgl) (topts :layout)))
-                  dopts))
   )
 
 
@@ -339,36 +332,38 @@
 (defn on-msg [ch ws hanami-msg]
   (let [{:keys [op data]} hanami-msg]
     (update-adb [ws :line-info :rcvcnt] inc)
-    (case op)
+    (case op
 
-    :register
-    (register data)
+      :register
+      (register data)
 
-    :opts
-    (update-adb [:main :opts]
-                (merge-old-new-opts (get-adb [:main :opts]) data))
+      :opts
+      (update-adb [:main :opts]
+                  (merge-old-new-opts (get-adb [:main :opts]) data))
 
-    :tabs
-    (mapv (fn[{:keys [id label opts specs] :as newdef}]
-            (let [oldef (get-tab-field id)]
-              (if (not oldef)
-                (add-tab newdef)
-                (let [newopts (merge-old-new-opts (oldef :opts) opts)]
-                  (replace-tab
-                   id {:id id
-                       :label (or label (get-tab-field id :label))
-                       :opts newopts
-                       :specs (mapv #(.parse js/JSON %) (com/ev specs))})))))
-          (com/ev data))
+      :tabs
+      (mapv (fn[{:keys [id label opts specs] :as newdef}]
+              (let [oldef (get-tab-field id)]
+                (if (not oldef)
+                  (add-tab
+                   (assoc newdef
+                          :specs (mapv #(.parse js/JSON %) (com/ev specs))))
+                  (let [newopts (merge-old-new-opts (oldef :opts) opts)]
+                    (replace-tab
+                     id {:id id
+                         :label (or label (get-tab-field id :label))
+                         :opts newopts
+                         :specs (mapv #(.parse js/JSON %) (com/ev specs))})))))
+            (com/ev data))
 
-    :specs
-    (let [{:keys [tab specs]} data]
-      (update-tab-field tab :specs specs))))
+      :specs
+      (let [{:keys [tab specs]} data]
+        (update-tab-field tab :specs specs)))))
 
 
 (defn on-open [ch ws]
   (update-adb
-   ws {:line-info {:chan ch, :rcvcnt 0, :sntcnt 0, :errcnt 0}}))
+   ws {:chan ch, :line-info {:rcvcnt 0, :sntcnt 0, :errcnt 0}}))
 
 
 (defn user-dispatch [ch op payload]
@@ -412,9 +407,11 @@
 (comment
 
   (go
-    (let [ch (async/<! (cli/open-connection "ws://localhost:3000/ws"))]
+    (let [port 3000 ;;js/location.port
+          uri (str "ws://localhost:" port "/ws")
+          ch (async/<! (cli/open-connection uri))]
       (printchan "Opening client, reading msgs from " ch)
-      (def cli-handler
+      (def hanami-handler
         (loop [msg (<! ch)]
           (let [{:keys [op payload]} msg]
             (user-dispatch ch op payload)

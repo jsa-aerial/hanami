@@ -6,7 +6,7 @@
 (def xrule-layer
   {:mark "rule"
    :encoding {:x {:field :X
-                  :type "quantitative"
+                  :type :RTYPE
                   :aggregate :AGG}
               :size {:value 2}
               :color {:value "red"}}})
@@ -22,7 +22,7 @@
               }})
 
 (def line-layer
-  {:mark "line"
+  {:mark {:type "line", :point :POINT}
    :encoding {:x {:field :X
                   :axis {:title :XTITLE}
                   :type :XTYPE}

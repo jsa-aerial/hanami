@@ -20,7 +20,8 @@
          :HEIGHT 500 :WIDTH 550
          :X "x" :XTYPE "quantitative" :XTITLE "X"
          :Y "y" :YTYPE "quantitative" :YTITLE "Y"
-         :AGG RMV}))
+         :POINT RMV
+         :RTYPE "quantitative" :AGG RMV}))
 
 (defn reset-defaults [default-map]
   (reset! _defaults default-map))

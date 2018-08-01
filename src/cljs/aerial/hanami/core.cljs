@@ -225,6 +225,151 @@
        :children (hanami)])]])
 
 
+
+
+;;; Messaging ----------------------------------------------------------------
+
+
+(defn get-ws []
+  (->> (get-adb []) keys (filter #(-> % keyword? not)) first))
+
+;; Stop app
+(defn app-stop []
+  (let [ws (get-ws)
+        ch (get-adb [ws :chan])]
+    (go (async/>! ch {:op :stop :payload {:ws ws :cause :userstop}}))))
+
+;; Send server msg
+(defn app-send [msg]
+  (cli/send-msg (get-ws) msg))
+
+
+
+(defn merge-old-new-opts [oldopts newopts]
+  (cond
+    (and oldopts newopts)
+    (sp/transform [(sp/submap [:vgl :layout]) sp/MAP-VALS]
+                  #(merge % (if (% :mode) (newopts :vgl) (newopts :layout)))
+                  oldopts)
+    oldopts oldopts
+    newopts newopts
+    :else (get-adb [:main :opts])))
+
+(defn register [{:keys [uid title logo img opts]}]
+  (printchan "Registering " uid)
+  (update-adb [:main :uid] uid
+              [:main :title] title
+              [:main :logo] "logo.png"
+              [:main :img] "Himeji_sakura.jpg"
+              [:main :opts] opts
+              [:tabs :active] []
+              [:tabs :current] :rm
+              [:vgl-as-vg] :rm)
+  (rgt/render [hanami-main]
+              (js/document.querySelector "#app")))
+
+(defn update-opts [{:keys [main tab opts]}]
+  (if main
+    (update-adb [:main :opts]
+                (merge-old-new-opts (get-adb [:main :opts]) opts))
+    (update-tab-field tab :opts
+                      (merge-old-new-opts (get-tab-field tab :opts) opts))))
+
+(defn update-tabs [tabdefs]
+  (mapv (fn[{:keys [id label opts specs] :as newdef}]
+          (let [oldef (get-tab-field id)
+                specs (when specs
+                        (->> specs com/ev (mapv #(.parse js/JSON %))))
+                main-opts (get-adb [:main :opts])]
+            (if (not oldef)
+              (add-tab (assoc newdef
+                              :opts (merge-old-new-opts main-opts opts)
+                              :specs specs))
+
+              (let [oldopts (or (oldef :opts) main-opts)
+                    newopts (merge-old-new-opts oldopts opts)]
+                (replace-tab id {:id id
+                                 :label (or label (get-tab-field id :label))
+                                 :opts newopts
+                                 :specs specs})))))
+        (com/ev tabdefs)))
+
+
+(defn on-msg [ch ws hanami-msg]
+  (let [{:keys [op data]} hanami-msg]
+    (update-adb [ws :line-info :rcvcnt] inc)
+    (case op
+
+      :register
+      (register data)
+
+      :opts
+      (update-opts data)
+
+      :tabs
+      (update-tabs data)
+
+      :specs
+      (let [{:keys [tab specs]} data]
+        (update-tab-field tab :specs specs)))))
+
+
+(defn on-open [ch ws]
+  (update-adb
+   ws {:chan ch, :line-info {:rcvcnt 0, :sntcnt 0, :errcnt 0}}))
+
+
+(defn user-dispatch [ch op payload]
+  (case op
+    :open (let [ws payload]
+            #_(printchan :CLIENT :open :ws ws)
+            (on-open ch ws))
+    :close (let [{:keys [ws code reason]} payload]
+             (printchan :CLIENT :RMTclose :payload payload)
+             (go (async/put! ch {:op :stop
+                                 :payload {:ws ws :cause :rmtclose}})))
+
+    :msg (let [{:keys [ws data]} payload]
+           #_(printchan :CLIENT :msg :payload payload)
+           (on-msg ch ws data))
+
+    :bpwait (let [{:keys [ws msg encode]} payload]
+              (printchan :CLIENT "Waiting to send msg " msg)
+              (go (async/<! (async/timeout 5000)))
+              (printchan :CLIENT "Trying resend...")
+              (cli/send-msg ws msg :encode encode))
+    :bpresume (printchan :CLIENT "BP Resume " payload)
+
+    :sent (let [{:keys [ws msg]} payload]
+            (printchan :CLIENT "Sent msg " msg)
+            (update-adb [ws :line-info :lastsnt] msg,
+                        [ws :line-info :sntcnt] inc))
+
+    :stop (let [{:keys [ws cause]} payload]
+            (printchan :CLIENT "Stopping reads... Cause " cause)
+            (cli/close-connection ws)
+            (update-adb ws :rm))
+
+    :error (let [{:keys [ws err]} payload]
+             (printchan :CLIENT :error :payload payload)
+             (update-adb [ws :line-info :errcnt] inc))
+
+    (printchan :CLIENT :WTF :op op :payload payload)))
+
+
+(defn connect []
+  (go
+    (let [port js/location.port
+          uri (str "ws://localhost:" port "/ws")
+          ch (async/<! (cli/open-connection uri))]
+      (printchan "Opening client, reading msgs from " ch)
+      (loop [msg (<! ch)]
+        (let [{:keys [op payload]} msg]
+          (user-dispatch ch op payload)
+          (when (not= op :stop)
+            (recur (<! ch))))))))
+
+
 (when-let [elem (js/document.querySelector "#app")]
   (update-adb [:main :title] "花見 Hanami"
               [:main :uid] ""
@@ -244,6 +389,21 @@
   (rgt/render [hanami-main]
               (js/document.querySelector "#app")))
 
+
+(comment
+
+  (go
+    (let [port 3000 ;;js/location.port
+          uri (str "ws://localhost:" port "/ws")
+          ch (async/<! (cli/open-connection uri))]
+      (printchan "Opening client, reading msgs from " ch)
+      (def hanami-handler
+        (loop [msg (<! ch)]
+          (let [{:keys [op payload]} msg]
+            (user-dispatch ch op payload)
+            (when (not= op :stop)
+              (recur (<! ch))))))))
+  )
 
 
 (comment
@@ -271,6 +431,10 @@
             :specs [js/vglspec js/vglspec2
                     js/vglspec3 js/vglspec]})
 
+  (add-tab {:id :ttest
+            :label "ToolTip"
+            :specs js/ttest})
+
   (add-tab {:id :px
            :label "MultiChartSVG"
             :opts (merge-old-new-opts
@@ -292,129 +456,4 @@
                   :layout {:size "auto"}}
            :specs [js/vglspec js/vglspec2
                    js/vglspec3 js/vglspec]}]}
-  )
-
-
-
-(defn get-ws []
-  (->> (get-adb []) keys (filter #(-> % keyword? not)) first))
-
-;; Stop app
-(defn app-stop []
-  (let [ws (get-ws)
-        ch (get-adb [ws :chan])]
-    (go (async/>! ch {:op :stop :payload {:ws ws :cause :userstop}}))))
-
-;; Send server msg
-(defn app-send [msg]
-  (cli/send-msg (get-ws) msg))
-
-
-
-(defn merge-old-new-opts [oldopts newopts]
-  (sp/transform [(sp/submap [:vgl :layout]) sp/MAP-VALS]
-                #(merge % (if (% :mode) (newopts :vgl) (newopts :layout)))
-                oldopts))
-
-(defn register [{:keys [uid title logo img opts]}]
-  (printchan "Registering " uid)
-  (update-adb [:main :uid] uid
-              [:main :title] title
-              [:main :logo] "logo.png"
-              [:main :img] "Himeji_sakura.jpg"
-              [:main :opts] opts
-              [:tabs :active] []
-              [:tabs :current] :rm
-              [:vgl-as-vg] :rm)
-  (rgt/render [hanami-main]
-              (js/document.querySelector "#app")))
-
-(defn on-msg [ch ws hanami-msg]
-  (let [{:keys [op data]} hanami-msg]
-    (update-adb [ws :line-info :rcvcnt] inc)
-    (case op
-
-      :register
-      (register data)
-
-      :opts
-      (update-adb [:main :opts]
-                  (merge-old-new-opts (get-adb [:main :opts]) data))
-
-      :tabs
-      (mapv (fn[{:keys [id label opts specs] :as newdef}]
-              (let [oldef (get-tab-field id)]
-                (if (not oldef)
-                  (add-tab
-                   (assoc newdef
-                          :specs (mapv #(.parse js/JSON %) (com/ev specs))))
-                  (let [newopts (merge-old-new-opts (oldef :opts) opts)]
-                    (replace-tab
-                     id {:id id
-                         :label (or label (get-tab-field id :label))
-                         :opts newopts
-                         :specs (mapv #(.parse js/JSON %) (com/ev specs))})))))
-            (com/ev data))
-
-      :specs
-      (let [{:keys [tab specs]} data]
-        (update-tab-field tab :specs specs)))))
-
-
-(defn on-open [ch ws]
-  (update-adb
-   ws {:chan ch, :line-info {:rcvcnt 0, :sntcnt 0, :errcnt 0}}))
-
-
-(defn user-dispatch [ch op payload]
-  (case op
-    :open (let [ws payload]
-            (printchan :CLIENT :open :ws ws)
-            (on-open ch ws))
-    :close (let [{:keys [ws code reason]} payload]
-             (printchan :CLIENT :RMTclose :payload payload)
-             (go (async/put! ch {:op :stop
-                                 :payload {:ws ws :cause :rmtclose}})))
-
-    :msg (let [{:keys [ws data]} payload]
-           (printchan :CLIENT :msg :payload payload)
-           (on-msg ch ws data))
-
-    :bpwait (let [{:keys [ws msg encode]} payload]
-              (printchan :CLIENT "Waiting to send msg " msg)
-              (go (async/<! (async/timeout 5000)))
-              (printchan :CLIENT "Trying resend...")
-              (cli/send-msg ws msg :encode encode))
-    :bpresume (printchan :CLIENT "BP Resume " payload)
-
-    :sent (let [{:keys [ws msg]} payload]
-            (printchan :CLIENT "Sent msg " msg)
-            (update-adb [ws :line-info :lastsnt] msg,
-                        [ws :line-info :sntcnt] inc))
-
-    :stop (let [{:keys [ws cause]} payload]
-            (printchan :CLIENT "Stopping reads... Cause " cause)
-            (cli/close-connection ws)
-            (update-adb ws :rm))
-
-    :error (let [{:keys [ws err]} payload]
-             (printchan :CLIENT :error :payload payload)
-             (update-adb [ws :line-info :errcnt] inc))
-
-    (printchan :CLIENT :WTF :op op :payload payload)))
-
-
-(comment
-
-  (go
-    (let [port 3000 ;;js/location.port
-          uri (str "ws://localhost:" port "/ws")
-          ch (async/<! (cli/open-connection uri))]
-      (printchan "Opening client, reading msgs from " ch)
-      (def hanami-handler
-        (loop [msg (<! ch)]
-          (let [{:keys [op payload]} msg]
-            (user-dispatch ch op payload)
-            (when (not= op :stop)
-              (recur (<! ch))))))))
   )

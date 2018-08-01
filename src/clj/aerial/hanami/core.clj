@@ -16,6 +16,7 @@
    [aerial.hanasu.common :as com]
    [aerial.hanami.common
     :refer [default-opts xform reset-defaults add-defaults]]
+   [aerial.hanami.templates :as ht]
 
    [clojure.data.json :as json]
    [clojure.core.async :as async  :refer (<! >! go-loop)]
@@ -74,7 +75,8 @@
               :img "Himeji_sakura.jpg"
               :opts default-opts}]
     (printchan :SRV :open :uid uid)
-    (update-adb [uid :ws] ws, [uid :rcvcnt] 0, [uid :sntcnt] 0)
+    (update-adb [uid :ws] ws, [uid :rcvcnt] 0, [uid :sntcnt] 0
+                [ws :uid] uid)
     (srv/send-msg ws {:op :register :data data})))
 
 
@@ -85,19 +87,23 @@
            (msg-handler payload))
 
     :open (on-open ch op payload)
-    :close (let [{:keys [ws status]} payload]
-             (printchan :SRV :close :payload payload)
-             (update-adb ws :rm))
+    :close (let [{:keys [ws status]} payload
+                 uid (get-adb [ws :uid])]
+             (printchan :SRV :close :uid uid)
+             (update-adb ws :rm, uid :rm))
 
-    :bpwait (let [{:keys [ws msg encode]} payload]
-              (printchan :SRV "Waiting to send msg " msg)
-              (Thread/sleep 5000)
-              (printchan :SRV "Trying resend...")
-              (srv/send-msg ws msg :encode encode))
-    :bpresume (printchan :SRV "BP Resume " payload)
+    :bpwait (let [{:keys [ws msg encode]} payload
+                  uid (get-adb [ws :uid])]
+              (printchan :SRV :UID uid " - Waiting to send msg " msg)
+              (update-adb [uid :bpdata] {:msg msg, :encode encode}))
+    :bpresume (let [{:keys [ws msg]} payload
+                    uid (get-adb [ws :uid])
+                    encode ((get-adb [uid :bpdata]) :encode)]
+                (printchan :SRV "BP Resume " (get-adb [ws :uid]))
+                (srv/send-msg ws msg :encode encode))
 
     :sent (let [{:keys [ws msg]} payload]
-            (printchan :SRV "Sent msg " msg)
+            #_(printchan :SRV "Sent msg " msg)
             (update-adb :sntcnt inc, [ws :sntcnt] 0))
     :failsnd (printchan :SRV "Failed send for " {:op op :payload payload})
 
@@ -149,29 +155,36 @@
   (srv/send-msg (get-adb [id :ws]) {:op op :data data}))
 
 (defn stabs! [id tabdefs]
-  (mapv (fn[tdef]
-          (let [specs (->> tdef :specs com/ev (mapv json/write-str))]
-            (assoc tdef :specs specs)))
-        (com/ev tabdefs)))
+  (s! id :tabs
+      (mapv (fn[tdef]
+              (let [specs (when (tdef :specs)
+                            (->> tdef :specs com/ev (mapv json/write-str)))]
+                (assoc tdef :specs specs)))
+            (com/ev tabdefs))))
 
 (defn svgl!
-  ([id vgl-map]
+  ([id vgl-maps]
    (s! id :tabs
        {:id :p1 :label "Vis"
         :opts default-opts
-        :specs (json/write-str vgl-map)}))
-  ([id tid vgl-map]
+        :specs (mapv #(json/write-str %) (com/ev vgl-maps))}))
+  ([id tid vgl-maps]
    (s! id :tabs
-       {:id tid :specs vgl-map})))
+       {:id tid
+        :label (-> tid name str/capitalize)
+        :specs (mapv #(json/write-str %) (com/ev vgl-maps))})))
 
-(defn sopts! [id opts]
-  (s! id :opts opts))
+(defn sopts!
+  ([id opts]
+   (s! id :opts {:main opts}))
+  ([id tid opts]
+   (s! id :opts {:tab tid :opts opts})))
 
 
 
 (comment
 
-  (start-server 3000 server-dispatch)
+  (start-server 3000 :idfn (constantly "Basics"))
   (stop-server)
 
   )

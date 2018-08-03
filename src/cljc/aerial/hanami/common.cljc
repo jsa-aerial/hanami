@@ -4,7 +4,7 @@
 
 
 (def default-opts
-  {:vgl {:export true
+  {:vgl {:export {:png true, :svg false}
          :renderer "canvas" #_"svg"
          :mode "vega-lite" #_vega}
    :layout {:order :col

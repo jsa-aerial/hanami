@@ -69,10 +69,10 @@
                  (mapv (fn[p] {:x p, :y (- (log2 p)) :col "SI"})))]
    (hc/xform ht/simple-layer-chart
              :TITLE "Self Information (unexpectedness)"
-             :LAYER [(hc/xform ht/line-layer
+             :LAYER [(hc/xform ht/xrule-layer :AGG "mean")
+                     (hc/xform ht/line-layer
                                :XTITLE "Probability of event"
-                               :YTITLE "-log(p)")
-                     (hc/xform ht/xrule-layer :AGG "mean")]
+                               :YTITLE "-log(p)")]
              :DATA data))
  (hmi/svgl! "Basics"))
 
@@ -151,15 +151,27 @@
 
 
 (->>
- (hc/xform ht/simple-layer-chart
-           :TITLE "A Real (obvserved) distribution"
-           :LAYER
-           [(hc/xform ht/bar-layer
-                      :XTYPE "ordinal" :XTITLE "Count"
-                      :YTITLE "Probability")
-            (hc/xform ht/xrule-layer :X "m" :RTYPE "ordinal" :AGG "mean")]
-           :DATA (mapv (fn[[x y]] {:x x :y y :m 5.7}) obsdist))
- (hmi/svgl! "Basics" :col))
+ [(hc/xform ht/simple-layer-chart
+            :TITLE "A Real (obvserved) distribution"
+            :HEIGHT 400 :WIDTH 450
+            :LAYER
+            [(hc/xform ht/bar-layer
+                       :XTITLE "Count"
+                       :YTITLE "Probability")
+             (hc/xform ht/xrule-layer :AGG "mean")
+             #_(hc/xform ht/xrule-layer :X "m")]
+            :DATA (mapv (fn[[x y]] {:x x :y y :m 5.7}) obsdist))
+  (hc/xform ht/simple-layer-chart
+            :TITLE "A Real (obvserved) distribution"
+            :HEIGHT 400 :WIDTH 450
+            :LAYER
+            [(hc/xform ht/bar-layer
+                       :XTITLE "Count"
+                       :YTITLE "Probability")
+             #_(hc/xform ht/xrule-layer :AGG "mean")
+             (hc/xform ht/xrule-layer :X "m")]
+            :DATA (mapv (fn[[x y]] {:x x :y y :m 5.7}) obsdist))]
+ (hmi/svgl! "Basics" :row))
 
 
 

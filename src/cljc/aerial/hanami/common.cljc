@@ -21,6 +21,7 @@
          :X "x" :XTYPE "quantitative" :XTITLE "X"
          :Y "y" :YTYPE "quantitative" :YTITLE "Y"
          :POINT RMV
+         :TOOLTIP RMV
          :RTYPE "quantitative" :AGG RMV}))
 
 (defn reset-defaults [default-map]

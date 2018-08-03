@@ -19,6 +19,8 @@
               :y {:field :Y
                   :axis {:title :YTITLE}
                   :type :YTYPE}
+              :tooltip [{:field :X :type :XTYPE}
+                        {:field :Y :type :YTYPE}]
               }})
 
 (def line-layer
@@ -39,6 +41,8 @@
               :y {:field :Y
                   :axis {:title :YTITLE}
                   :type :YTYPE}
+              :tooltip [{:field :X :type :XTYPE}
+                        {:field :Y :type :YTYPE}]
               }})
 
 (def gen-layer
@@ -49,6 +53,7 @@
               :y {:field :Y
                   :axis {:title :YTITLE}
                   :type :YTYPE}
+              :tooltip :TOOLTIP
               }})
 
 
@@ -91,8 +96,9 @@
    :background :BACKGROUND
    :layer :LAYER
    :data {:values :DATA}
-   :config {:bar {:binSpacing 0
-                  :discreteBandSize 50}
+   :config {:bar {:binSpacing 1
+                  :discreteBandSize 5
+                  :continuousBandSize 5}
             #_:view #_{:stroke "transparent"},
             #_:axis #_{:domainWidth 1}}})
 

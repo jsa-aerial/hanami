@@ -64,7 +64,8 @@
    :mark "bar",
    :encoding {:x {:field :X, :type :XTYPE :axis {:title :XTITLE}},
               :y {:field :Y, :type :YTYPE :axis {:title :YTITLE}}
-              :tooltip {:field "tt" :type "nominal"}}})
+              :tooltip [{:field :X :type :XTYPE}
+                        {:field :Y :type :YTYPE}]}})
 
 
 (def simple-line-chart

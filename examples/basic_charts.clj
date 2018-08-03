@@ -159,7 +159,7 @@
                       :YTITLE "Probability")
             (hc/xform ht/xrule-layer :X "m" :RTYPE "ordinal" :AGG "mean")]
            :DATA (mapv (fn[[x y]] {:x x :y y :m 5.7}) obsdist))
- (hmi/svgl! "Basics"))
+ (hmi/svgl! "Basics" :col))
 
 
 

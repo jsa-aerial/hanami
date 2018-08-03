@@ -14,15 +14,16 @@
 
                  [com.rpl/specter "1.1.1"]
 
-                 [aerial.hanasu "0.2.0"]
+                 [aerial.hanasu "0.2.1"]
+
                  [re-com "2.1.0"]
                  [reagent "0.7.0"]
                  #_[reagent "0.8.1"]
 
-                 [cljsjs/vega-embed "3.1.1-0"]
-                 [cljsjs/vega "3.2.1-0"]
-                 [cljsjs/vega-lite "2.2.0-0"]
-                 [cljsjs/vega-tooltip "0.6.1-0"]
+                 [cljsjs/vega-embed "3.16.1-0"]
+                 [cljsjs/vega "3.3.1-0"]
+                 [cljsjs/vega-lite "2.6.0-0"]
+                 [cljsjs/vega-tooltip "0.12.0-0"]
                  ]
 
   :plugins [[lein-figwheel "0.5.16"]

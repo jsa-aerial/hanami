@@ -132,7 +132,7 @@
       (-> (js/vegaEmbed elem  spec (clj->js opts))
           (.then (fn [res]
                    #_(js/vegaTooltip.vega res.view spec)
-                   (js/vegaTooltip.vegaLite res.view spec)))
+                   #_(js/vegaTooltip.vegaLite res.view spec)))
           (.catch (fn [err]
                     (printchan err)))))))
 
@@ -259,8 +259,8 @@
   (printchan "Registering " uid)
   (update-adb [:main :uid] uid
               [:main :title] title
-              [:main :logo] "logo.png"
-              [:main :img] "Himeji_sakura.jpg"
+              [:main :logo] logo
+              [:main :img] img
               [:main :opts] opts
               [:tabs :active] []
               [:tabs :current] :rm
@@ -434,6 +434,11 @@
   (add-tab {:id :ttest
             :label "ToolTip"
             :specs js/ttest})
+
+  (add-tab {:id :geotest
+            :label "GeoTest"
+            :specs js/geotest})
+  (update-tab-field :geotest :specs js/geotest)
 
   (add-tab {:id :px
            :label "MultiChartSVG"

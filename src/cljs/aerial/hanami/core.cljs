@@ -376,7 +376,7 @@
 (when-let [elem (js/document.querySelector "#app")]
   (printchan "Element 'app' available, port " js/location.port)
   (app-stop)
-  (connect 3000 #_js/locatioin.port)
+  (connect js/location.port)
   (rgt/render [hanami-main]
               (js/document.querySelector "#app")))
 

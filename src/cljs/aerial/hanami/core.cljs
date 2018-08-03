@@ -211,7 +211,9 @@
                 [:img {:src (get-adb [:main :logo])}]
                 [header (get-adb [:main :title])]
                 [gap :size "5px"]
-                [title :level :level3 :label (get-adb [:main :uid])]
+                [title
+                 :level :level3
+                 :label [:span.bold (get-adb [:main :uid])]]
                 [gap :size "30px"]
                 (active-tabs)]]
     [line]
@@ -236,8 +238,9 @@
 ;; Stop app
 (defn app-stop []
   (let [ws (get-ws)
-        ch (get-adb [ws :chan])]
-    (go (async/>! ch {:op :stop :payload {:ws ws :cause :userstop}}))))
+        ch (when ws (get-adb [ws :chan]))]
+    (when ch
+      (go (async/>! ch {:op :stop :payload {:ws ws :cause :userstop}})))))
 
 ;; Send server msg
 (defn app-send [msg]
@@ -272,8 +275,9 @@
   (if main
     (update-adb [:main :opts]
                 (merge-old-new-opts (get-adb [:main :opts]) opts))
-    (update-tab-field tab :opts
-                      (merge-old-new-opts (get-tab-field tab :opts) opts))))
+    (do (update-tab-field tab :opts
+                          (merge-old-new-opts (get-tab-field tab :opts) opts))
+        (update-tab-field tab :compvis sp/NONE))))
 
 (defn update-tabs [tabdefs]
   (mapv (fn[{:keys [id label opts specs] :as newdef}]
@@ -357,10 +361,9 @@
     (printchan :CLIENT :WTF :op op :payload payload)))
 
 
-(defn connect []
+(defn connect [port]
   (go
-    (let [port js/location.port
-          uri (str "ws://localhost:" port "/ws")
+    (let [uri (str "ws://localhost:" port "/ws")
           ch (async/<! (cli/open-connection uri))]
       (printchan "Opening client, reading msgs from " ch)
       (loop [msg (<! ch)]
@@ -371,21 +374,9 @@
 
 
 (when-let [elem (js/document.querySelector "#app")]
-  (update-adb [:main :title] "花見 Hanami"
-              [:main :uid] ""
-              [:main :port] "3000"
-              [:main :logo] "logo.png"
-              [:main :img] "Himeji_sakura.jpg"
-              [:main :opts] {:vgl {:export true
-                                   :renderer "canvas" #_"svg"
-                                   :mode "vega-lite" #_vega}
-                             :layout {:order :col
-                                      :eltsper 2
-                                      :size "none"}}
-              [:tabs :active] []
-              [:tabs :current] :rm
-              [:vgl-as-vg] :rm)
   (printchan "Element 'app' available, port " js/location.port)
+  (app-stop)
+  (connect 3000 #_js/locatioin.port)
   (rgt/render [hanami-main]
               (js/document.querySelector "#app")))
 

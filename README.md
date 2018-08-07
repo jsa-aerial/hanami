@@ -1,2 +1,5 @@
 # hanami
-Interactive arts and charts plotting with Clojure and Vega-lite-2
+
+Interactive arts and charts visualizations with Clojure, Vega-lite and Vega. Flower viewing 花見 (hanami)
+
+

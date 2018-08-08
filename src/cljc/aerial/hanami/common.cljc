@@ -16,13 +16,17 @@
 
 (def _defaults
   (atom {:BACKGROUND "floralwhite"
-         :TITLE "A Chart"
-         :HEIGHT 500 :WIDTH 550
-         :X "x" :XTYPE "quantitative" :XTITLE "X"
-         :Y "y" :YTYPE "quantitative" :YTITLE "Y"
+         :TITLE "A Chart", :TOFFSET RMV
+         :HEIGHT 500, :WIDTH 550
+         :X "x", :XTYPE, "quantitative", :XTITLE "X", :XSCALE RMV, :XGRID RMV
+         :Y "y", :YTYPE, "quantitative", :YTITLE "Y", :YSCALE RMV, :YGRID RMV
+         :TRANSFORM RMV
+         :SELECTION RMV
+         :COLOR RMV
+         :RESOLVE RMV
          :POINT RMV
          :TOOLTIP RMV
-         :RTYPE "quantitative" :AGG RMV}))
+         :RTYPE "quantitative", :AGG RMV}))
 
 (defn reset-defaults [default-map]
   (reset! _defaults default-map))
@@ -51,7 +55,4 @@
              {k v}
              (->> kvs (partition-all 2)
                   (mapv (fn[[k v]] [k v])))))))
-
-
-
 

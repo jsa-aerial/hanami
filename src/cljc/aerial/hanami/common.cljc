@@ -25,7 +25,7 @@
          :COLOR RMV
          :RESOLVE RMV
          :POINT RMV
-         :TOOLTIP RMV
+         :TOOLTIP aerial.hanami.templates/default-tooltip
          :RTYPE "quantitative", :AGG RMV}))
 
 (defn reset-defaults [default-map]
@@ -39,6 +39,7 @@
     (into {k v} (->> kvs (partition-all 2)
                      (mapv (fn[[k v]] [k v])))))))
 
+
 (defn xform
   ([x xkv]
    (let [defaults @_defaults
@@ -48,11 +49,27 @@
       (fn[v]
         (if (coll? v)
           (xform v xkv)
-          (get xkv v v)))
+          (let [subval (get xkv v v)]
+            #_(clojure.pprint/pprint
+             (if (not= v :DATA) [:V v :SUBVAL subval] v))
+            (if (or (= v :DATA)
+                    (string? subval)
+                    (not (coll? subval)))
+              subval
+              (xform subval xkv)))))
       x)))
   ([x k v & kvs]
    (xform x (into
              {k v}
              (->> kvs (partition-all 2)
                   (mapv (fn[[k v]] [k v])))))))
+
+
+
+
+
+
+
+
+
 

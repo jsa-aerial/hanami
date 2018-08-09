@@ -24,8 +24,7 @@
               :y {:field :Y
                   :axis {:title :YTITLE}
                   :type :YTYPE}
-              :tooltip [{:field :X :type :XTYPE}
-                        {:field :Y :type :YTYPE}]
+              :tooltip :TOOLTIP
               }})
 
 (def line-layer
@@ -45,8 +44,7 @@
               :y {:field :Y
                   :axis {:title :YTITLE}
                   :type :YTYPE}
-              :tooltip [{:field :X :type :XTYPE}
-                        {:field :Y :type :YTYPE}]}})
+              :tooltip :TOOLTIP}})
 
 
 (def interval-scales
@@ -86,8 +84,7 @@
    :mark "bar",
    :encoding {:x {:field :X, :type :XTYPE :axis {:title :XTITLE}},
               :y {:field :Y, :type :YTYPE :axis {:title :YTITLE}}
-              :tooltip [{:field :X :type :XTYPE}
-                        {:field :Y :type :YTYPE}]}})
+              :tooltip :TOOLTIP}})
 
 
 (def simple-line-chart
@@ -102,8 +99,7 @@
               :y {:field :Y
                   :axis {:title :YTITLE}
                   :type :YTYPE}
-              :tooltip [{:field :X :type :XTYPE}
-                        {:field :Y :type :YTYPE}]}
+              :tooltip :TOOLTIP}
    :data {:values :DATA}})
 
 
@@ -138,8 +134,7 @@
                 :color {:field :ROW :type :ROWTYPE
                         :scale {:scheme {:name "greenblue" #_"category20c"
                                          :extent [0.4 1]}}}
-                :tooltip [{:field :X :type :XTYPE}
-                          {:field :Y :type :YTYPE}]}
+                :tooltip :TOOLTIP}
 
      :config {:bar {:binSpacing 0
                     :discreteBandSize 1
@@ -175,8 +170,7 @@
               :color {:field :X :type :XTYPE
                       :scale {:scheme {:name "greenblue"
                                        :extent [0.4 1]}}}
-              :tooltip [{:field :X :type :XTYPE}
-                        {:field :Y :type :YTYPE}]}
+              :tooltip :TOOLTIP}
 
    :config {:bar {:binSpacing 0
                   :discreteBandSize 1

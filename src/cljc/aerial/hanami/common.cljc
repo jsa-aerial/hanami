@@ -1,6 +1,7 @@
 (ns aerial.hanami.common
   (:require
-   [com.rpl.specter :as sp]))
+   [com.rpl.specter :as sp]
+   [aerial.hanami.templates :as ht]))
 
 
 (def default-opts
@@ -18,14 +19,16 @@
   (atom {:BACKGROUND "floralwhite"
          :TITLE "A Chart", :TOFFSET RMV
          :HEIGHT 500, :WIDTH 550
-         :X "x", :XTYPE, "quantitative", :XTITLE "X", :XSCALE RMV, :XGRID RMV
-         :Y "y", :YTYPE, "quantitative", :YTITLE "Y", :YSCALE RMV, :YGRID RMV
+         :X "x", :XTYPE, "quantitative", :XTITLE RMV, :XSCALE RMV, :XGRID RMV
+         :Y "y", :YTYPE, "quantitative", :YTITLE RMV, :YSCALE RMV, :YGRID RMV
          :TRANSFORM RMV
-         :SELECTION RMV
+         :MDWN-MARK RMV, :SMDWN-MARK RMV
+         :SELECTION RMV, :ENCODINGS ["x", "y"], :IRESOLVE "global"
+         :SIZE RMV
          :COLOR RMV
          :RESOLVE RMV
          :POINT RMV
-         :TOOLTIP aerial.hanami.templates/default-tooltip
+         :TOOLTIP ht/default-tooltip
          :RTYPE "quantitative", :AGG RMV}))
 
 (defn reset-defaults [default-map]

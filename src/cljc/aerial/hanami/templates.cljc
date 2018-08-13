@@ -7,6 +7,31 @@
   [{:field :X :type :XTYPE}
    {:field :Y :type :YTYPE}])
 
+(def interval-scales
+  {:INAME
+   {:type "interval",
+    :bind "scales", ; <-- This gives zoom and pan
+    :on "[mousedown, window:mouseup] > window:mousemove!",
+    :encodings :ENCODINGS,
+    :zoom "wheel!",
+    :resolve :IRESOLVE}})
+
+(def interval-mark-mdwn
+  {:MDWM-NAME
+   {:type "interval"
+    :on "[mousedown[!event.shiftKey], mouseup] > mousemove"
+    :translate "[mousedown[!event.shiftKey], mouseup] > mousemove"
+    :mark :MDWN-MARK}})
+
+(def interval-mark-smdwn
+  {:SMDWM-NAME
+   {:type "interval"
+    :on "[mousedown[event.shiftKey], mouseup] > mousemove"
+    :translate "[mousedown[event.shiftKey], mouseup] > mousemove"
+    :mark :SMDWN-MARK}})
+
+
+
 
 (def xrule-layer
   {:mark "rule"
@@ -44,17 +69,8 @@
               :y {:field :Y
                   :axis {:title :YTITLE}
                   :type :YTYPE}
+              :size :SIZE
               :tooltip :TOOLTIP}})
-
-
-(def interval-scales
-  {:grid
-   {:type "interval",
-    :bind "scales", ; <-- This gives zoom and pan
-    :on "[mousedown, window:mouseup] > window:mousemove!",
-    :encodings ["x", "y"],
-    :zoom "wheel!",
-    :resolve "global"}})
 
 (def gen-encode-layer
   {:transform :TRANSFORM
@@ -68,6 +84,7 @@
                   :type :YTYPE
                   :axis {:title :YTITLE, :grid :YGRID}
                   :scale :YSCALE}
+              :size :SIZE
               :tooltip :TOOLTIP
               :color :COLOR}})
 

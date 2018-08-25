@@ -24,12 +24,15 @@
             button row-button md-icon-button md-circle-icon-button info-button
             input-text input-password input-textarea
             label title p
+            single-dropdown
             checkbox radio-button slider progress-bar throbber
             horizontal-bar-tabs vertical-bar-tabs
             modal-panel popover-content-wrapper popover-anchor-wrapper]
     :refer-macros [handler-fn]]
    [re-com.box
     :refer [h-box v-box box gap line flex-child-style]]
+   [re-com.dropdown
+    :refer [filter-choices-by-keyword single-dropdown-args-desc]]
 
    [aerial.hanami.utils
     :refer [title2 href]]
@@ -74,47 +77,58 @@
 
 (defn get-tab-field
   ([tid]
-   (sp/select-one [sp/ATOM :tabs :active sp/ALL #(= (% :id) tid)]
+   (sp/select-one [sp/ATOM :tabs :active sp/ATOM sp/ALL #(= (% :id) tid)]
                   app-db))
   ([tid field]
-   (sp/select-one [sp/ATOM :tabs :active sp/ALL #(= (% :id) tid) field]
+   (sp/select-one [sp/ATOM :tabs :active sp/ATOM sp/ALL #(= (% :id) tid) field]
                   app-db)))
 
 (defn update-tab-field [tid field value]
-  (sp/setval [sp/ATOM :tabs :active sp/ALL #(= (% :id) tid) field]
+  (sp/setval [sp/ATOM :tabs :active sp/ATOM sp/ALL #(= (% :id) tid) field]
              value app-db))
 
 (defn get-cur-tab
   ([]
-   (get-tab-field (get-adb [:tabs :current])))
+   (get-tab-field (deref (get-adb [:tabs :current]))))
   ([field]
-   (get-tab-field (get-adb [:tabs :current]) field)))
+   (get-tab-field (deref (get-adb [:tabs :current])) field)))
 
 (defn update-cur-tab [field value]
-  (update-tab-field (get-adb [:tabs :current]) field value))
+  (update-tab-field (deref (get-adb [:tabs :current])) field value))
 
 (defn add-tab [tabval]
-  (sp/setval [sp/ATOM :tabs :active sp/AFTER-ELEM] tabval app-db)
-  (update-adb [:tabs :current] (tabval :id)))
+  (sp/setval [sp/ATOM :tabs :active sp/ATOM sp/AFTER-ELEM] tabval app-db)
+  (sp/setval [sp/ATOM :tabs :current sp/ATOM] (tabval :id) app-db))
 
 (defn replace-tab [tid newdef]
-  (sp/setval [sp/ATOM :tabs :active sp/ALL #(= (% :id) tid)] newdef app-db))
+  (sp/setval [sp/ATOM :tabs :active sp/ATOM sp/ALL #(= (% :id) tid)]
+             newdef app-db))
 
 (defn active-tabs []
   (printchan :ACTIVE-TABS " called")
-  (let [curtab (get-adb [:tabs :current])]
+  (let [bar-cursor (rgt/cursor app-db [:tabs :bars])
+        curtab (get-cur-tab)]
+    (if curtab
+      @bar-cursor
+      [:p])))
+  #_(let [curtab-cursor (rgt/cursor app-db [:tabs :current])
+        curtab @curtab-cursor
+        tabset-cursor (rgt/cursor app-db [:tabs :active])
+        tabset @tabset-cursor]
     (if curtab
       [horizontal-bar-tabs
        :model curtab
-       :tabs (get-adb [:tabs :active])
+       :tabs tabset
        :on-change #(update-adb [:tabs :current] %)]
-      [:p])))
+      [:p]))
 
 
 
 
 (defn header [msg]
-  [title2 msg :class "title" #_:style #_{:background-color "lightgreen"}])
+  [title2 msg :class "title"
+   ;;:margin-top "2px" :margin-bottom "1px"
+   #_:style #_{:background-color "lightgreen"}])
 
 
 (defn visualize
@@ -147,7 +161,7 @@
     (fn [comp]
       (let [argv (rest (rgt/argv comp))
             opts (second argv)]
-        #_(printchan :DIDMNT :ARGV argv)
+        (printchan "Did-Mount: called")
         (visualize spec (rgt/dom-node comp) opts)))
 
     :component-did-update
@@ -165,24 +179,30 @@
       [box :child [:div#app]])}))
 
 
-(defn vis-list [specs opts]
-  (let [specs (com/ev specs)
-        layout (if (= (get-in opts [:layout :order]) :row) h-box v-box)
+(defn vis-list [tabid spec-children-pairs opts]
+  (let [layout (if (= (get-in opts [:layout :order]) :row) h-box v-box)
         eltnum (get-in opts [:layout :eltsper] 3)
-        numspecs (count specs)
-        spec-chunks (->> specs (partition-all eltnum) (mapv vec))]
-    (printchan "VIS-LIST : " (count specs))
-    (for [specs spec-chunks]
+        numspecs (count spec-children-pairs)
+        spec-chunks (->> spec-children-pairs
+                         (partition-all eltnum)
+                         (mapv vec))]
+    (printchan "VIS-LIST : " numspecs)
+    (for [sub-pairs spec-chunks]
       [layout
        :size (get-in opts [:layout :size] "auto")
        :gap "20px"
        :children
-       (for [spec specs]
-         [vgl spec opts])])))
+       (for [[spec children] sub-pairs]
+         (do #_(js-delete spec "usermeta")
+             #_(printchan :NSPEC (js->clj spec) children)
+             [v-box :gap "10px"
+              :children [[h-box :gap "5px" :children children]
+                         [vgl spec opts]]]))])))
 
-(defn hanami []
+(defn hanami [injector]
   (if-let [tabval (get-cur-tab)]
-    (let [spec (tabval :specs)
+    (let [tabid (tabval :id)
+          specs (tabval :specs)
           compvis (tabval :compvis)
           opts (tabval :opts (get-adb [:main :opts]))]
       (cond
@@ -190,8 +210,10 @@
         (do (printchan "hanami called - has compvis")
             compvis)
 
-        spec
-        (let [compvis (vis-list spec opts)]
+        specs
+        (let [spec-children-pairs (tabval :spec-children-pairs)
+              ;;_ (printchan :SCPAIRS (js->clj spec-children-pairs))
+              compvis (vis-list tabid spec-children-pairs opts)]
           (printchan "hanami called - making compvis")
           (update-cur-tab :compvis compvis)
           compvis)
@@ -200,31 +222,33 @@
         [[:img {:src (get-adb [:main :img])}]]))
     [[:img {:src (get-adb [:main :img])}]]))
 
+(defn tabs [injector]
+  (printchan "TABS called ...")
+  (let [opts (or (get-cur-tab :opts) (get-adb [:main :opts]))
+        size (get-in opts [:layout :size] "auto")
+        order (get-in opts [:layout :order] :col)
+        layout (if (= order :row) v-box h-box)]
+    [layout
+     :size size
+     :gap "10px"
+     :children (hanami injector)]))
 
 (defn hanami-main []
   (printchan "Hanami-main called ...")
-  [v-box
-   :gap "10px"
-   :children
-   [[h-box :gap "10px"
-     :children [[gap :size "5px"]
-                [:img {:src (get-adb [:main :logo])}]
-                [header (get-adb [:main :title])]
-                [gap :size "5px"]
-                [title
-                 :level :level3
-                 :label [:span.bold (get-adb [:main :uid])]]
-                [gap :size "30px"]
-                (active-tabs)]]
-    [line]
-    (let [opts (or (get-cur-tab :opts) (get-adb [:main :opts]))
-          size (get-in opts [:layout :size] "auto")
-          order (get-in opts [:layout :order] :col)
-          layout (if (= order :row) v-box h-box)]
-      [layout
-       :size size
-       :gap "10px"
-       :children (hanami)])]])
+  (let [inj-cursor (rgt/cursor app-db [:injector])
+        injector (first @inj-cursor)
+        hd-cursor (rgt/cursor app-db [:header])
+        header (first @hd-cursor)]
+    [v-box
+     :gap "10px"
+     :children
+     [[v-box :gap "3px"
+       :children [[header]
+                  [h-box
+                   :align :start :max-height "30px"
+                   :children [[gap :size "15px"] [active-tabs]]]]]
+      [line]
+      [tabs injector]]]))
 
 
 
@@ -265,9 +289,15 @@
               [:main :logo] logo
               [:main :img] img
               [:main :opts] opts
-              [:tabs :active] []
-              [:tabs :current] :rm
-              [:vgl-as-vg] :rm)
+              [:vgl-as-vg] :rm
+              [:tabs] (let [cur-ratom (rgt/atom nil)
+                            tabs-ratom (rgt/atom [])]
+                        {:current cur-ratom
+                         :active tabs-ratom
+                         :bars [horizontal-bar-tabs
+                                :model cur-ratom
+                                :tabs tabs-ratom
+                                :on-change #(reset! cur-ratom %)]}))
   (rgt/render [hanami-main]
               (js/document.querySelector "#app")))
 
@@ -284,17 +314,26 @@
           (let [oldef (get-tab-field id)
                 specs (when specs
                         (->> specs com/ev (mapv #(.parse js/JSON %))))
-                main-opts (get-adb [:main :opts])]
+                main-opts (get-adb [:main :opts])
+                injector (-> :injector get-adb first)
+                spec-children-pairs (mapv #(vector % (injector
+                                                      {:tabid id
+                                                       :spec %
+                                                       :opts opts}))
+                                          (com/ev specs))]
             (if (not oldef)
-              (add-tab (assoc newdef
-                              :opts (merge-old-new-opts main-opts opts)
-                              :specs specs))
+              (let [opts (merge-old-new-opts main-opts opts)]
+                (add-tab (assoc newdef
+                                :opts (merge-old-new-opts main-opts opts)
+                                :spec-children-pairs spec-children-pairs
+                                :specs specs)))
 
               (let [oldopts (or (oldef :opts) main-opts)
                     newopts (merge-old-new-opts oldopts opts)]
                 (replace-tab id {:id id
                                  :label (or label (get-tab-field id :label))
                                  :opts newopts
+                                 :spec-children-pairs spec-children-pairs
                                  :specs specs})))))
         (com/ev tabdefs)))
 
@@ -305,7 +344,8 @@
     (case op
 
       :register
-      (register data)
+      (do (register data)
+          (rgt/render [hanami-main] (get-adb :elem)))
 
       :opts
       (update-opts data)
@@ -373,34 +413,108 @@
             (recur (<! ch))))))))
 
 
-(when-let [elem (js/document.querySelector "#app")]
-  (printchan "Element 'app' available, port " js/location.port)
+
+(defn default-header-fn []
+  [h-box :gap "10px" :max-height "30px"
+   :children [[gap :size "5px"]
+              [:img {:src (get-adb [:main :logo])}]
+              [title
+               :level :level3
+               :label [:span.bold (get-adb [:main :title])]]
+              [gap :size "5px"]
+              [title
+               :level :level3
+               :label [:span.bold (get-adb [:main :uid :name])]]
+              [gap :size "30px"]]])
+
+(defn default-injector-fn [{:keys [spec opts]}]
+  (let [udata (js->clj spec.usermeta :keywordize-keys true)]
+    (js-delete spec "usermeta")
+    (printchan :UDATA udata :OPTS opts)
+    []))
+
+(defn start [& {:keys [elem port header-fn injector-fn]
+                :or {header-fn default-header-fn
+                     injector-fn default-injector-fn}}]
+  (printchan "Element 'app' available, port " port)
   (app-stop)
-  (connect js/location.port)
-  (rgt/render [hanami-main]
-              (js/document.querySelector "#app")))
+  (update-adb :elem elem
+              :injector [injector-fn]
+              :header [header-fn])
+  (connect port))
+
+
 
 
 (comment
 
-  (go
-    (let [port 3000 ;;js/location.port
-          uri (str "ws://localhost:" port "/ws")
-          ch (async/<! (cli/open-connection uri))]
-      (printchan "Opening client, reading msgs from " ch)
-      (def hanami-handler
-        (loop [msg (<! ch)]
-          (let [{:keys [op payload]} msg]
-            (user-dispatch ch op payload)
-            (when (not= op :stop)
-              (recur (<! ch))))))))
-  )
+  (start :elem (js/document.querySelector "#app")
+         :port 3003
+         :injector-fn test-injector #_default-injector-fn)
+
+  (defn bar-slider-fn [tid val]
+    (let [tabval (get-tab-field tid)
+          spec-children-pairs (tabval :spec-children-pairs)]
+      (printchan "Slider update " val)
+      #_(update-adb [:test1 :sval] (str val))
+      (update-tab-field tid :compvis nil)
+      (update-tab-field
+       tid :spec-children-pairs
+       (mapv (fn[[spec children]]
+               (let [cljspec (js->clj spec :keywordize-keys true)
+                     data (mapv (fn[m] (assoc m :b (+ (m :b) val)))
+                                (get-in cljspec [:data :values]))
+                     newspec (clj->js (assoc-in cljspec [:data :values] data))]
+                 [newspec children]))
+             spec-children-pairs))))
+
+  (defn test-injector [{:keys [tabid spec opts]}]
+    (printchan "Test Injector called" :TID tabid :SPEC spec)
+    (let [cljspec (js->clj spec :keywordize-keys true)
+          udata (cljspec :usermeta)]
+      (cond
+        (not (map? udata)) []
+
+        (udata :test1)
+        (let [sval (rgt/atom "0.0")]
+          (printchan :SLIDER-INJECTOR)
+          [[gap :size "10px"] [label :label "Slider away"]
+           [slider
+            :model sval
+            :min -10.0, :max 10.0, :step 1.0
+            :width "200px"
+            :on-change #(do (bar-slider-fn tabid %)
+                            (reset! sval (str %)))]
+           [input-text
+            :model sval
+            :width "60px", :height "26px"
+            :on-change #(reset! sval %)]])
+
+        (udata :test2)
+        [[gap :size "10px"]
+         [label :label "Select a demo"]
+         [single-dropdown
+          :choices (udata :test2)
+          :on-change #(printchan "Dropdown: " %)
+          :model nil
+          :placeholder "Hi there"
+          :width "100px"]]
+
+        :else
+        [[[gap :size "10px"]
+          [label :label "No user map data"]]])))
 
 
-(comment
 
-  (get-adb)
-  (update-adb [:main :uid] "Hello")
+  (let [tid :tab2
+        field :specs
+        value [{:spec2 :aspec}]]
+    (sp/setval [sp/ATOM :tabs :active sp/ALL sp/ATOM #(= (% :id) tid) field]
+               value test-db))
+
+
+  (get-adb [:test1 :sval])
+  (update-adb [:main :uid :name] "Hello")
 
   (add-tab
    {:id :p1
@@ -439,8 +553,6 @@
                     :layout {:size "auto"}})
             :specs [js/vglspec js/vglspec2
                     js/vglspec3 js/vglspec]})
-
-  (update-adb :tabs :current :p1)
 
 
   (get-adb :tabs)

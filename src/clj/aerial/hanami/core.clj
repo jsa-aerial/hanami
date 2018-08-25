@@ -37,6 +37,8 @@
 
 
 
+(defn uuid [] (str (java.util.UUID/randomUUID)))
+
 (defonce app-bpsize 100)
 (defonce app-db (atom {:rcvcnt 0 :sntcnt 0}))
 
@@ -68,15 +70,20 @@
 
 (defn on-open [ch op payload]
   (let [ws payload
-        uid ((-> :idfn get-adb first))
+        uid-name ((-> :idfn get-adb first))
+        uuid (uuid)
+        uid {:uuid uuid :name uid-name}
         data {:uid uid
-              :title "花見 Hanami"
-              :logo "logo.png"
-              :img "Himeji_sakura.jpg"
-              :opts default-opts}]
-    (printchan :SRV :open :uid uid)
-    (update-adb [uid :ws] ws, [uid :rcvcnt] 0, [uid :sntcnt] 0
-                [ws :uid] uid)
+              :title (get-adb [:header :title])
+              :logo (get-adb [:header :logo])
+              :img (get-adb [:header :img])
+              :opts default-opts}
+        name-uuids (or (get-adb uid-name) [])]
+    (printchan :SRV :open uid)
+    (update-adb [uuid :ws] ws, [uuid :name] uid-name
+                [uuid :rcvcnt] 0, [uuid :sntcnt] 0
+                [ws :uuid] uuid
+                uid-name (conj name-uuids uuid))
     (srv/send-msg ws {:op :register :data data})))
 
 
@@ -88,18 +95,21 @@
 
     :open (on-open ch op payload)
     :close (let [{:keys [ws status]} payload
-                 uid (get-adb [ws :uid])]
-             (printchan :SRV :close :uid uid)
-             (update-adb ws :rm, uid :rm))
+                 uuid (get-adb [ws :uuid])
+                 uuid-name (get-adb [uuid :name])
+                 uuids (get-adb uuid-name)]
+             (printchan :SRV :close :uuid uuid uuid-name)
+             (update-adb ws :rm, uuid :rm
+                         uuid-name (->> uuids (remove #(= uuid %)) vec)))
 
     :bpwait (let [{:keys [ws msg encode]} payload
-                  uid (get-adb [ws :uid])]
-              (printchan :SRV :UID uid " - Waiting to send msg " msg)
-              (update-adb [uid :bpdata] {:msg msg, :encode encode}))
+                  uuid (get-adb [ws :uuid])]
+              (printchan :SRV :UUID uuid " - Waiting to send msg " msg)
+              (update-adb [uuid :bpdata] {:msg msg, :encode encode}))
     :bpresume (let [{:keys [ws msg]} payload
-                    uid (get-adb [ws :uid])
-                    encode ((get-adb [uid :bpdata]) :encode)]
-                (printchan :SRV "BP Resume " (get-adb [ws :uid]))
+                    uuid (get-adb [ws :uuid])
+                    encode ((get-adb [uuid :bpdata]) :encode)]
+                (printchan :SRV "BP Resume " (get-adb [ws :uuid]))
                 (srv/send-msg ws msg :encode encode))
 
     :sent (let [{:keys [ws msg]} payload]
@@ -137,10 +147,18 @@
       #_(wrap-gzip)))
 
 
-(defn start-server [port & {:keys [idfn] :or {idfn (partial gensym "hanami-")}}]
+(defn start-server
+  [port & {:keys [idfn title logo img]
+           :or {idfn (partial gensym "hanami-")
+                title "花見 Hanami"
+                logo "logo.png"
+                img "Himeji_sakura.jpg"}}]
   (let [ch (srv/start-server port :main-handler hanami-handler)]
     (printchan "Server start, reading msgs from " ch)
-    (update-adb :chan ch :idfn [idfn])
+    (update-adb :chan ch :idfn [idfn]
+                [:header :title] title
+                [:header :logo] logo
+                [:header :img] img)
     (go-loop [msg (<! ch)]
       (let [{:keys [op payload]} msg]
         (future (server-dispatch ch op payload))
@@ -151,11 +169,12 @@
   (async/>!! (get-adb :chan) {:op :stop :payload {:cause :userstop}}))
 
 
-(defn s! [id op data]
-  (srv/send-msg (get-adb [id :ws]) {:op op :data data}))
+(defn s! [uuids op data]
+  (doseq [id uuids]
+    (srv/send-msg (get-adb [id :ws]) {:op op :data data})))
 
-(defn stabs! [id tabdefs]
-  (s! id :tabs
+(defn stabs! [uuid-name tabdefs]
+  (s! (get-adb uuid-name) :tabs
       (mapv (fn[tdef]
               (let [specs (when (tdef :specs)
                             (->> tdef :specs com/ev (mapv json/write-str)))]
@@ -163,28 +182,28 @@
             (com/ev tabdefs))))
 
 (defn svgl!
-  ([id vgl-maps]
-   (s! id :tabs
+  ([uuid-name vgl-maps]
+   (s! (get-adb uuid-name) :tabs
        {:id :p1 :label "Vis"
         :opts default-opts
         :specs (mapv #(json/write-str %) (com/ev vgl-maps))}))
-  ([id tid vgl-maps]
-   (s! id :tabs
+  ([uuid-name tid vgl-maps]
+   (s! (get-adb uuid-name) :tabs
        {:id tid
         :label (-> tid name str/capitalize)
         :specs (mapv #(json/write-str %) (com/ev vgl-maps))})))
 
 (defn sopts!
-  ([id opts]
-   (s! id :opts {:main opts}))
-  ([id tid opts]
-   (s! id :opts {:tab tid :opts opts})))
+  ([uuid-name opts]
+   (s! (get-adb uuid-name) :opts {:main opts}))
+  ([uuid-name tid opts]
+   (s! (get-adb uuid-name) :opts {:tab tid :opts opts})))
 
 
 
 (comment
 
-  (start-server 3000 :idfn (constantly "Basics"))
+  (start-server 3003 :idfn (constantly "Basics"))
   (stop-server)
 
   )

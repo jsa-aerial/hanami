@@ -20,9 +20,13 @@
   (let [ln2 (Math/log 2)]
     (/ (Math/log x) ln2)))
 
+(defn roundit [r & {:keys [places] :or {places 4}}]
+  (let [n (Math/pow 10.0 places)]
+    (-> r (* n) Math/round (/ n))))
 
 
-(hmi/start-server 3000 :idfn (constantly "Basics"))
+
+(hmi/start-server 3003 :idfn (constantly "Basics"))
 #_(hmi/stop-server)
 
 
@@ -38,6 +42,7 @@
              {:a "H", :b 87 },
              {:a "I", :b 52 }]]
    (hc/xform ht/simple-bar-chart
+             :USERDATA {:test1 :slider}
              :TITLE "A Simple Bar Chart"
              :HEIGHT 300, :WIDTH 350
              :X "a" :XTYPE "ordinal" :XTITLE "foo" :Y "b" :YTITLE "bar"
@@ -47,7 +52,8 @@
 
 ;;; Geo Example
 (->>
- {:width 500,
+ {;;:usermeta {:test1 :nothing}
+  :width 500,
   :height 300,
   :data {:url "data/airports.csv"},
   :projection {:type "albersUsa"},
@@ -62,117 +68,97 @@
  (hmi/svgl! "Basics" :geo))
 
 
-
-;;; Self Info - unexpectedness
-(->>
- (let [data (->> (range 0.005 0.999 0.001)
-                 (mapv (fn[p] {:x p, :y (- (log2 p)) :col "SI"})))]
-   (hc/xform ht/simple-layer-chart
-             :TITLE "Self Information (unexpectedness)"
-             :LAYER [(hc/xform ht/xrule-layer :AGG "mean")
-                     (hc/xform ht/line-layer
-                               :XTITLE "Probability of event"
-                               :YTITLE "-log(p)")]
-             :DATA data))
- (hmi/svgl! "Basics"))
-
-;;; Entropy - unpredictability
-(->>
- (let [data (->> (range 0.00005 0.9999 0.001)
-                         (mapv (fn[p] {:x p,
-                                      :y (- (- (* p (log2 p)))
-                                            (* (- 1 p) (log2 (- 1 p))))
-                                      })))]
-   (hc/xform ht/simple-layer-chart
-             :TITLE "Entropy (Unpredictability)"
-             :LAYER [(hc/xform ht/gen-layer
-                               :MARK "line"
-                               :XTITLE "Probability of event" :YTITLE "H(p)")
-                     (hc/xform ht/xrule-layer :AGG "mean")]
-             :DATA data))
- (hmi/svgl! "Basics"))
-
-
-
-[hc/_defaults hc/default-opts]
 ;;; Multi Chart - cols and rows
+;;; First, init tabs
+(hmi/stabs! "Basics"
+            {:id :multi, :label "Multi",
+             :opts {:vgl {:export false}
+                    :layout {:order :row, :size "auto"}}})
+;;; Now graphs
 (->>
  [(let [data (->> (range 0.005 0.999 0.001)
-                 (mapv (fn[p] {:x p, :y (- (log2 p)) :col "SI"})))]
-   (hc/xform ht/simple-layer-chart
-             :TITLE "Self Information (unexpectedness)"
-             :HEIGHT 300, :WIDTH 350
-             :LAYER [(hc/xform ht/line-layer
-                               :XTITLE "Probability of event"
-                               :YTITLE "-log(p)")
-                     (hc/xform ht/xrule-layer :AGG "mean")]
-             :DATA data))
+                  (mapv (fn[p] {:x p, :y (- (log2 p)) :col "SI"})))]
+    ;; Self Info - unexpectedness
+    (hc/xform ht/simple-layer-chart
+              :USERDATA {:test1 :nothing}
+              :TITLE "Self Information (unexpectedness)"
+              :HEIGHT 300, :WIDTH 350
+              :LAYER [(hc/xform ht/line-layer
+                                :XTITLE "Probability of event"
+                                :YTITLE "-log(p)")
+                      (hc/xform ht/xrule-layer :AGG "mean")]
+              :DATA data))
+  ;; Entropy - unpredictability
   (let [data (->> (range 0.00005 0.9999 0.001)
-                         (mapv (fn[p] {:x p,
-                                      :y (- (- (* p (log2 p)))
-                                            (* (- 1 p) (log2 (- 1 p))))
-                                      })))]
-   (hc/xform ht/simple-layer-chart
-             :TITLE "Entropy (Unpredictability)"
-             :HEIGHT 300, :WIDTH 350
-             :LAYER [(hc/xform ht/gen-layer
-                               :MARK "line"
-                               :XTITLE "Probability of event" :YTITLE "H(p)")
-                     (hc/xform ht/xrule-layer :AGG "mean")]
-             :DATA data))]
- (hmi/svgl! "Basics" :row))
+                  (mapv (fn[p] {:x p,
+                               :y (- (- (* p (log2 p)))
+                                     (* (- 1 p) (log2 (- 1 p))))})))]
+    (hc/xform ht/simple-layer-chart
+              :USERDATA {:test2 [{:id 1 :label "One" :val 1}
+                                 {:id 2 :label "Two" :val 2}
+                                 {:id 3 :label "Three" :val 3}]}
+              :TITLE "Entropy (Unpredictability)"
+              :HEIGHT 300, :WIDTH 350
+              :LAYER [(hc/xform ht/gen-encode-layer
+                                :MARK "line"
+                                :XTITLE "Probability of event" :YTITLE "H(p)")
+                      (hc/xform ht/xrule-layer :AGG "mean")]
+              :DATA data))]
+ (hmi/svgl! "Basics" :multi))
 
-(hmi/stabs! "Basics"
-            [{:id :col, :label "Col"}
-             {:id :row, :label "Row",
-              :opts
-              {:vgl {:export false}
-               :layout {:order :row, :size "auto"}}}])
-
-(hmi/sopts! "Basics" :row
+;;; Add export for PNG
+(hmi/sopts! "Basics" :multi
             (merge hc/default-opts
                    {:vgl {:export {:png true :svg false}}
                     :layout {:order :row, :size "auto"}}))
 
 
-
-
-
+;;; Some distributions
+;;;;
 (def obsdist
   (let [obs [[0 9] [1 78] [2 305] [3 752] [4 1150] [5 1166]
              [6 899] [7 460] [8 644] [9 533] [10 504]]
         totcnt (->> obs (mapv second) (apply +))
         pdist (map (fn[[k cnt]] [k (double (/ cnt totcnt))]) obs)]
     pdist))
-
 ;;(p/mean obsdist) => 5.7
-(hc/xform ht/xrule-layer {:AGG 5.7})
-
-
-
 (->>
  [(hc/xform ht/simple-layer-chart
-            :TITLE "A Real (obvserved) distribution"
+            :TITLE "A Real (obvserved) distribution with incorrect simple mean"
             :HEIGHT 400 :WIDTH 450
             :LAYER
             [(hc/xform ht/bar-layer
                        :XTITLE "Count"
                        :YTITLE "Probability")
-             (hc/xform ht/xrule-layer :AGG "mean")
-             #_(hc/xform ht/xrule-layer :X "m")]
+             (hc/xform ht/xrule-layer :AGG "mean")]
             :DATA (mapv (fn[[x y]] {:x x :y y :m 5.7}) obsdist))
   (hc/xform ht/simple-layer-chart
-            :TITLE "A Real (obvserved) distribution"
+            :TITLE "The same distribution with correct weighted mean"
             :HEIGHT 400 :WIDTH 450
             :LAYER
             [(hc/xform ht/bar-layer
                        :XTITLE "Count"
                        :YTITLE "Probability")
-             #_(hc/xform ht/xrule-layer :AGG "mean")
              (hc/xform ht/xrule-layer :X "m")]
             :DATA (mapv (fn[[x y]] {:x x :y y :m 5.7}) obsdist))]
- (hmi/svgl! "Basics" :row))
+ (hmi/svgl! "Basics" :dists))
 
+(->>
+ (let [data (concat (->> obsdist
+                         (mapv (fn[[x y]]
+                                 {:cnt x :y y :dist "Real"})))
+                    (->> (p/binomial-dist 10 0.57)
+                         (mapv (fn[[x y]]
+                                 {:cnt x :y (roundit y)
+                                  :dist "Binomial"}))))]
+   (hc/xform ht/col-grouped-bar-chart
+             {:WIDTH (-> 550 (/ 11) double Math/round (- 15))
+              :TITLE "Real vs Binomial 0.57", :TOFFSET 40
+              :DATA data
+              :X "dist" :XTYPE "nominal" :XTITLE ""
+              :Y "y" :YTITLE "Probability"
+              :COLUMN "cnt" :COLTYPE "ordinal"}))
+ (hmi/svgl! "Basics" :dists))
 
 
 

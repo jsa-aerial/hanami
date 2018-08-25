@@ -21,11 +21,18 @@
          :HEIGHT 500, :WIDTH 550
          :X "x", :XTYPE, "quantitative", :XTITLE RMV, :XSCALE RMV, :XGRID RMV
          :Y "y", :YTYPE, "quantitative", :YTITLE RMV, :YSCALE RMV, :YGRID RMV
+         :ENCODING ht/xy-encoding
+         :USERDATA RMV
          :TRANSFORM RMV
-         :MDWN-MARK RMV, :SMDWN-MARK RMV
+         :MDWN-MARK {:fill "#333",
+                     :fillOpacity 0.125,
+                     :stroke "white"},
+         :SMDWN-MARK {:fill "#333",
+                     :fillOpacity 0.125,
+                     :stroke "white"}
          :SELECTION RMV, :ENCODINGS ["x", "y"], :IRESOLVE "global"
          :SIZE RMV
-         :COLOR RMV
+         :COLOR RMV, :XRL-COLOR "red", :YRL-COLOR "green"
          :RESOLVE RMV
          :POINT RMV
          :TOOLTIP ht/default-tooltip
@@ -51,7 +58,8 @@
       sp/ALL
       (fn[v]
         (if (coll? v)
-          (xform v xkv)
+          (let [xv (xform v xkv)]
+            (if (seq xv) xv RMV))
           (let [subval (get xkv v v)]
             #_(clojure.pprint/pprint
              (if (not= v :DATA) [:V v :SUBVAL subval] v))

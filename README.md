@@ -2,7 +2,7 @@
 
 <a href="https://altair-viz.github.io"><img src="https://github.com/jsa-aerial/hanami/blob/master/resources/public/Himeji_sakura.jpg" align="left" hspace="40" vspace="6" alt="Altair logo" width="150px"></a>
 
-Interactive arts and charts visualizations with Clojure, Vega-lite and Vega. Flower viewing 花見 (hanami)
+Interactive arts and charts visualizations with Clojure, Vega-lite and Vega. Flower viewing 花見 (hanami)*
 
 
 ## Overview

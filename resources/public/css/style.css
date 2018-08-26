@@ -1,0 +1,140 @@
+
+.title {
+    background-color: white;
+}
+
+.item {
+    background-color: white;
+}
+
+.item.active {
+    background-color: skyblue;
+}
+
+
+/* some style */
+
+.vega-embed a {
+    visibility: hidden;
+    font-size: 14px;
+    margin-right: 0.5em;
+}
+
+.vega-embed:hover a {
+    visibility: visible;
+}
+
+.vg-tooltip {
+    visibility: hidden;
+    padding: 6px;
+    border-radius: 3px;
+    position: fixed;
+    z-index: 2000;
+    font-family: sans-serif;
+    font-size: 11px;
+
+    /* The default look of the tooltip is the same as .light-theme
+  but it can be overwritten by .dark-theme */
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid #d9d9d9;
+    color: black;
+}
+.vg-tooltip td.key, .vg-tooltip td.value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.vg-tooltip td.key {
+    color: #808080;
+    max-width: 150px;
+    text-align: right;
+    padding-right: 1px;
+}
+.vg-tooltip td.value {
+    max-width: 200px;
+    text-align: left;
+}
+
+/* Dark and light color themes */
+.vg-tooltip.dark-theme {
+    background-color: rgba(64, 64, 64, 0.9);
+    border: none;
+    color: white;
+}
+.vg-tooltip.dark-theme td.key {
+    color: #bfbfbf;
+}
+.vg-tooltip.light-theme {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid #d9d9d9;
+    color: black;
+}
+.vg-tooltip.light-theme td.key {
+    color: #808080;
+}
+
+
+/* Vega tooltip 0.12.0 styling*/
+
+#vg-tooltip-element {
+  visibility: hidden;
+  padding: 8px;
+  position: fixed;
+  z-index: 1000;
+  font-family: sans-serif;
+  font-size: 11px;
+  border-radius: 3px;
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+
+  /* The default theme is the light theme. */
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid #d9d9d9;
+  color: black;
+}
+#vg-tooltip-element.visible {
+  visibility: visible;
+}
+#vg-tooltip-element h2 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+#vg-tooltip-element table {
+  border-spacing: 0;
+}
+#vg-tooltip-element td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+#vg-tooltip-element td.key {
+  color: #808080;
+  max-width: 150px;
+  text-align: right;
+  padding-right: 4px;
+}
+#vg-tooltip-element td.value {
+  display: block;
+  max-width: 300px;
+  max-height: 7em;
+  text-align: left;
+}
+
+/* Dark and light color themes */
+#vg-tooltip-element.dark-theme {
+  background-color: rgba(32, 32, 32, 0.9);
+  border: 1px solid #f5f5f5;
+  color: white;
+}
+#vg-tooltip-element.dark-theme td.key {
+  color: #bfbfbf;
+}
+
+#vg-tooltip-element.light-theme {
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid #d9d9d9;
+  color: black;
+}
+#vg-tooltip-element.light-theme td.key {
+  color: #808080;
+}

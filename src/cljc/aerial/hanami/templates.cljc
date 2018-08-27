@@ -7,6 +7,7 @@
   [{:field :X :type :XTYPE}
    {:field :Y :type :YTYPE}])
 
+
 (def interval-scales
   {:INAME
    {:type "interval",
@@ -36,6 +37,24 @@
     :mark :SMDWN-MARK}})
 
 
+(def xy-encoding
+  {:x {:field :X
+       :type :XTYPE
+       :axis {:title :XTITLE, :grid :XGRID}
+       :scale :XSCALE}
+   :y {:field :Y
+       :type :YTYPE
+       :axis {:title :YTITLE, :grid :YGRID}
+       :scale :YSCALE}
+   :color :COLOR
+   :size :SIZE
+   :shape :SHAPE
+   :tooltip :TOOLTIP})
+
+
+(def data-options
+  {:values :DATA :url :UDATA, :name :NDATA})
+
 
 
 (def xrule-layer
@@ -54,19 +73,6 @@
               :size {:value 2}
               :color {:value :YRL-COLOR}}})
 
-
-(def xy-encoding
-  {:x {:field :X
-       :type :XTYPE
-       :axis {:title :XTITLE, :grid :XGRID}
-       :scale :XSCALE}
-   :y {:field :Y
-       :type :YTYPE
-       :axis {:title :YTITLE, :grid :YGRID}
-       :scale :YSCALE}
-   :color :COLOR
-   :size :SIZE
-   :tooltip :TOOLTIP})
 
 (def bar-layer
   {:mark "bar"
@@ -97,7 +103,7 @@
    :width :WIDTH
    :background :BACKGROUND
    :selection :SELECTION
-   :data {:values :DATA},
+   :data data-options
    :transform :TRANSFORM
    :mark "bar",
    :encoding :ENCODING})
@@ -110,7 +116,7 @@
    :width :WIDTH
    :background :BACKGROUND
    :selection :SELECTION
-   :data {:values :DATA}
+   :data data-options
    :transform :TRANSFORM
    :mark {:type "line", :point :POINT}
    :encoding :ENCODING})
@@ -122,7 +128,7 @@
    :width :WIDTH
    :background :BACKGROUND
    :selection :SELECTION
-   :data {:values :DATA}
+   :data data-options
    :transform :TRANSFORM
    :mark {:type "circle", :size :MSIZE}
    :encoding :ENCODING})
@@ -136,7 +142,7 @@
    :background :BACKGROUND
    :layer :LAYER
    :resolve :RESOLVE
-   :data {:values :DATA}
+   :data data-options
    :config {:bar {:binSpacing 1
                   :discreteBandSize 5
                   :continuousBandSize 5}
@@ -152,7 +158,7 @@
    :background :BACKGROUND
    :hconcat :HCONCAT
    :resolve :RESOLVE
-   :data {:values :DATA}
+   :data data-options
    :config {:bar {:binSpacing 1
                   :discreteBandSize 5
                   :continuousBandSize 5}
@@ -168,7 +174,7 @@
    :width  :WIDTH
    :background :BACKGROUND
    :selection :SELECTION
-   :data {:values :DATA}
+   :data data-options
 
    :mark "bar"
    :encoding {:x {:field :X, :type :XTYPE
@@ -194,7 +200,7 @@
    :height :HEIGHT
    :width :WIDTH
    :background :BACKGROUND
-   :data {:values :DATA}
+   :data data-options
 
    :selection {:grid
                {:type "interval",

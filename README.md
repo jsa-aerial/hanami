@@ -59,7 +59,7 @@ Transforms to:
 
 And when sent to a view, results in:
 
-![Hanami pic 1](resources/public/images/hanami-pic-1.png?raw=true)
+![Hanami pic 1](resources/public/images/hanami-cars-1.png?raw=true)
 
 
 ## API

@@ -36,6 +36,14 @@ To install, add the following to your project `:dependencies`:
 ## Examples
 
 ```Clojure
+(ns hanami.examples
+  (:require [aerial.hanami.common :as hc]
+            [aerial.hanami.templates :as ht]
+            [aerial.hanami.core :as hmi]
+            ...)
+```
+
+```Clojure
 (hc/xform ht/simple-point-chart
   :UDATA "data/cars.json"
   :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")
@@ -57,9 +65,10 @@ Transforms to:
      {:field "Miles_per_Gallon", :type "quantitative"}]}}
  ```
 
-And when sent to a view, results in:
+And when sent to a view, results in, where the mouse is hovering over the point given by [132, 32.7]:
 
 ![Hanami pic 1](resources/public/images/hanami-cars-1.png?raw=true)
+
 
 
 ## API

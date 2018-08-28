@@ -7,6 +7,12 @@
   [{:field :X :type :XTYPE}
    {:field :Y :type :YTYPE}])
 
+(def default-mark-props
+  {:field :MPFIELD :type :MPTYPE})
+
+(def default-title
+  {:text :TTEXT :offset :TOFFSET})
+
 
 (def interval-scales
   {:INAME
@@ -97,8 +103,7 @@
 
 (def simple-bar-chart
   {:usermeta :USERDATA
-   :title {:text :TITLE
-           #_:anchor #_"start"}
+   :title :TITLE
    :height :HEIGHT
    :width :WIDTH
    :background :BACKGROUND
@@ -111,7 +116,7 @@
 
 (def simple-line-chart
   {:usermeta :USERDATA
-   :title  {:text :TITLE :offset :TOFFSET}
+   :title  :TITLE
    :height :HEIGHT
    :width :WIDTH
    :background :BACKGROUND
@@ -123,7 +128,7 @@
 
 (def simple-point-chart
   {:usermeta :USERDATA
-   :title  {:text :TITLE :offset :TOFFSET}
+   :title  :TITLE
    :height :HEIGHT
    :width :WIDTH
    :background :BACKGROUND
@@ -136,7 +141,7 @@
 
 (def simple-layer-chart
   {:usermeta :USERDATA
-   :title  {:text :TITLE :offset :TOFFSET}
+   :title  :TITLE
    :height :HEIGHT
    :width :WIDTH
    :background :BACKGROUND
@@ -152,7 +157,7 @@
 
 (def hconcat-chart
   {:usermeta :USERDATA
-   :title  {:text :TITLE :offset :TOFFSET}
+   :title  :TITLE
    :height :HEIGHT
    :width :WIDTH
    :background :BACKGROUND
@@ -169,7 +174,7 @@
 
 (def row-grouped-bar-chart
   {:usermeta :USERDATA
-   :title  {:text :TITLE :offset :TOFFSET}
+   :title  :TITLE
    :height :HEIGHT
    :width  :WIDTH
    :background :BACKGROUND
@@ -196,7 +201,7 @@
 
 (def col-grouped-bar-chart
   {:usermeta :USERDATA
-   :title  {:text :TITLE :offset :TOFFSET}
+   :title  :TITLE
    :height :HEIGHT
    :width :WIDTH
    :background :BACKGROUND

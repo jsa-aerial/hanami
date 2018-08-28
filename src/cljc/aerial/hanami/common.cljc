@@ -17,6 +17,7 @@
 (def data-key :DATA)
 (def color-key :COLOR)
 (def shape-key :SHAPE)
+(def title-key :TITLE)
 
 (defmacro gen-key-setter [key]
   (let [setter (symbol (str "set-" (name key) "-key!"))
@@ -30,18 +31,30 @@
 (defn set-color-key! [key] (alter-var-root (var color-key) (constantly key)))
 ;;;(gen-key-setter shape) code generated is good, but bug in spec on expand
 (defn set-shape-key! [key] (alter-var-root (var shape-key) (constantly key)))
-
+;;;(gen-key-setter title) code generated is good, but bug in spec on expand
+(defn set-title-key! [key] (alter-var-root (var title-key) (constantly key)))
 
 (def _defaults
-  (atom {:BACKGROUND "floralwhite"
+  (atom {;; General
+         :BACKGROUND "floralwhite"
          :TITLE RMV, :TOFFSET RMV
-         :HEIGHT 500, :WIDTH 550
+         :HEIGHT 300, :WIDTH 400
+         :USERDATA RMV
+
+         ;; Data, transforms, and encodings
          :DATA RMV, :UDATA RMV, :NDATA RMV
+         :TRANSFORM RMV
+         :AGG RMV
          :X "x", :XTYPE, "quantitative", :XTITLE RMV, :XSCALE RMV, :XGRID RMV
          :Y "y", :YTYPE, "quantitative", :YTITLE RMV, :YSCALE RMV, :YGRID RMV
+         :POINT RMV, :MSIZE RMV
+         :TOOLTIP ht/default-tooltip
          :ENCODING ht/xy-encoding
-         :USERDATA RMV
-         :TRANSFORM RMV
+         :RESOLVE RMV
+         :XRL-COLOR "red", :YRL-COLOR "green"
+         :RTYPE "quantitative"
+
+         ;; Selections
          :MDWN-MARK {:fill "#333",
                      :fillOpacity 0.125,
                      :stroke "white"},
@@ -49,14 +62,13 @@
                      :fillOpacity 0.125,
                      :stroke "white"}
          :SELECTION RMV, :ENCODINGS ["x", "y"], :IRESOLVE "global"
+
+         ;; Mark Properties
          :SHAPE RMV,
          :SIZE RMV
          :COLOR RMV,
-         :XRL-COLOR "red", :YRL-COLOR "green"
-         :RESOLVE RMV
-         :POINT RMV, :MSIZE RMV
-         :TOOLTIP ht/default-tooltip
-         :RTYPE "quantitative", :AGG RMV}))
+         :MPTYPE "nominal"
+         }))
 
 (defn reset-defaults [default-map]
   (reset! _defaults default-map))
@@ -85,7 +97,10 @@
             #_(clojure.pprint/pprint
              (if (not= v :DATA) [:V v :SUBVAL subval] v))
             (cond (and (#{color-key shape-key} v) (string? subval))
-                  {:field subval :type "nominal"}
+                  (xform ht/default-mark-props (assoc xkv :MPFIELD subval))
+
+                  (and (= title-key v) (string? subval))
+                  (xform ht/default-title (assoc xkv :TTEXT subval))
 
                   (or (= v data-key)
                       (string? subval)

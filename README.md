@@ -81,14 +81,86 @@ And when sent to a view, results in, where the mouse is hovering over the point 
 
 _Templates_ are simply maps parameterized by _substitution keys_. Generally, templates will typically correspond to a legal VG or VGL specification or a legal subcomponent thereof. For example, a complete VGL specification (rendered as Clojure) is a legal template - even though it has no substitution keys. At the other extreme temmplates can correspond to pieces of specifications or subcomponents. These will always have substitution keys - if they didn't there would be no point to them. Here are some examples as provided by the name space `aerial.hanami.templates`.
 
-A couple of 'subcomponent' fragments:
+A couple of 'fragments':
 
 ```Clojure
 (def default-mark-props
   {:field :MPFIELD :type :MPTYPE})
 
+(def interval-scales
+  {:INAME
+   {:type "interval",
+    :bind "scales", ; <-- This gives zoom and pan
+    :translate
+    "[mousedown[event.shiftKey], window:mouseup] > window:mousemove!"
+    :encodings :ENCODINGS,
+    :zoom "wheel!",
+    :resolve :IRESOLVE}})
+```
 
+A few 'subcomponents':
 
+```Clojure
+(def xy-encoding
+  {:x {:field :X
+       :type :XTYPE
+       :axis {:title :XTITLE, :grid :XGRID}
+       :scale :XSCALE}
+   :y {:field :Y
+       :type :YTYPE
+       :axis {:title :YTITLE, :grid :YGRID}
+       :scale :YSCALE}
+   :color :COLOR
+   :size :SIZE
+   :shape :SHAPE
+   :tooltip :TOOLTIP})
+
+(def gen-encode-layer
+  {:transform :TRANSFORM
+   :selection :SELECTION
+   :mark :MARK
+   :encoding :ENCODING})
+
+(def simple-layer-chart
+  {:usermeta :USERDATA
+   :title  :TITLE
+   :height :HEIGHT
+   :width :WIDTH
+   :background :BACKGROUND
+   :layer :LAYER
+   :resolve :RESOLVE
+   :data data-options})
+```
+
+And a full chart. This one does (interactive) faceted composing.
+
+```Clojure
+(def row-grouped-bar-chart
+  {:usermeta :USERDATA
+   :title  :TITLE
+   :height :HEIGHT
+   :width  :WIDTH
+   :background :BACKGROUND
+   :selection :SELECTION
+   :data data-options
+
+   :mark "bar"
+   :encoding {:x {:field :X, :type :XTYPE
+                  :axis {:title :XTITLE}}
+              :y {:field :Y, :type :YTYPE
+                  :axis {:title :YTITLE}}
+              :row {:field :ROW :type :ROWTYPE}
+              :color {:field :ROW :type :ROWTYPE
+                      :scale {:scheme {:name "greenblue" #_"category20c"
+                                       :extent [0.4 1]}}}
+              :tooltip :TOOLTIP}
+
+   :config {:bar {:binSpacing 0
+                  :discreteBandSize 1
+                  :continuousBandSize 1}
+            :view {:stroke "transparent"},
+            :axis {:domainWidth 1}}})
+```
 
 
 ### Walk through example of transformation

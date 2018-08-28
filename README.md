@@ -77,29 +77,6 @@ And when sent to a view, results in, where the mouse is hovering over the point 
 
 
 
-
-
-
-## API
-
-As noted, there isn't much of a functional/procedural API and no objects or protocols (classes/interfaces) are involved. There are three primary functions. One on the server side, one on the browser/client side and one common to both. There are hanful of other ancillary functions common to both sides involving the abiltiy to change default substitution map.
-
-### Primary
-
-#### Common
-
-In name space `aerial.hanami.common`
-
-```Clojure
-(xform
-  ([x xkv] ...)
-  ([x k v & kvs] ...))
-```
-
-This is the recursive transformation function. `x` is a _template_ (see above). In both the 2 and 3+ argument cases, the remaining arguments involve providing _substitution keys_ and values. In the two argument case these are supplied as a `map`, while the 3+ argument case you provide them in the usual key/value pair `rest` style of clojure. Each key should correspond to a _substitution key_ (see above in **Templates**) while the value will be what is inserted into a template during the transformation sequence.
-
-
-
 ## Templates
 
 ### Walk through example of transformation
@@ -160,3 +137,23 @@ Further, we have these in the `ht` namespace, where our chart template is also d
    :shape :SHAPE
    :tooltip :TOOLTIP})
 ````
+
+
+## API
+
+As noted, there isn't much of a functional/procedural API and no objects or protocols (classes/interfaces) are involved. There are three primary functions. One on the server side, one on the browser/client side and one common to both. There are hanful of other ancillary functions common to both sides involving the abiltiy to change default substitution map.
+
+### Primary
+
+#### Common
+
+In name space `aerial.hanami.common`
+
+```Clojure
+(xform
+  ([x xkv] ...)
+  ([x k v & kvs] ...))
+```
+
+This is the recursive transformation function. `x` is a _template_ (see above). In both the 2 and 3+ argument cases, the remaining arguments involve providing _substitution keys_ and values. In the two argument case these are supplied as a `map`, while the 3+ argument case you provide them in the usual key/value pair `rest` style of clojure. Each key should correspond to a _substitution key_ (see above in **Templates**) while the value will be what is inserted into a template during the transformation sequence.
+

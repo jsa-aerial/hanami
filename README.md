@@ -9,7 +9,7 @@ Interactive arts and charts visualizations with Clojure(Script), Vega-lite, and 
 
 In keeping with this central data oriented tenet, Hanami eschews the typical API approach for generating specifications in favor of using recursive transforms of parameterized templates. This is also in keeping with the data transformation focus in functional programming, which is espcially nice in Clojure(Script).
 
-An important aspect of this approach is that parameterized templates can be used to build other such templates by being higher level substitutions. In addition templates can be composed and this is another important idiomatic use. The result in examples becoming drop in reusable code.
+An important aspect of this approach is that parameterized templates can be used to build other such templates by being higher level substitutions. In addition templates can be composed and this is another important idiomatic use. Additionally templates may be merged, though typically this is after transformation. The result enables the construction of sharable libraries of templates providing reusable plots, charts, and entire visualizations. Generally these will be domain and/or task specific. Hanami itself provides only a small set of very generic templates, which have proven useful in constructing more domain/task specific end results.
 
 
 ## Installation
@@ -79,6 +79,18 @@ And when sent to a view, results in, where the mouse is hovering over the point 
 
 ## Templates
 
+_Templates_ are simply maps parameterized by _substitution keys_. Generally, templates will typically correspond to a legal VG or VGL specification or a legal subcomponent thereof. For example, a complete VGL specification (rendered as Clojure) is a legal template - even though it has no substitution keys. At the other extreme temmplates can correspond to pieces of specifications or subcomponents. These will always have substitution keys - if they didn't there would be no point to them. Here are some examples as provided by the name space `aerial.hanami.templates`.
+
+A couple of 'subcomponent' fragments:
+
+```Clojure
+(def default-mark-props
+  {:field :MPFIELD :type :MPTYPE})
+
+
+
+
+
 ### Walk through example of transformation
 
 It's worth having a preliminary look at what happens with this simple chart and its transformations. The value of `ht/simple-point-chart` is:
@@ -95,7 +107,7 @@ It's worth having a preliminary look at what happens with this simple chart and 
  :mark {:type "circle", :size :MSIZE}
  :encoding :ENCODING}
 ```
-In the above transform we specified values for `:UDATA`, `:X`, `:Y`, and `COLOR`. First, none of these are anywhere to be seen in `ht/simple-point-chart` so where do they come from? Second, what happened to all those other fields like `:usermeta` and those values like `:SELECTION`. Both questions have answers rooted in the map of defaults for transformations. There is nothing special about these defaults and a user can completely change them if they do not like the key names or their values. However, out of the box, here is a subset of these options that answer our two questions and where some other values came from:
+In the above transform we specified values for `:UDATA`, `:X`, `:Y`, and `:COLOR`. First, none of these are anywhere to be seen in `ht/simple-point-chart` so where do they come from? Second, what happened to all those other fields like `:usermeta` and those values like `:SELECTION`. Both questions have answers rooted in the map of default _substitution keys_ and values for transformations. There is nothing special about these defaults and a user can completely change them if they do not like the key names or their values. However, out of the box, Hanami provides a starting set and  here is a subset of those substitutions that answer our two questions and also where some other values come from:
 
 ```Clojure
   :BACKGROUND "floralwhite"
@@ -141,7 +153,7 @@ Further, we have these in the `ht` namespace, where our chart template is also d
 
 ## API
 
-As noted, there isn't much of a functional/procedural API and no objects or protocols (classes/interfaces) are involved. There are three primary functions. One on the server side, one on the browser/client side and one common to both. There are hanful of other ancillary functions common to both sides involving the abiltiy to change default substitution map.
+As noted, there isn't much of a functional/procedural API and no objects or protocols (classes/interfaces) are involved. There are three primary functions. One on the server side, one on the browser/client side and one common to both. There are handful of other ancillary functions common to both sides involving the abiltiy to change default substitution map.
 
 ### Primary
 

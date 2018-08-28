@@ -145,15 +145,10 @@ And a full chart. This one does (interactive) faceted composing.
    :data data-options
 
    :mark "bar"
-   :encoding {:x {:field :X, :type :XTYPE
-                  :axis {:title :XTITLE}}
-              :y {:field :Y, :type :YTYPE
-                  :axis {:title :YTITLE}}
-              :row {:field :ROW :type :ROWTYPE}
-              :color {:field :ROW :type :ROWTYPE
-                      :scale {:scheme {:name "greenblue" #_"category20c"
-                                       :extent [0.4 1]}}}
-              :tooltip :TOOLTIP}
+   :encoding :ENCODING
+   :color {:field :ROW :type :ROWTYPE
+           :scale {:scheme {:name "greenblue" #_"category20c"
+                            :extent [0.4 1]}}}
 
    :config {:bar {:binSpacing 0
                   :discreteBandSize 1

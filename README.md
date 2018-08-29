@@ -110,6 +110,8 @@ A few 'subcomponents':
        :type :YTYPE
        :axis {:title :YTITLE, :grid :YGRID}
        :scale :YSCALE}
+   :row :ROWDEF
+   :column :COLDEF
    :color :COLOR
    :size :SIZE
    :shape :SHAPE
@@ -132,7 +134,7 @@ A few 'subcomponents':
    :data data-options})
 ```
 
-And a full chart. This one does (interactive) faceted composing.
+And a full chart. This one does faceted composing with optional interactivity. Most of the capability comes from :ENCODING and its default.
 
 ```Clojure
 (def row-grouped-bar-chart
@@ -146,9 +148,6 @@ And a full chart. This one does (interactive) faceted composing.
 
    :mark "bar"
    :encoding :ENCODING
-   :color {:field :ROW :type :ROWTYPE
-           :scale {:scheme {:name "greenblue" #_"category20c"
-                            :extent [0.4 1]}}}
 
    :config {:bar {:binSpacing 0
                   :discreteBandSize 1
@@ -192,6 +191,8 @@ In the above transform we specified values for `:UDATA`, `:X`, `:Y`, and `:COLOR
   :SIZE RMV, :SHAPE RMV
   :TOOLTIP ht/default-tooltip
 ```
+Defaults for substitution keys are always overridden by values given for them in a call to `xform`. Any RMV value indicates removal - the key in a template associated with a substitution key whose value is RMV is removed from the template.
+
 Further, we have these in the `ht` namespace, where our chart template is also defined:
 
 ```Clojure
@@ -216,6 +217,8 @@ Further, we have these in the `ht` namespace, where our chart template is also d
    :shape :SHAPE
    :tooltip :TOOLTIP})
 ````
+
+
 
 
 ## API

@@ -76,10 +76,136 @@ And when sent to a view, results in, where the mouse is hovering over the point 
 ![Hanami pic 1](resources/public/images/hanami-cars-1.png?raw=true)
 
 
+And lastly a quite involved example from a real application for RNASeq Differential Gene Expression:
+
+```Clojure
+(let [data (->> DGE-data (filter #(-> "padj" % (<= 0.05))))
+       mdwn-brush (hc/xform ht/interval-brush-mdwn :MDWM-NAME "brush" :IRESOLVE "global")
+       color {:field "NM" :type "nominal" :scale {:range ["#e45756" "#54a24b" "#4c78a8"]}}
+       size {:condition {:selection {:not "brush"} :value 40} :value 400}
+       tooltip (-> (cons {:field "Gene", :type "Nominal"} ht/default-tooltip)
+                   vec (conj {:field "pvalue" :type "quantitative"}))]
+   (hc/xform
+    ht/hconcat-chart
+    :TITLE
+    "RNASeq Exp 180109_NS500751_0066 DGE for aT4-024V10min vs aT4-024V30min"
+    :TOFFSET 40
+    :DATA :data
+    :HCONCAT[(hc/xform
+              ht/simple-point-chart
+              :TITLE "MA Plot"
+              :MSIZE 40
+              :SELECTION (merge  (hc/xform ht/interval-scales :INAME "grid1")
+                                 mdwn-brush)
+              :X "baseMean", :Y "log2FoldChange"
+              :COLOR color, :SIZE size, :TOOLTIP tooltip)
+             (hc/xform
+              ht/simple-point-chart
+              :TITLE "Volcano Plot"
+              :MSIZE 40
+              :SELECTION (merge (hc/xform ht/interval-scales :INAME "grid2")
+                                mdwn-brush)
+              :X "log2FoldChange", :Y "-log10(pval)"
+              :COLOR color, :SIZE size :TOOLTIP tooltip)]))
+```
+
+Transforms to:
+
+```Clojure
+{:hconcat
+ [{:encoding
+   {:x {:field "baseMean", :type "quantitative"},
+    :y {:field "log2FoldChange", :type "quantitative"},
+    :color
+    {:field "NM",
+     :type "nominal",
+     :scale {:range ["#e45756" "#54a24b" "#4c78a8"]}},
+    :size
+    {:condition {:selection {:not "brush"}, :value 40}, :value 400},
+    :tooltip
+    [{:field "Gene", :type "Nominal"}
+     {:field "baseMean", :type "quantitative"}
+     {:field "log2FoldChange", :type "quantitative"}
+     {:field "pvalue", :type "quantitative"}]},
+   :mark {:type "circle", :size 40},
+   :width 450,
+   :background "floralwhite",
+   :title {:text "MA Plot"},
+   :selection
+   {"grid1"
+    {:type "interval",
+     :bind "scales",
+     :translate
+     "[mousedown[event.shiftKey], window:mouseup] > window:mousemove!",
+     :encodings ["x" "y"],
+     :zoom "wheel!",
+     :resolve "global"},
+    "brush"
+    {:type "interval",
+     :on
+     "[mousedown[!event.shiftKey], window:mouseup] > window:mousemove!",
+     :translate
+     "[mousedown[!event.shiftKey], window:mouseup] > window:mousemove",
+     :resolve "global",
+     :mark {:fill "#333", :fillOpacity 0.125, :stroke "white"}}},
+   :height 400}
+  {:encoding
+   {:x {:field "log2FoldChange", :type "quantitative"},
+    :y {:field "-log10(pval)", :type "quantitative"},
+    :color
+    {:field "NM",
+     :type "nominal",
+     :scale {:range ["#e45756" "#54a24b" "#4c78a8"]}},
+    :size
+    {:condition {:selection {:not "brush"}, :value 40}, :value 400},
+    :tooltip
+    [{:field "Gene", :type "Nominal"}
+     {:field "log2FoldChange", :type "quantitative"}
+     {:field "-log10(pval)", :type "quantitative"}
+     {:field "pvalue", :type "quantitative"}]},
+   :mark {:type "circle", :size 40},
+   :width 450,
+   :background "floralwhite",
+   :title {:text "Volcano Plot"},
+   :selection
+   {"grid2"
+    {:type "interval",
+     :bind "scales",
+     :translate
+     "[mousedown[event.shiftKey], window:mouseup] > window:mousemove!",
+     :encodings ["x" "y"],
+     :zoom "wheel!",
+     :resolve "global"},
+    "brush"
+    {:type "interval",
+     :on
+     "[mousedown[!event.shiftKey], window:mouseup] > window:mousemove!",
+     :translate
+     "[mousedown[!event.shiftKey], window:mouseup] > window:mousemove",
+     :resolve "global",
+     :mark {:fill "#333", :fillOpacity 0.125, :stroke "white"}}},
+   :height 400}],
+ :config
+ {:bar {:binSpacing 1, :discreteBandSize 5, :continuousBandSize 5}},
+ :width 450,
+ :background "floralwhite",
+ :title
+ {:text
+  "RNASeq Exp 180109_NS500751_0066 DGE for aT4-024V10min vs aT4-024V30min",
+  :offset 40},
+ :height 400,
+ :data {:values [... ]}}
+```
+
+When sent to a view visualizes as follows. Note that this is an interactive visualization where each grid can be independently zoomed and panned and brush stroke highlighting in one view hightlights the covered points in the other viewe. Here the mouse is hovering over the point:
+
+![Hanami pic 1](resources/public/images/RNASeq-interactive-vis.png?raw=true)
+
+
 
 ## Templates
 
-_Templates_ are simply maps parameterized by _substitution keys_. Generally, templates will typically correspond to a legal VG or VGL specification or a legal subcomponent thereof. For example, a complete VGL specification (rendered as Clojure) is a legal template - even though it has no substitution keys. At the other extreme temmplates can correspond to pieces of specifications or subcomponents. These will always have substitution keys - if they didn't there would be no point to them. Here are some examples as provided by the name space `aerial.hanami.templates`.
+_Templates_ are simply maps parameterized by _substitution keys_. Generally, templates will typically correspond to a legal VG or VGL specification or a legal subcomponent thereof. For example, a complete VGL specification (rendered as Clojure) is a legal template - even though it has no substitution keys. At the other extreme, temmplates can correspond to pieces of specifications or subcomponents. These will always have substitution keys - if they didn't there would be no point to them. Here are some examples as provided by the name space `aerial.hanami.templates`.
 
 A couple of 'fragments':
 
@@ -134,7 +260,7 @@ A few 'subcomponents':
    :data data-options})
 ```
 
-And a full chart. This one does faceted composing with optional interactivity. Most of the capability comes from :ENCODING and its default.
+And a full chart. This one does faceted composing with optional interactivity. Most of the capability comes from `:ENCODING` and its default.
 
 ```Clojure
 (def row-grouped-bar-chart

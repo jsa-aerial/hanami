@@ -77,7 +77,7 @@
 
 (defn add-defaults
   ([new-default-map]
-   (swap! _defaults (merge @_defaults new-default-map)))
+   (swap! _defaults #(merge % new-default-map)))
   ([k v & kvs]
    (add-defaults
     (into {k v} (->> kvs (partition-all 2)
@@ -97,7 +97,7 @@
             (if (seq xv) xv RMV))
           (let [subval (get xkv v v)]
             #_(clojure.pprint/pprint
-             (if (not= v :DATA) [:V v :SUBVAL subval] v))
+             (if (not= v data-key) [v :SUBVAL subval] v))
             (cond (and (#{color-key shape-key} v) (string? subval))
                   (xform ht/default-mark-props (assoc xkv :MPFIELD subval))
 
@@ -109,8 +109,9 @@
                       (not (coll? subval)))
                   subval
 
-                  :else
-                  (xform subval xkv)))))
+                  :else ;substitution val is coll
+                  (let [xv (xform subval xkv)]
+                    (if (seq xv) xv RMV))))))
       x)))
   ([x k v & kvs]
    (xform x (into

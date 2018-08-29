@@ -13,6 +13,15 @@
 (def default-title
   {:text :TTEXT :offset :TOFFSET})
 
+(def default-row
+  {:field :ROW :type :ROWTYPE})
+
+(def default-col
+  {:field :COLUMN :type :COLTYPE})
+
+(def data-options
+  {:values :DATA :url :UDATA, :name :NDATA})
+
 
 (def interval-scales
   {:INAME
@@ -52,14 +61,13 @@
        :type :YTYPE
        :axis {:title :YTITLE, :grid :YGRID}
        :scale :YSCALE}
+   :row :ROWDEF
+   :column :COLDEF
    :color :COLOR
    :size :SIZE
    :shape :SHAPE
    :tooltip :TOOLTIP})
 
-
-(def data-options
-  {:values :DATA :url :UDATA, :name :NDATA})
 
 
 
@@ -169,7 +177,6 @@
                   :continuousBandSize 5}
             #_:view #_{:stroke "transparent"},
             #_:axis #_{:domainWidth 1}}})
-
 
 
 (def row-grouped-bar-chart

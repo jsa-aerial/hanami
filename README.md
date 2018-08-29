@@ -83,8 +83,9 @@ And lastly a quite involved example from a real application for RNASeq Different
        mdwn-brush (hc/xform ht/interval-brush-mdwn :MDWM-NAME "brush" :IRESOLVE "global")
        color {:field "NM" :type "nominal" :scale {:range ["#e45756" "#54a24b" "#4c78a8"]}}
        size {:condition {:selection {:not "brush"} :value 40} :value 400}
-       tooltip (-> (cons {:field "Gene", :type "Nominal"} ht/default-tooltip)
-                   vec (conj {:field "pvalue" :type "quantitative"}))]
+       tooltip `[{:field "Gene", :type "nominal"}
+                  ~@ht/default-tooltip
+                 {:field "pvalue", :type "quantitative"}]]
    (hc/xform
     ht/hconcat-chart
     :TITLE
@@ -197,7 +198,7 @@ Transforms to:
  :data {:values [... ]}}
 ```
 
-When sent to a view visualizes as follows. Note that this is an interactive visualization where each grid can be independently zoomed and panned and brush stroke highlighting in one view hightlights the covered points in the other viewe. Here the mouse is hovering over the point:
+Well, now that is quite a lot. When sent to a view, visualizes as follows. Note that this is a fully interactive visualization where each grid can be independently zoomed and panned and brush stroke highlighting in one view hightlights the covered points in the other view. Here the mouse is hovering over the upper left point in the volcano plot.
 
 ![Hanami pic 1](resources/public/images/RNASeq-interactive-vis.png?raw=true)
 

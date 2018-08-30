@@ -189,7 +189,7 @@
    :width  :WIDTH
    :background :BACKGROUND
    :selection :SELECTION
-   :data ht/data-options
+   :data data-options
 
    :mark "bar"
    :encoding :ENCODING

@@ -34,6 +34,7 @@
 ;;;(gen-key-setter title) code generated is good, but bug in spec on expand
 (defn set-title-key! [key] (alter-var-root (var title-key) (constantly key)))
 
+
 (def _defaults
   (atom {;; General
          :BACKGROUND "floralwhite"
@@ -66,10 +67,14 @@
          :SELECTION RMV, :ENCODINGS ["x", "y"], :IRESOLVE "global"
 
          ;; Mark Properties
-         :SHAPE RMV,
-         :SIZE RMV
-         :COLOR RMV,
          :MPTYPE "nominal"
+         :SHAPE RMV
+         :SIZE RMV
+         ;; color
+         :COLOR RMV
+         :CFIELD :X, :CTYPE :XTYPE, :LTYPE "symbol" :LTITLE "" :LOFFSET 0
+         :CSCALE {:scheme {:name "greenblue" :extent [0.4 1]}}
+         :CLEGEND {:type :LTYPE :offset :LOFFSET :title :LTITLE}
          }))
 
 (defn reset-defaults [default-map]
@@ -98,21 +103,25 @@
           (let [subval (get xkv v v)]
             #_(clojure.pprint/pprint
              (if (not= v data-key) [v :SUBVAL subval] v))
-            (cond (and (#{color-key shape-key} v) (string? subval))
-                  (xform ht/default-mark-props (assoc xkv :MPFIELD subval))
+            (cond
+              (= v subval) v
 
-                  (and (= title-key v) (string? subval))
-                  (xform ht/default-title (assoc xkv :TTEXT subval))
+              (and (#{color-key shape-key} v) (string? subval))
+              (xform ht/default-mark-props (assoc xkv :MPFIELD subval))
 
-                  (or (= v data-key)
-                      (string? subval)
-                      (not (coll? subval)))
-                  subval
+              (and (= title-key v) (string? subval))
+              (xform ht/default-title (assoc xkv :TTEXT subval))
 
-                  :else ;substitution val is coll
-                  (let [xv (xform subval xkv)]
-                    (if (seq xv) xv RMV))))))
+              (or (= v data-key)
+                  (string? subval)
+                  (not (coll? subval)))
+              (recur subval)
+
+              :else ;substitution val is coll
+              (let [xv (xform subval xkv)]
+                (if (seq xv) xv RMV))))))
       x)))
+
   ([x k v & kvs]
    (xform x (into
              {k v}

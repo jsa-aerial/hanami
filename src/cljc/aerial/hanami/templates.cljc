@@ -10,6 +10,9 @@
 (def default-mark-props
   {:field :MPFIELD :type :MPTYPE})
 
+(def default-color
+  {:field :CFIELD :type :CTYPE :scale :CSCALE})
+
 (def default-title
   {:text :TTEXT :offset :TOFFSET})
 
@@ -179,25 +182,17 @@
             #_:axis #_{:domainWidth 1}}})
 
 
-(def row-grouped-bar-chart
+(def grouped-bar-chart
   {:usermeta :USERDATA
    :title  :TITLE
    :height :HEIGHT
    :width  :WIDTH
    :background :BACKGROUND
    :selection :SELECTION
-   :data data-options
+   :data ht/data-options
 
    :mark "bar"
-   :encoding {:x {:field :X, :type :XTYPE
-                  :axis {:title :XTITLE}}
-              :y {:field :Y, :type :YTYPE
-                  :axis {:title :YTITLE}}
-              :row {:field :ROW :type :ROWTYPE}
-              :color {:field :ROW :type :ROWTYPE
-                      :scale {:scheme {:name "greenblue" #_"category20c"
-                                       :extent [0.4 1]}}}
-              :tooltip :TOOLTIP}
+   :encoding :ENCODING
 
    :config {:bar {:binSpacing 0
                   :discreteBandSize 1
@@ -206,38 +201,4 @@
             :axis {:domainWidth 1}}})
 
 
-(def col-grouped-bar-chart
-  {:usermeta :USERDATA
-   :title  :TITLE
-   :height :HEIGHT
-   :width :WIDTH
-   :background :BACKGROUND
-   :data data-options
-
-   :selection {:grid
-               {:type "interval",
-                :bind "scales", ; <-- This gives zoom and pan
-                :on "[mousedown, window:mouseup] > window:mousemove!",
-                :encodings ["y"], ;  <-- x is typically nominal
-                :zoom "wheel!",
-                :resolve "global"}}
-   :mark "bar"
-   :encoding {:x {:field :X
-                  :type :XTYPE
-                  ;;:scale {:rangeStep 1}
-                  :axis {:title :XTITLE}}
-              :y {:field :Y
-                  :type :YTYPE
-                  :axis {:title :YTITLE}}
-              :column {:field :COLUMN :type :COLTYPE}
-              :color {:field :X :type :XTYPE
-                      :scale {:scheme {:name "greenblue"
-                                       :extent [0.4 1]}}}
-              :tooltip :TOOLTIP}
-
-   :config {:bar {:binSpacing 0
-                  :discreteBandSize 1
-                  :continuousBandSize 1}
-            :view {:stroke "transparent"},
-            :axis {:domainWidth 1}}})
 

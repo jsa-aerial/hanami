@@ -134,7 +134,7 @@ And the rendered visualizations are:
 This is a nice example of how one visualization (the row grouping) can bring out the salient information so much better than another (the col grouping)
 
 
-The next is a visualization for a investigating lowess smoothing of TNSeq fitness data.
+The next is a visualization for an investigation into using lowess smoothing of TNSeq fitness data.
 
 ```Clojure
 (hc/xform ht/simple-layer-chart

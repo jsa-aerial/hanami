@@ -79,9 +79,25 @@ And when sent to a view, results in, where the mouse is hovering over the point 
 An example of an instrumented chart:
 
 ```Clojure
+(hc/xform ht/simple-bar-chart
+  :USERDATA
+  {:test1 '[[gap :size "10px"] [label :label "Slider away"]
+            [slider
+             :model sval
+             :min -10.0, :max 10.0, :step 1.0
+             :width "200px"
+             :on-change bar-slider-fn]
+            [input-text
+             :model sval
+             :width "60px", :height "26px"
+             :on-change bar-slider-fn]]}
+  :TITLE "A Simple Bar Chart"
+  :HEIGHT 300, :WIDTH 350
+  :X "a" :XTYPE "ordinal" :XTITLE "foo" :Y "b" :YTITLE "bar"
+  :DATA data)
 ```
 
-Renders as
+Renders as (before slider move left; after slider move right)
 
 ![Hanami pic 2](resources/public/images/instrumented-chart-1a.png?raw=true)
 ![Hanami pic 3](resources/public/images/instrumented-chart-1b.png?raw=true)

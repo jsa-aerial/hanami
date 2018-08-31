@@ -76,6 +76,142 @@ And when sent to a view, results in, where the mouse is hovering over the point 
 ![Hanami pic 1](resources/public/images/hanami-cars-1.png?raw=true)
 
 
+Here is the same data (observed distribution vs binomial models) as row and column grouped (faceted) charts.
+
+```Clojure
+(hc/xform ht/grouped-bar-chart
+  :TITLE "Real distribution vs Binomials", :TOFFSET 10
+  :HEIGHT 80, :WIDTH 450
+  :DATA ...
+  :X "cnt" :XTYPE "ordinal" :XTITLE ""
+  :Y "y" :YTITLE "Probability"
+  :COLOR ht/default-color :CFIELD :ROW :CTYPE :ROWTYPE
+  :ROW "dist" :ROWTYPE "nominal")
+
+(hc/xform ht/grouped-bar-chart
+  :TITLE "Real distribution vs Binomials", :TOFFSET 40
+  :WIDTH (-> 550 (/ 6) double Math/round (- 15))
+  :DATA ...
+  :X "dist" :XTYPE "nominal" :XTITLE ""
+  :Y "y" :YTITLE "Probability"
+  :COLOR ht/default-color
+  :COLUMN "cnt" :COLTYPE "ordinal")
+```
+
+Both of these transform into similar amounts of VGL output, but the first is somewhat more interesting. Note the `:color` mark propery value and the input  for it in the above code.
+
+```Clojure
+{:title {:text "Real distribution vs Binomials", :offset 10},
+ :height 80,
+ :width 450,
+ :background "floralwhite",
+ :mark "bar",
+ :encoding
+ {:x {:field "cnt", :type "ordinal", :axis {:title ""}},
+  :y {:field "y", :type "quantitative", :axis {:title "Probability"}},
+  :row {:field "dist", :type "nominal"},
+  :color
+  {:field "dist",
+   :type "nominal",
+   :scale {:scheme {:name "greenblue", :extent [0.4 1]}}},
+  :tooltip
+  [{:field "cnt", :type "ordinal"}
+   {:field "y", :type "quantitative"}]},
+  :view {:stroke "transparent"},
+  :axis {:domainWidth 1}},
+ :data {:values ...}
+ :config
+ {:bar {:binSpacing 0, :discreteBandSize 1, :continuousBandSize 1}}
+```
+
+And the rendered visualizations are:
+
+![Hanami pic 1](resources/public/images/real-vs-binomial-col.png?raw=true)
+
+![Hanami pic 1](resources/public/images/real-vs-binomial-row.png?raw=true)
+
+
+This is a nice example of how one visualization (the row grouping) can bring out the salient information so much better than another (the col grouping)
+
+
+The next is a visualization for a investigating lowess smoothing of TNSeq fitness data.
+
+```Clojure
+(hc/xform ht/simple-layer-chart
+  :TITLE "Raw vs 1-4 lowess smoothing" :TOFFSET 5
+  :HEIGHT 500 :WIDTH 700
+  :DATA (concat base-xy lowess-1 lowess-2 lowess-3 lowess-4)
+  :LAYER (mapv #(hc/xform ht/gen-encode-layer
+                  :MARK (if (= "NoL" %) "circle" "line")
+                  :TRANSFORM [{:filter {:field "NM" :equal %}}]
+                  :COLOR "NM"
+                  :XTITLE "Position", :YTITLE "Count")
+               ["NoL" "L1" "L2" "L3" "L4"]))
+```
+
+This one is interesting in that it combines some nice straight ahead Clojure data mapping with the template system. Here, we create five layers - but they are all different data sets and so VGL's `repeat` would not apply. But, Clojure's `mapv` combined with Hanami's `xform` does the trick. Of course, any number of layers could be so constructed.
+
+
+```Clojure
+{:title {:text "Raw vs 1-4 lowess smoothing", :offset 5},
+ :height 500,
+ :width 700,
+ :background "floralwhite",
+ :layer
+ [{:transform [{:filter {:field "NM", :equal "NoL"}}],
+   :mark "circle",
+   :encoding
+   {:x {:field "x", :type "quantitative", :axis {:title "Position"}},
+    :y {:field "y", :type "quantitative", :axis {:title "Count"}},
+    :color {:field "NM", :type "nominal"},
+    :tooltip
+    [{:field "x", :type "quantitative"}
+     {:field "y", :type "quantitative"}]}}
+  {:transform [{:filter {:field "NM", :equal "L1"}}],
+   :mark "line",
+   :encoding
+   {:x {:field "x", :type "quantitative", :axis {:title "Position"}},
+    :y {:field "y", :type "quantitative", :axis {:title "Count"}},
+    :color {:field "NM", :type "nominal"},
+    :tooltip
+    [{:field "x", :type "quantitative"}
+     {:field "y", :type "quantitative"}]}}
+  {:transform [{:filter {:field "NM", :equal "L2"}}],
+   :mark "line",
+   :encoding
+   {:x {:field "x", :type "quantitative", :axis {:title "Position"}},
+    :y {:field "y", :type "quantitative", :axis {:title "Count"}},
+    :color {:field "NM", :type "nominal"},
+    :tooltip
+    [{:field "x", :type "quantitative"}
+     {:field "y", :type "quantitative"}]}}
+  {:transform [{:filter {:field "NM", :equal "L3"}}],
+   :mark "line",
+   :encoding
+   {:x {:field "x", :type "quantitative", :axis {:title "Position"}},
+    :y {:field "y", :type "quantitative", :axis {:title "Count"}},
+    :color {:field "NM", :type "nominal"},
+    :tooltip
+    [{:field "x", :type "quantitative"}
+     {:field "y", :type "quantitative"}]}}
+  {:transform [{:filter {:field "NM", :equal "L4"}}],
+   :mark "line",
+   :encoding
+   {:x {:field "x", :type "quantitative", :axis {:title "Position"}},
+    :y {:field "y", :type "quantitative", :axis {:title "Count"}},
+    :color {:field "NM", :type "nominal"},
+    :tooltip
+    [{:field "x", :type "quantitative"}
+     {:field "y", :type "quantitative"}]}}],
+ :data {:values ...}
+ :config
+ {:bar {:binSpacing 1, :discreteBandSize 5, :continuousBandSize 5}}}
+ ```
+
+![Hanami pic 1](resources/public/images/lowess-tnseq-smoothing.png?raw=true)
+
+
+
 And lastly a quite involved example from a real application for RNASeq Differential Gene Expression:
 
 ```Clojure

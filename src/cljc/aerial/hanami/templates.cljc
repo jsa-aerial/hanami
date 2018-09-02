@@ -181,6 +181,19 @@
             #_:view #_{:stroke "transparent"},
             #_:axis #_{:domainWidth 1}}})
 
+(def vconcat-chart
+  {:usermeta :USERDATA
+   :title  :TITLE
+   :height :HEIGHT
+   :width :WIDTH
+   :background :BACKGROUND
+   :vconcat :VCONCAT
+   :resolve :RESOLVE
+   :data data-options
+   :config {:bar {:binSpacing 1
+                  :discreteBandSize 5
+                  :continuousBandSize 5}}})
+
 
 (def grouped-bar-chart
   {:usermeta :USERDATA

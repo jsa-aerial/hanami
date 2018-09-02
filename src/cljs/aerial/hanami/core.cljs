@@ -229,7 +229,7 @@
        :children
        (for [[spec children] sub-pairs]
          (do #_(js-delete spec "usermeta")
-             #_(printchan :NSPEC #_(js->clj) spec children)
+             #_(printchan :NSPEC spec children)
              [v-box :gap "10px"
               :children [[h-box :gap "5px" :children children]
                          [vgl spec opts]]]))])))
@@ -247,7 +247,7 @@
 
         specs
         (let [spec-children-pairs (tabval :spec-children-pairs)
-              ;;_ (printchan :SCPAIRS #_(js->clj) spec-children-pairs)
+              ;;_ (printchan :SCPAIRS spec-children-pairs)
               compvis (vis-list tabid spec-children-pairs opts)]
           (printchan "hanami called - making compvis")
           (update-cur-tab :compvis compvis)
@@ -270,8 +270,8 @@
 
 (defn hanami-main []
   (printchan "Hanami-main called ...")
-  (let [inj-cursor (rgt/cursor app-db [:injector])
-        injector (first @inj-cursor)
+  (let [inst-cursor (rgt/cursor app-db [:instrumentor])
+        instrumentor (first @inst-cursor)
         hd-cursor (rgt/cursor app-db [:header])
         header (first @hd-cursor)]
     [v-box
@@ -350,8 +350,8 @@
                 specs (when specs
                         (->> specs com/ev #_(mapv #(.parse js/JSON %))))
                 main-opts (get-adb [:main :opts])
-                injector (-> :injector get-adb first)
-                spec-children-pairs (mapv #(vector % (injector
+                instrumentor (-> :instrumentor get-adb first)
+                spec-children-pairs (mapv #(vector % (instrumentor
                                                       {:tabid id
                                                        :spec %
                                                        :opts opts}))
@@ -461,18 +461,18 @@
                :label [:span.bold (get-adb [:main :uid :name])]]
               [gap :size "30px"]]])
 
-(defn default-injector-fn [{:keys [spec opts]}]
-  (let [udata (spec :usermeta) #_(js->clj spec.usermeta :keywordize-keys true)]
+(defn default-instrumentor-fn [{:keys [spec opts]}]
+  (let [udata (spec :usermeta)]
     (printchan :UDATA udata :OPTS opts)
     []))
 
-(defn start [& {:keys [elem port header-fn injector-fn]
+(defn start [& {:keys [elem port header-fn instrumentor-fn]
                 :or {header-fn default-header-fn
-                     injector-fn default-injector-fn}}]
+                     instrumentor-fn default-instrumentor-fn}}]
   (printchan "Element 'app' available, port " port)
   (app-stop)
   (update-adb :elem elem
-              :injector [injector-fn]
+              :instrumentor [instrumentor-fn]
               :header [header-fn])
   (connect port))
 
@@ -483,35 +483,33 @@
 
   (start :elem (js/document.querySelector "#app")
          :port 3003
-         :injector-fn test-injector #_default-injector-fn)
+         :instrumentor-fn test-instrumentor)
 
   (defn bar-slider-fn [tid val]
     (let [tabval (get-tab-field tid)
           spec-children-pairs (tabval :spec-children-pairs)]
       (printchan "Slider update " val)
-      #_(update-adb [:test1 :sval] (str val))
       (update-tab-field tid :compvis nil)
       (update-tab-field
        tid :spec-children-pairs
        (mapv (fn[[spec children]]
-               (let [cljspec spec #_(js->clj spec :keywordize-keys true)
+               (let [cljspec spec
                      data (mapv (fn[m] (assoc m :b (+ (m :b) val)))
                                 (get-in cljspec [:data :values]))
-                     ;;newspec (clj->js (assoc-in cljspec [:data :values] data))
                      newspec (assoc-in cljspec [:data :values] data)]
                  [newspec children]))
              spec-children-pairs))))
 
-  (defn test-injector [{:keys [tabid spec opts]}]
-    (printchan "Test Injector called" :TID tabid #_:SPEC #_spec)
-    (let [cljspec spec #_(js->clj spec :keywordize-keys true)
+  (defn test-instrumentor [{:keys [tabid spec opts]}]
+    (printchan "Test Instrumentor called" :TID tabid #_:SPEC #_spec)
+    (let [cljspec spec
           udata (cljspec :usermeta)] (update-adb [:udata] udata)
       (cond
         (not (map? udata)) []
 
         (udata :test1)
         (let [sval (rgt/atom "0.0")]
-          (printchan :SLIDER-INJECTOR)
+          (printchan :SLIDER-INSTRUMENTOR)
           (xform-recom (udata :test1)
                        :m1 sval
                        :oc1 #(do (bar-slider-fn tabid %)

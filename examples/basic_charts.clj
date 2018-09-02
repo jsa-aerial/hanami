@@ -1,6 +1,6 @@
 (ns hanami.basic-charts
 
-  (:require [clojure.string :as cljstr]
+  (:require [clojure.string :as str]
             #_[clojure.data.csv :as csv]
             [clojure.data.json :as json]
 
@@ -26,11 +26,29 @@
 
 
 
-(hmi/start-server 3003 :idfn (constantly "Basics"))
+(hmi/start-server 3003 :idfn (constantly "Exploring"))
 #_(hmi/stop-server)
 
 
-;;; Simple Barchart with template
+
+;;; Simple scatter with template
+(->> (hc/xform ht/simple-point-chart
+       :HEIGHT 300 :WIDTH 400
+       ;;:DATA (->> "http://localhost:3003/data/cars.json" slurp json/read-str)
+       :UDATA "data/cars.json"
+       :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")
+     (hmi/svgl! "Exploring"))
+
+(->>
+ {:data {:url "data/cars.json"},
+  :mark "point",
+  :encoding {:x {:field "Horsepower", :type "quantitative"},
+             :y {:field "Miles_per_Gallon", :type "quantitative"},
+             :color {:field "Origin", :type "nominal"}}}
+ (hmi/svgl! "Exploring"))
+
+
+;;; Simple Barchart with instrumented template
 (->>
  (let [data [{:a "A", :b 28 },
              {:a "B", :b 55 },
@@ -40,15 +58,73 @@
              {:a "F", :b 53 },
              {:a "G", :b 19 },
              {:a "H", :b 87 },
-             {:a "I", :b 52 }]]
+             {:a "I", :b 52 }]
+       min -10.0
+       minstr (-> min str (str/split #"\.") first)
+       max 10.0
+       maxstr (-> max str (str/split #"\.") first (#(str "+" %)))]
    (hc/xform ht/simple-bar-chart
-             :USERDATA {:test1 :slider}
-             :TITLE "A Simple Bar Chart"
+             :USERDATA
+             {:test1 `[[gap :size "10px"] [label :label "Add Bar"]
+                       [label :label ~minstr]
+                       [slider
+                        :model :m1
+                        :min ~min, :max ~max, :step 1.0
+                        :width "200px"
+                        :on-change :oc1]
+                       [label :label ~maxstr]
+                       [input-text
+                        :model :m1
+                        :width "60px", :height "26px"
+                        :on-change :oc2]]}
              :HEIGHT 300, :WIDTH 350
-             :X "a" :XTYPE "ordinal" :XTITLE "foo" :Y "b" :YTITLE "bar"
+             :X "a" :XTYPE "ordinal" :XTITLE "Foo" :Y "b" :YTITLE "Bar"
              :DATA data))
- (hmi/svgl! "Basics"))
+ (hmi/svgl! "Exploring"))
 
+
+
+(->>
+ {:height 600,
+  :width 600,
+  :data
+  {:values
+   [{:dose 0.5, :response 32659}
+    {:dose 0.5, :response 40659}
+    {:dose 0.5, :response 29000}
+    {:dose 1, :response 31781}
+    {:dose 1, :response 30781}
+    {:dose 1, :response 35781}
+    {:dose 2, :response 30054}
+    {:dose 4, :response 29398}
+    {:dose 5, :response 27779}
+    {:dose 10, :response 27915}
+    {:dose 15, :response 27410}
+    {:dose 20, :response 25819}
+    {:dose 50, :response 23999}
+    {:dose 50, :response 25999}
+    {:dose 50, :response 20999}]},
+  :layer
+  [{:selection
+    {:grid
+     {:type "interval",
+      :bind "scales",
+      :on "[mousedown, window:mouseup] > window:mousemove!",
+      :encodings ["x" "y"],
+      :translate "[mousedown, window:mouseup] > window:mousemove!",
+      :zoom "wheel!",
+      :mark {:fill "#333", :fillOpacity 0.125, :stroke "white"},
+      :resolve "global"}},
+    :mark {:type "point", :filled true, :color "green"},
+    :encoding
+    {:x {:field "dose", :type "quantitative", :scale {:type "log"}},
+     :y {:field "response", :type "quantitative", :aggregate "mean"}}}
+   #_{:mark {:type "errorbar", :ticks true},
+    :encoding
+    {:x {:field "dose", :type "quantitative", :scale {:zero false}},
+     :y {:field "response", :type "quantitative"},
+     :color {:value "#4682b4"}}}]}
+ (hmi/svgl! "Exploring"))
 
 ;;; Geo Example
 (->>
@@ -65,12 +141,12 @@
                        {:field "latitude", :type "quantitative"}],
              :size {:value 10}},
   :config {:view {:stroke "transparent"}}}
- (hmi/svgl! "Basics" :geo))
+ (hmi/svgl! "Exploring" :geo))
 
 
 ;;; Multi Chart - cols and rows
 ;;; First, init tabs
-(hmi/stabs! "Basics"
+(hmi/stabs! "Exploring"
             {:id :multi, :label "Multi",
              :opts {:vgl {:export false}
                     :layout {:order :row, :size "auto"}}})
@@ -104,10 +180,10 @@
                                 :XTITLE "Probability of event" :YTITLE "H(p)")
                       (hc/xform ht/xrule-layer :AGG "mean")]
               :DATA data))]
- (hmi/svgl! "Basics" :multi))
+ (hmi/svgl! "Exploring" :multi))
 
 ;;; Add export for PNG
-(hmi/sopts! "Basics" :multi
+(hmi/sopts! "Exploring" :multi
             (merge hc/default-opts
                    {:vgl {:export {:png true :svg false}}
                     :layout {:order :row, :size "auto"}}))
@@ -141,7 +217,7 @@
                        :YTITLE "Probability")
              (hc/xform ht/xrule-layer :X "m")]
             :DATA (mapv (fn[[x y]] {:x x :y y :m 5.7}) obsdist))]
- (hmi/svgl! "Basics" :dists))
+ (hmi/svgl! "Exploring" :dists))
 
 (->>
  (let [data (concat (->> obsdist
@@ -158,7 +234,7 @@
               :X "dist" :XTYPE "nominal" :XTITLE ""
               :Y "y" :YTITLE "Probability"
               :COLUMN "cnt" :COLTYPE "ordinal"}))
- (hmi/svgl! "Basics" :dists))
+ (hmi/svgl! "Exploring" :dists))
 
 
 

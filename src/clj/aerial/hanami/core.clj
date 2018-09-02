@@ -174,25 +174,18 @@
     (srv/send-msg (get-adb [id :ws]) {:op op :data data})))
 
 (defn stabs! [uuid-name tabdefs]
-  (s! (get-adb uuid-name) :tabs (com/ev tabdefs)
-      #_(mapv (fn[tdef]
-              (let [specs (when (tdef :specs)
-                            (->> tdef :specs com/ev (mapv json/write-str)))]
-                (assoc tdef :specs specs)))
-            (com/ev tabdefs))))
+  (s! (get-adb uuid-name) :tabs (com/ev tabdefs)))
 
 (defn svgl!
   ([uuid-name vgl-maps]
    (s! (get-adb uuid-name) :tabs
        {:id :p1 :label "Vis"
         :opts default-opts
-        ;;:specs (mapv #(json/write-str %) (com/ev vgl-maps))
         :specs (com/ev vgl-maps)}))
   ([uuid-name tid vgl-maps]
    (s! (get-adb uuid-name) :tabs
        {:id tid
         :label (-> tid name str/capitalize)
-        ;;:specs (mapv #(json/write-str %) (com/ev vgl-maps))
         :specs (com/ev vgl-maps)})))
 
 (defn sopts!

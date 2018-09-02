@@ -39,6 +39,47 @@
    ))
 
 
+
+;;; Fix this. First 'refer :all' from re-com.core. Then use ns-publics
+;;; and deref vars in the resulting map (to get the function objects)
+;;; to make re-com-xref.
+(def re-com-xref
+  (into
+   {} (mapv vector
+            '[h-box v-box box gap line flex-child-style
+              button row-button md-icon-button md-circle-icon-button info-button
+              input-text input-password input-textarea
+              label title p
+              single-dropdown
+              checkbox radio-button slider progress-bar throbber
+              horizontal-bar-tabs vertical-bar-tabs
+              modal-panel popover-content-wrapper popover-anchor-wrapper
+              filter-choices-by-keyword single-dropdown-args-desc]
+            [h-box v-box box gap line flex-child-style
+             button row-button md-icon-button md-circle-icon-button info-button
+             input-text input-password input-textarea
+             label title p
+             single-dropdown
+             checkbox radio-button slider progress-bar throbber
+             horizontal-bar-tabs vertical-bar-tabs
+             modal-panel popover-content-wrapper popover-anchor-wrapper
+             filter-choices-by-keyword single-dropdown-args-desc])))
+
+(defn xform-recom
+  ([x k v & kvs]
+   (let [kvs (->> kvs (partition-all 2) (map vec))]
+     (xform-recom x (into re-com-xref (cons [k v] kvs)))))
+  ([x kvs]
+   (sp/transform
+    sp/ALL
+    (fn[v] (cond
+             (coll? v) (xform-recom v kvs)
+             (symbol? v) (let [v (-> v name symbol)]
+                           (get kvs v v))
+             :else (get kvs v v)))
+    x)))
+
+
 (def print-chan (async/chan 10))
 
 (go-loop [msg (async/<! print-chan)]
@@ -111,16 +152,6 @@
     (if curtab
       @bar-cursor
       [:p])))
-  #_(let [curtab-cursor (rgt/cursor app-db [:tabs :current])
-        curtab @curtab-cursor
-        tabset-cursor (rgt/cursor app-db [:tabs :active])
-        tabset @tabset-cursor]
-    (if curtab
-      [horizontal-bar-tabs
-       :model curtab
-       :tabs tabset
-       :on-change #(update-adb [:tabs :current] %)]
-      [:p]))
 
 
 
@@ -132,7 +163,7 @@
 
 
 (defn visualize
-  [spec elem uopts] (printchan :UOPTS uopts)
+  [spec elem uopts] #_(printchan :SPEC spec, :UOPTS uopts)
   (when spec
     (let [spec (clj->js spec)
           opts {:renderer (get-in uopts [:vgl :renderer] "canvas")
@@ -143,7 +174,7 @@
                            :compiled false}}
           vega-spec (js/vl.compile spec)]
       #_(update-adb :vgl-as-vg vega-spec)
-      (-> (js/vegaEmbed elem  spec (clj->js opts))
+      (-> (js/vegaEmbed elem spec (clj->js opts))
           (.then (fn [res]
                    #_(js/vegaTooltip.vega res.view spec)
                    #_(js/vegaTooltip.vegaLite res.view spec)))
@@ -167,11 +198,15 @@
     :component-did-update
     (fn [comp old-useless-argv]
       (printchan "Did-Update: called")
+      ;; OK, this is a mess. 'new-useful-argv' is really only useful
+      ;; in conjunction with old-useless-argv. Even then you may not
+      ;; really get the data / args you want/need/expect. Only the
+      ;; new-argv-2nd-way gives the complete argument set.
       (let [new-useful-argv (rgt/children comp)
-            new-argv-2nd-way (rgt/argv comp)
-            new-spec (first new-useful-argv)
-            opts (second new-useful-argv)]
-        #_(printchan :ARGV (rest new-argv-2nd-way))
+            new-argv-2nd-way (rgt/argv comp) ; first elt some fn?!?
+            new-spec (-> new-argv-2nd-way rest first)
+            opts (-> new-argv-2nd-way rest second)]
+        #_(printchan :ARGV1 new-useful-argv :ARGV2 (rest new-argv-2nd-way))
         (visualize new-spec (rgt/dom-node comp) opts)))
 
     :reagent-render
@@ -194,12 +229,12 @@
        :children
        (for [[spec children] sub-pairs]
          (do #_(js-delete spec "usermeta")
-             #_(printchan :NSPEC (js->clj spec) children)
+             #_(printchan :NSPEC #_(js->clj) spec children)
              [v-box :gap "10px"
               :children [[h-box :gap "5px" :children children]
                          [vgl spec opts]]]))])))
 
-(defn hanami [injector]
+(defn hanami []
   (if-let [tabval (get-cur-tab)]
     (let [tabid (tabval :id)
           specs (tabval :specs)
@@ -212,7 +247,7 @@
 
         specs
         (let [spec-children-pairs (tabval :spec-children-pairs)
-              ;;_ (printchan :SCPAIRS (js->clj spec-children-pairs))
+              ;;_ (printchan :SCPAIRS #_(js->clj) spec-children-pairs)
               compvis (vis-list tabid spec-children-pairs opts)]
           (printchan "hanami called - making compvis")
           (update-cur-tab :compvis compvis)
@@ -222,7 +257,7 @@
         [[:img {:src (get-adb [:main :img])}]]))
     [[:img {:src (get-adb [:main :img])}]]))
 
-(defn tabs [injector]
+(defn tabs []
   (printchan "TABS called ...")
   (let [opts (or (get-cur-tab :opts) (get-adb [:main :opts]))
         size (get-in opts [:layout :size] "auto")
@@ -231,7 +266,7 @@
     [layout
      :size size
      :gap "10px"
-     :children (hanami injector)]))
+     :children (hanami)]))
 
 (defn hanami-main []
   (printchan "Hanami-main called ...")
@@ -248,7 +283,7 @@
                    :align :start :max-height "30px"
                    :children [[gap :size "15px"] [active-tabs]]]]]
       [line]
-      [tabs injector]]]))
+      [tabs]]]))
 
 
 
@@ -313,14 +348,14 @@
   (mapv (fn[{:keys [id label opts specs] :as newdef}]
           (let [oldef (get-tab-field id)
                 specs (when specs
-                        (->> specs com/ev (mapv #(.parse js/JSON %))))
+                        (->> specs com/ev #_(mapv #(.parse js/JSON %))))
                 main-opts (get-adb [:main :opts])
                 injector (-> :injector get-adb first)
                 spec-children-pairs (mapv #(vector % (injector
                                                       {:tabid id
                                                        :spec %
                                                        :opts opts}))
-                                          (com/ev specs))]
+                                          specs)]
             (if (not oldef)
               (let [opts (merge-old-new-opts main-opts opts)]
                 (add-tab (assoc newdef
@@ -344,8 +379,7 @@
     (case op
 
       :register
-      (do (register data)
-          (rgt/render [hanami-main] (get-adb :elem)))
+      (register data)
 
       :opts
       (update-opts data)
@@ -428,8 +462,7 @@
               [gap :size "30px"]]])
 
 (defn default-injector-fn [{:keys [spec opts]}]
-  (let [udata (js->clj spec.usermeta :keywordize-keys true)]
-    (js-delete spec "usermeta")
+  (let [udata (spec :usermeta) #_(js->clj spec.usermeta :keywordize-keys true)]
     (printchan :UDATA udata :OPTS opts)
     []))
 
@@ -461,34 +494,30 @@
       (update-tab-field
        tid :spec-children-pairs
        (mapv (fn[[spec children]]
-               (let [cljspec (js->clj spec :keywordize-keys true)
+               (let [cljspec spec #_(js->clj spec :keywordize-keys true)
                      data (mapv (fn[m] (assoc m :b (+ (m :b) val)))
                                 (get-in cljspec [:data :values]))
-                     newspec (clj->js (assoc-in cljspec [:data :values] data))]
+                     ;;newspec (clj->js (assoc-in cljspec [:data :values] data))
+                     newspec (assoc-in cljspec [:data :values] data)]
                  [newspec children]))
              spec-children-pairs))))
 
   (defn test-injector [{:keys [tabid spec opts]}]
-    (printchan "Test Injector called" :TID tabid :SPEC spec)
-    (let [cljspec (js->clj spec :keywordize-keys true)
-          udata (cljspec :usermeta)]
+    (printchan "Test Injector called" :TID tabid #_:SPEC #_spec)
+    (let [cljspec spec #_(js->clj spec :keywordize-keys true)
+          udata (cljspec :usermeta)] (update-adb [:udata] udata)
       (cond
         (not (map? udata)) []
 
         (udata :test1)
         (let [sval (rgt/atom "0.0")]
           (printchan :SLIDER-INJECTOR)
-          [[gap :size "10px"] [label :label "Slider away"]
-           [slider
-            :model sval
-            :min -10.0, :max 10.0, :step 1.0
-            :width "200px"
-            :on-change #(do (bar-slider-fn tabid %)
-                            (reset! sval (str %)))]
-           [input-text
-            :model sval
-            :width "60px", :height "26px"
-            :on-change #(reset! sval %)]])
+          (xform-recom (udata :test1)
+                       :m1 sval
+                       :oc1 #(do (bar-slider-fn tabid %)
+                                 (reset! sval (str %)))
+                       :oc2 #(do (bar-slider-fn tabid (js/parseFloat %))
+                                 (reset! sval %))))
 
         (udata :test2)
         [[gap :size "10px"]
@@ -511,6 +540,17 @@
         value [{:spec2 :aspec}]]
     (sp/setval [sp/ATOM :tabs :active sp/ALL sp/ATOM #(= (% :id) tid) field]
                value test-db))
+
+
+  ;;; cljs.user=> (defn foo [x] (inc x))
+  ;;; #'cljs.user/foo
+  ;;; cljs.user=> (#'cljs.user/foo 3)
+  ;;; 4
+  ;;; cljs.user=> (def bar 10)
+  ;;; #'cljs.user/bar
+  ;;; cljs.user=> @#'cljs.user/bar
+  ;;; 10
+  ;;; 5:24 PM
 
 
   (get-adb [:test1 :sval])

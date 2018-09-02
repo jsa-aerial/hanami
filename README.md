@@ -81,19 +81,20 @@ An example of an instrumented chart:
 ```Clojure
 (hc/xform ht/simple-bar-chart
   :USERDATA
-  {:test1 '[[gap :size "10px"] [label :label "Slider away"]
+  {:test1 `[[gap :size "10px"] [label :label "Add Bar"]
+            [label :label ~minstr]
             [slider
-             :model sval
-             :min -10.0, :max 10.0, :step 1.0
+             :model :m1
+             :min ~min, :max ~max, :step 1.0
              :width "200px"
-             :on-change bar-slider-fn]
+             :on-change :oc1]
+            [label :label ~maxstr]
             [input-text
-             :model sval
+             :model :m1
              :width "60px", :height "26px"
-             :on-change bar-slider-fn]]}
-  :TITLE "A Simple Bar Chart"
+             :on-change :oc2]]}
   :HEIGHT 300, :WIDTH 350
-  :X "a" :XTYPE "ordinal" :XTITLE "foo" :Y "b" :YTITLE "bar"
+  :X "a" :XTYPE "ordinal" :XTITLE "Foo" :Y "b" :YTITLE "Bar"
   :DATA data)
 ```
 

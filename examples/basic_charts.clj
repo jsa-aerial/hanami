@@ -65,18 +65,19 @@
        maxstr (-> max str (str/split #"\.") first (#(str "+" %)))]
    (hc/xform ht/simple-bar-chart
              :USERDATA
-             {:test1 `[[gap :size "10px"] [label :label "Add Bar"]
-                       [label :label ~minstr]
-                       [slider
-                        :model :m1
-                        :min ~min, :max ~max, :step 1.0
-                        :width "200px"
-                        :on-change :oc1]
-                       [label :label ~maxstr]
-                       [input-text
-                        :model :m1
-                        :width "60px", :height "26px"
-                        :on-change :oc2]]}
+             {:tab {:p1 :label "Ex"}
+              :slider `[[gap :size "10px"] [label :label "Add Bar"]
+                        [label :label ~minstr]
+                        [slider
+                         :model :m1
+                         :min ~min, :max ~max, :step 1.0
+                         :width "200px"
+                         :on-change :oc1]
+                        [label :label ~maxstr]
+                        [input-text
+                         :model :m1
+                         :width "60px", :height "26px"
+                         :on-change :oc2]]}
              :HEIGHT 300, :WIDTH 350
              :X "a" :XTYPE "ordinal" :XTITLE "Foo" :Y "b" :YTITLE "Bar"
              :DATA data))

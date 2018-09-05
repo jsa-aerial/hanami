@@ -5,10 +5,12 @@
     :refer (<! >! put! chan)
     :refer-macros [go go-loop]]
 
+   [com.rpl.specter :as sp]
+
    [aerial.hanasu.client :as cli]
    [aerial.hanasu.common :as com]
-
-   [com.rpl.specter :as sp]
+   [aerial.hanami.common :as hc]
+   [aerial.hanami.templates :as ht]
 
    ;; Vega & Vega-Lite
    [cljsjs.vega]
@@ -345,14 +347,15 @@
         (update-tab-field tab :compvis sp/NONE))))
 
 (defn update-tabs [tabdefs]
-  (mapv (fn[{:keys [id label opts specs] :as newdef}]
-          (let [oldef (get-tab-field id)
+  (mapv (fn [{:keys [id label opts specs] :as newdef}]
+          (let [tid id
+                oldef (get-tab-field tid)
                 specs (when specs
-                        (->> specs com/ev #_(mapv #(.parse js/JSON %))))
+                        (->> specs com/ev))
                 main-opts (get-adb [:main :opts])
                 instrumentor (-> :instrumentor get-adb first)
                 spec-children-pairs (mapv #(vector % (instrumentor
-                                                      {:tabid id
+                                                      {:tabid tid
                                                        :spec %
                                                        :opts opts}))
                                           specs)]
@@ -365,12 +368,18 @@
 
               (let [oldopts (or (oldef :opts) main-opts)
                     newopts (merge-old-new-opts oldopts opts)]
-                (replace-tab id {:id id
-                                 :label (or label (get-tab-field id :label))
-                                 :opts newopts
-                                 :spec-children-pairs spec-children-pairs
-                                 :specs specs})))))
+                (replace-tab tid {:id tid
+                                  :label (or label (get-tab-field tid :label))
+                                  :opts newopts
+                                  :spec-children-pairs spec-children-pairs
+                                  :specs specs})))))
         (com/ev tabdefs)))
+
+
+(defn update-data [data-maps]
+  (mapv (fn [{:keys [tid vid data]}]
+          :???)
+        data-maps))
 
 
 (defn on-msg [ch ws hanami-msg]
@@ -386,6 +395,9 @@
 
       :tabs
       (update-tabs data)
+
+      :data-update
+      (update-data data)
 
       :specs
       (let [{:keys [tab specs]} data]
@@ -507,7 +519,7 @@
       (cond
         (not (map? udata)) []
 
-        (udata :test1)
+        (udata :slider)
         (let [sval (rgt/atom "0.0")]
           (printchan :SLIDER-INSTRUMENTOR)
           (xform-recom (udata :test1)

@@ -19,20 +19,23 @@
 (def shape-key :SHAPE)
 (def title-key :TITLE)
 
-(defmacro gen-key-setter [key]
-  (let [setter (symbol (str "set-" (name key) "-key!"))
-        var-name (symbol (str (name key) "-key"))]
-    `(defn ~setter [key]
-       (alter-var-root (var ~var-name) (constantly key)))))
 
-;;;(gen-key-setter data) code generated is good, but bug in spec on expand
-(defn set-data-key! [key] (alter-var-root (var data-key) (constantly key)))
-;;;(gen-key-setter color) code generated is good, but bug in spec on expand
-(defn set-color-key! [key] (alter-var-root (var color-key) (constantly key)))
-;;;(gen-key-setter shape) code generated is good, but bug in spec on expand
-(defn set-shape-key! [key] (alter-var-root (var shape-key) (constantly key)))
-;;;(gen-key-setter title) code generated is good, but bug in spec on expand
-(defn set-title-key! [key] (alter-var-root (var title-key) (constantly key)))
+#?(:clj
+   (do
+     (defn set-data-key! [key]
+       (alter-var-root (var data-key) (constantly key)))
+     (defn set-color-key! [key]
+       (alter-var-root (var color-key) (constantly key)))
+     (defn set-shape-key! [key]
+       (alter-var-root (var shape-key) (constantly key)))
+     (defn set-title-key! [key]
+       (alter-var-root (var title-key) (constantly key))))
+   :cljs
+   (do
+     (defn set-data-key!  [key] (set! data-key  key))
+     (defn set-color-key! [key] (set! color-key key))
+     (defn set-shape-key! [key] (set! shape-key key))
+     (defn set-title-key! [key] (set! title-key key))))
 
 
 (def _defaults

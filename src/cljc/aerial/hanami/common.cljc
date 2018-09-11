@@ -91,6 +91,8 @@
     (into {k v} (->> kvs (partition-all 2)
                      (mapv (fn[[k v]] [k v])))))))
 
+(defn get-default [k] (@_defaults k))
+
 
 
 (defn xform
@@ -129,7 +131,9 @@
    (xform x (into
              {k v}
              (->> kvs (partition-all 2)
-                  (mapv (fn[[k v]] [k v])))))))
+                  (mapv (fn[[k v]] [k v]))))))
+
+  ([x] (xform x {})))
 
 
 

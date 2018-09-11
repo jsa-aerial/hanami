@@ -296,15 +296,14 @@
 (defn get-ws []
   (->> (get-adb []) keys (filter #(-> % keyword? not)) first))
 
-;; Stop app
-(defn app-stop []
+(defn get-chan []
   (let [ws (get-ws)
         ch (when ws (get-adb [ws :chan]))]
-    (when ch
-      (go (async/>! ch {:op :stop :payload {:ws ws :cause :userstop}})))))
+    ch))
 
 ;; Send server msg
 (defn app-send [msg]
+  #_(printchan "Sending msg " msg)
   (cli/send-msg (get-ws) msg))
 
 
@@ -319,6 +318,14 @@
     newopts newopts
     :else (get-adb [:main :opts])))
 
+
+;; Stop app
+(defn app-stop []
+  (let [ws (get-ws)
+        ch (get-chan)]
+    (when ch
+      (go (async/>! ch {:op :stop :payload {:ws ws :cause :userstop}})))))
+
 (defn register [{:keys [uid title logo img opts]}]
   (printchan "Registering " uid)
   (update-adb [:main :uid] uid
@@ -326,6 +333,7 @@
               [:main :logo] logo
               [:main :img] img
               [:main :opts] opts
+              [:main :session-name] (rgt/atom "")
               [:vgl-as-vg] :rm
               [:tabs] (let [cur-ratom (rgt/atom nil)
                             tabs-ratom (rgt/atom [])]
@@ -338,6 +346,7 @@
   (rgt/render [hanami-main]
               (js/document.querySelector "#app")))
 
+
 (defn update-opts [{:keys [main tab opts]}]
   (if main
     (update-adb [:main :opts]
@@ -346,41 +355,55 @@
                           (merge-old-new-opts (get-tab-field tab :opts) opts))
         (update-tab-field tab :compvis sp/NONE))))
 
-(defn update-tabs [tabdefs]
-  (mapv (fn [{:keys [id label opts specs] :as newdef}]
-          (let [tid id
-                oldef (get-tab-field tid)
-                specs (when specs
-                        (->> specs com/ev))
-                main-opts (get-adb [:main :opts])
-                instrumentor (-> :instrumentor get-adb first)
-                spec-children-pairs (mapv #(vector % (instrumentor
-                                                      {:tabid tid
-                                                       :spec %
-                                                       :opts opts}))
-                                          specs)]
-            (if (not oldef)
-              (let [opts (merge-old-new-opts main-opts opts)]
-                (add-tab (assoc newdef
-                                :opts (merge-old-new-opts main-opts opts)
-                                :spec-children-pairs spec-children-pairs
-                                :specs specs)))
 
-              (let [oldopts (or (oldef :opts) main-opts)
-                    newopts (merge-old-new-opts oldopts opts)]
-                (replace-tab tid {:id tid
-                                  :label (or label (get-tab-field tid :label))
-                                  :opts newopts
+
+(defn make-tabdefs [specs]
+  (let [grps (group-by #(->> % :usermeta :tab :id) (com/ev specs))]
+    (mapv (fn[[id specs]]
+            (let [tab (->> specs first :usermeta :tab)]
+              (assoc tab :specs (mapv (fn[spec] (dissoc spec :tab)) specs))))
+          grps)))
+
+(defn update-tabs [specs]
+  (let [tabdefs (make-tabdefs specs)]
+    (mapv (fn [{:keys [id label opts specs] :as newdef}]
+            (let [tid id
+                  oldef (get-tab-field tid)
+                  specs (when specs
+                          (->> specs com/ev))
+                  main-opts (get-adb [:main :opts])
+                  instrumentor (-> :instrumentor get-adb first)
+                  spec-children-pairs (mapv #(vector % (instrumentor
+                                                        {:tabid tid
+                                                         :spec %
+                                                         :opts opts}))
+                                            specs)]
+              (if (not oldef)
+                (let [opts (merge-old-new-opts main-opts opts)]
+                  (add-tab (assoc newdef
+                                  :opts (merge-old-new-opts main-opts opts)
                                   :spec-children-pairs spec-children-pairs
-                                  :specs specs})))))
-        (com/ev tabdefs)))
+                                  :specs specs)))
+
+                (let [oldopts (or (oldef :opts) main-opts)
+                      newopts (merge-old-new-opts oldopts opts)]
+                  (replace-tab tid
+                               {:id tid
+                                :label (or label (get-tab-field tid :label))
+                                :opts newopts
+                                :spec-children-pairs spec-children-pairs
+                                :specs specs})))))
+          tabdefs)))
 
 
 (defn update-data [data-maps]
+  (printchan :UPDATE-DATA data-maps)
   (mapv (fn [{:keys [tid vid data]}]
           :???)
         data-maps))
 
+
+(defmulti user-msg :op)
 
 (defn on-msg [ch ws hanami-msg]
   (let [{:keys [op data]} hanami-msg]
@@ -396,12 +419,14 @@
       :tabs
       (update-tabs data)
 
-      :data-update
+      :data
       (update-data data)
 
       :specs
       (let [{:keys [tab specs]} data]
-        (update-tab-field tab :specs specs)))))
+        (update-tab-field tab :specs specs))
+
+      (user-msg {:op op :data data :ws ws :ch ch}))))
 
 
 (defn on-open [ch ws]
@@ -459,6 +484,24 @@
             (recur (<! ch))))))))
 
 
+(defn set-session-name [name]
+  (let [old-uid (get-adb [:main :uid])
+        name (if (= name "") (old-uid :name))]
+    (sp/setval [sp/ATOM :main :session-name sp/ATOM] name app-db)
+    (when (not= name (old-uid :name))
+      (update-adb [:main :uid :name] name)
+      (app-send {:op :set-session-name
+                 :data {:uid old-uid
+                        :new-name name}}))))
+
+(defn session-input []
+  (if (not= "" (sp/select-one [sp/ATOM :main :session-name sp/ATOM] app-db))
+    [:p]
+    [input-text
+     :model (get-adb [:main :session-name])
+     :on-change set-session-name
+     :placeholder (get-adb [:main :uid :name])
+     :width "100px"]))
 
 (defn default-header-fn []
   [h-box :gap "10px" :max-height "30px"
@@ -467,6 +510,8 @@
               [title
                :level :level3
                :label [:span.bold (get-adb [:main :title])]]
+              #_[gap :size "5px"]
+              [session-input]
               [gap :size "5px"]
               [title
                :level :level3
@@ -522,7 +567,7 @@
         (udata :slider)
         (let [sval (rgt/atom "0.0")]
           (printchan :SLIDER-INSTRUMENTOR)
-          (xform-recom (udata :test1)
+          (xform-recom (udata :slider)
                        :m1 sval
                        :oc1 #(do (bar-slider-fn tabid %)
                                  (reset! sval (str %)))
@@ -539,9 +584,8 @@
           :placeholder "Hi there"
           :width "100px"]]
 
-        :else
-        [[[gap :size "10px"]
-          [label :label "No user map data"]]])))
+        :else []
+        )))
 
 
 

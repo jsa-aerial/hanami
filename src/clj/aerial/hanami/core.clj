@@ -56,28 +56,44 @@
 
 
 
-(defn unknown-type-response [ws _]
-  (srv/send-msg ws {:op "error" :payload "ERROR: unknown message type"}))
+
+(defmulti user-msg :op)
+
+(defmethod user-msg :default [msg]
+  (printchan "ERROR: unknown user message " msg)
+  #_(srv/send-msg
+   (msg :ws) {:op "error" :payload "ERROR: unknown user message"}))
+
+
+(defn set-session-name [{:keys [uid new-name]}]
+  (let [{:keys [uuid name]} uid
+        old-name-uuids (remove #(= % uuid) (get-adb name))
+        new-name-uuids (or (get-adb new-name) [])]
+    (update-adb [uuid :name] new-name
+                name (if (seq old-name-uuids) old-name-uuids :rm)
+                new-name (conj new-name-uuids uuid))))
 
 (defn msg-handler [msg]
-  (let [{:keys [data ws]} msg
-        {:keys [type payload]} data]
-    (printchan :DATA data :TYPE type :payload payload)
-    ((case type
-        unknown-type-response)
-     ws payload)))
+  (printchan :MSG-HANDLER :MSG msg)
+  (let [{:keys [op data]} (msg :data)]
+    (case op
+      :set-session-name
+      (set-session-name data)
+
+      (user-msg (msg :data)))))
 
 
 (defn on-open [ch op payload]
   (let [ws payload
         uid-name ((-> :idfn get-adb first))
+        connfn (-> :connfn get-adb first)
         uuid (uuid)
         uid {:uuid uuid :name uid-name}
-        data {:uid uid
-              :title (get-adb [:header :title])
-              :logo (get-adb [:header :logo])
-              :img (get-adb [:header :img])
-              :opts default-opts}
+        data (connfn {:uid uid
+                      :title (get-adb [:header :title])
+                      :logo (get-adb [:header :logo])
+                      :img (get-adb [:header :img])
+                      :opts default-opts})
         name-uuids (or (get-adb uid-name) [])]
     (printchan :SRV :open uid)
     (update-adb [uuid :ws] ws, [uuid :name] uid-name
@@ -90,8 +106,8 @@
 (defn server-dispatch [ch op payload]
   (case op
     :msg (let [{:keys [ws]} payload]
-           (update-adb :rcvcnt inc, [ws :rcvcnt] inc)
-           (msg-handler payload))
+           (msg-handler payload)
+           (update-adb :rcvcnt inc, [ws :rcvcnt] inc))
 
     :open (on-open ch op payload)
     :close (let [{:keys [ws status]} payload
@@ -148,14 +164,16 @@
 
 
 (defn start-server
-  [port & {:keys [idfn title logo img]
+  [port & {:keys [idfn title logo img connfn]
            :or {idfn (partial gensym "hanami-")
+                connfn identity
                 title "花見 Hanami"
                 logo "logo.png"
                 img "Himeji_sakura.jpg"}}]
   (let [ch (srv/start-server port :main-handler hanami-handler)]
     (printchan "Server start, reading msgs from " ch)
-    (update-adb :chan ch :idfn [idfn]
+    (update-adb :chan ch
+                :idfn [idfn] :connfn [connfn]
                 [:header :title] title
                 [:header :logo] logo
                 [:header :img] img)
@@ -173,20 +191,18 @@
   (doseq [id uuids]
     (srv/send-msg (get-adb [id :ws]) {:op op :data data})))
 
-(defn stabs! [uuid-name tabdefs]
-  (s! (get-adb uuid-name) :tabs (com/ev tabdefs)))
+(defn get-msgop [spec]
+  (or (->> spec com/ev first :usermeta :msgop) :data))
 
-(defn svgl!
-  ([uuid-name vgl-maps]
-   (s! (get-adb uuid-name) :tabs
-       {:id :p1 :label "Vis"
-        :opts default-opts
-        :specs (com/ev vgl-maps)}))
-  ([uuid-name tid vgl-maps]
-   (s! (get-adb uuid-name) :tabs
-       {:id tid
-        :label (-> tid name str/capitalize)
-        :specs (com/ev vgl-maps)})))
+(defn get-session-name [spec]
+  (or (->> spec com/ev first :usermeta :session-name) "Exploring"))
+
+(defn sv! [vgl-maps]
+  (let [vgl-maps (com/ev vgl-maps)
+        session-name (get-session-name vgl-maps)]
+    (s! (get-adb session-name)
+        (get-msgop vgl-maps)
+        vgl-maps)))
 
 (defn sopts!
   ([uuid-name opts]

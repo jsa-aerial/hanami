@@ -105,7 +105,8 @@
         (if (coll? v)
           (let [xv (xform v xkv)]
             (if (seq xv) xv RMV))
-          (let [subval (get xkv v v)]
+          (let [subval (get xkv v v)
+                subval (if (fn? subval) (subval xkv) subval)]
             #_(clojure.pprint/pprint
              (if (not= v data-key) [v :SUBVAL subval] v))
             (cond

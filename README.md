@@ -5,11 +5,11 @@ Interactive arts and charts visualizations with Clojure(Script), Vega-lite, and 
 <a href="https://hanami.github.io"><img src="https://github.com/jsa-aerial/hanami/blob/master/resources/public/Himeji_sakura.jpg" align="left" hspace="10" vspace="6" alt="hanami logo" width="150px"></a>
 
 
-**Hanami** is a Clojure(Script) library and application for creating interactive visualizations based in [Vega-Lite](https://vega.github.io/vega-lite/) (VGL) and/or [Vega](https://vega.github.io/vega/) (VG) specifications. These specifications are declarative and completely specified by _data_ (JSON maps). VGL compiles into the lower level grammar of VG which in turn compiles to a runtime format utilizting lower level runtime environments such as [D3](https://d3js.org/), HTML5 Canvas, and [WebGL](https://github.com/vega/vega-webgl-renderer).
+**Hanami** is a Clojure(Script) library for creating interactive visualizations based in [Vega-Lite](https://vega.github.io/vega-lite/) (VGL) and/or [Vega](https://vega.github.io/vega/) (VG) specifications. These specifications are declarative and completely specified by _data_ (JSON maps). VGL compiles into the lower level grammar of VG which in turn compiles to a runtime format utilizting lower level runtime environments such as [D3](https://d3js.org/), HTML5 Canvas, and [WebGL](https://github.com/vega/vega-webgl-renderer).
 
 In keeping with this central data oriented tenet, Hanami eschews the typical API approach for generating specifications in favor of using recursive transforms of parameterized templates. This is also in keeping with the data transformation focus in functional programming, which is espcially nice in Clojure(Script).
 
-An important aspect of this approach is that parameterized templates can be used to build other such templates by being higher level substitutions. In addition templates can be composed and this is another important idiomatic use. Additionally templates may be merged, though typically this is after transformation. The result enables the construction of sharable libraries of templates providing reusable plots, charts, and entire visualizations. Generally these will be domain and/or task specific. Hanami itself provides only a small set of very generic templates, which have proven useful in constructing more domain/task specific end results.
+An important aspect of this approach is that parameterized templates can be used to build other such templates by being higher level substitutions. In addition templates can be composed and this is another important idiomatic use. Furthermore, templates may be merged, though typically this is after transformation. The overall result enables the construction of sharable libraries of templates providing reusable plots, charts, and entire visualizations. Generally these will be domain and/or task specific. Hanami itself provides only a small set of very generic templates, which have proven useful in constructing more domain/task specific end results.
 
 
 ## Installation
@@ -28,16 +28,21 @@ To install, add the following to your project `:dependencies`:
   * Purely data driven - no objects, classes, inheritance, whatever
   * Completely open ended - users may define their own with their own defaults
   * More general in scope than an API while capable of arbitrary specific detail
-* Named visulization groupings (tabbed navigation)
-* Multiple simultaneous independent and dependent visulizations per grouping
-* Default application for exploratory work
-* Enables specific application construction as lib
+* A tabbing system for named visulization groupings
+  * Multiple simultaneous independent and dependent visulizations per grouping
+  * Automatic grid layout
+  * Option system for customization
+* Enables specific application construction
   * Application level page header instrumentation (re-com enabled)
   * Application level external instrumentation of charts (re-com enabled)
   * Multiple simultaneous (named) applications
   * Multiple sessions per application
-  * Data streaming capable - user extensible messages
+    * Shared named sessions
+  * Application extensible messaging capability
+  * Data streaming capable
+    * Realtime chart/plot updates with data updates
 * Uses light weight websocket messaging system
+
 
 ## Examples
 
@@ -71,7 +76,7 @@ Transforms to:
      {:field "Miles_per_Gallon", :type "quantitative"}]}}
  ```
 
-And when sent to a view, results in, where the mouse is hovering over the point given by [132, 32.7]:
+And when sent to a viewer, results in, where the mouse is hovering over the point given by [132, 32.7]:
 
 ![Hanami pic 1](resources/public/images/hanami-cars-1.png?raw=true)
 
@@ -98,7 +103,7 @@ An example of an instrumented chart:
   :DATA data)
 ```
 
-Renders as (before slider move left; after slider move right)
+Renders as (left, before slider move; right, after slider move)
 
 ![Hanami pic 2](resources/public/images/instrumented-chart-1a.png?raw=true)
 ![Hanami pic 3](resources/public/images/instrumented-chart-1b.png?raw=true)

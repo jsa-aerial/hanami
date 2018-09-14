@@ -225,7 +225,7 @@
    :autosize "pad",
    :legends [{:fill "color", :type "gradient"}],
    :config {:range {:heatmap {:scheme "greenblue"}}},
-   :height 400, :width 500,
+   :height :HEIGHT, :width :WIDTH,
    :padding 5,
    :axes [{:scale "x",
            :grid true,
@@ -271,16 +271,14 @@
                      {:x {:scale "x", :field :X},
                       :y {:scale "y", :field :Y},
                       :size {:value 4},
-                      :fill
-                      [{:test "points", :value "black"}
-                       {:value "transparent"}]}}}],
+                      :fill [{:test "points", :value "black"}
+                             {:value "transparent"}]}}}],
    :signals [{:name "count",
               :value 10,
               :bind {:input "select", :options [1 5 10 20]}}
              {:name "points", :value true, :bind {:input "checkbox"}}],
    :data [{:name "source",
            :values :DATA :url :UDATA
-           ;;:url "data/cars.json",
            :transform [{:type "filter",
                         :expr :XFORM-EXPR}]}
           {:name "contours",

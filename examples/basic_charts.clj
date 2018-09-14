@@ -172,12 +172,10 @@
 ;;;
 (->>
  [(let [data (->> (range 0.005 0.999 0.001)
-                  (mapv (fn[p] {:x p, :y (- (log2 p)) :col "SI"})))
-        topts {:vgl #_{:export false},{:export {:png true :svg false}}
-               :layout {:order :row, :size "auto"}}]
+                  (mapv (fn[p] {:x p, :y (- (log2 p)) :col "SI"})))]
     ;; Self Info - unexpectedness
     (hc/xform ht/simple-layer-chart
-              :TID :multi :TOPTS topts
+              :TID :multi :TOPTS {:order :row, :size "auto"}
               :TITLE "Self Information (unexpectedness)"
               :HEIGHT 300, :WIDTH 350
               :LAYER [(hc/xform ht/line-layer

@@ -25,9 +25,25 @@
     (-> r (* n) Math/round (/ n))))
 
 
+(defn connfn [data]
+  (assoc data :exps ["eid1" "eid2" "eid3"]))
 
-(hmi/start-server 3003 :idfn (constantly "Exploring"))
+(hmi/start-server
+ 3003
+ :idfn (constantly "Exploring")
+ :connfn connfn)
 #_(hmi/stop-server)
+
+
+(hc/add-defaults
+ :USERDATA {:tab {:id :TID, :label :TLBL, :opts :TOPTS}
+            :opts :OPTS
+            :vid :VID, :msgop :MSGOP, :session-name :SESSION-NAME}
+ :VID hc/RMV, :MSGOP :tabs, :SESSION-NAME "Exploring"
+ :TID :expl1, :TLBL #(-> :TID % name str/capitalize)
+ :OPTS (hc/default-opts :vgl), :TOPTS (hc/default-opts :tab))
+
+(hc/xform (hc/get-default :USERDATA) :TID :geo :VID :v1)
 
 
 
@@ -37,15 +53,17 @@
        ;;:DATA (->> "http://localhost:3003/data/cars.json" slurp json/read-str)
        :UDATA "data/cars.json"
        :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")
-     (hmi/svgl! "Exploring"))
+     hmi/sv!)
 
 (->>
- {:data {:url "data/cars.json"},
-  :mark "point",
-  :encoding {:x {:field "Horsepower", :type "quantitative"},
-             :y {:field "Miles_per_Gallon", :type "quantitative"},
-             :color {:field "Origin", :type "nominal"}}}
- (hmi/svgl! "Exploring"))
+ (hc/xform
+  {:usermeta :USERDATA
+   :data {:url "data/cars.json"},
+   :mark "point",
+   :encoding {:x {:field "Horsepower", :type "quantitative"},
+              :y {:field "Miles_per_Gallon", :type "quantitative"},
+              :color {:field "Origin", :type "nominal"}}})
+ hmi/sv!)
 
 
 ;;; Simple Barchart with instrumented template
@@ -65,99 +83,101 @@
        maxstr (-> max str (str/split #"\.") first (#(str "+" %)))]
    (hc/xform ht/simple-bar-chart
              :USERDATA
-             {:tab {:p1 :label "Ex"}
-              :slider `[[gap :size "10px"] [label :label "Add Bar"]
-                        [label :label ~minstr]
-                        [slider
-                         :model :m1
-                         :min ~min, :max ~max, :step 1.0
-                         :width "200px"
-                         :on-change :oc1]
-                        [label :label ~maxstr]
-                        [input-text
-                         :model :m1
-                         :width "60px", :height "26px"
-                         :on-change :oc2]]}
+             (merge
+              (hc/get-default :USERDATA)
+              {:slider `[[gap :size "10px"] [label :label "Add Bar"]
+                         [label :label ~minstr]
+                         [slider
+                          :model :m1
+                          :min ~min, :max ~max, :step 1.0
+                          :width "200px"
+                          :on-change :oc1]
+                         [label :label ~maxstr]
+                         [input-text
+                          :model :m1
+                          :width "60px", :height "26px"
+                          :on-change :oc2]]})
              :HEIGHT 300, :WIDTH 350
              :X "a" :XTYPE "ordinal" :XTITLE "Foo" :Y "b" :YTITLE "Bar"
              :DATA data))
- (hmi/svgl! "Exploring"))
-
+ hmi/sv!)
 
 
 (->>
- {:height 600,
-  :width 600,
-  :data
-  {:values
-   [{:dose 0.5, :response 32659}
-    {:dose 0.5, :response 40659}
-    {:dose 0.5, :response 29000}
-    {:dose 1, :response 31781}
-    {:dose 1, :response 30781}
-    {:dose 1, :response 35781}
-    {:dose 2, :response 30054}
-    {:dose 4, :response 29398}
-    {:dose 5, :response 27779}
-    {:dose 10, :response 27915}
-    {:dose 15, :response 27410}
-    {:dose 20, :response 25819}
-    {:dose 50, :response 23999}
-    {:dose 50, :response 25999}
-    {:dose 50, :response 20999}]},
-  :layer
-  [{:selection
-    {:grid
-     {:type "interval",
-      :bind "scales",
-      :on "[mousedown, window:mouseup] > window:mousemove!",
-      :encodings ["x" "y"],
-      :translate "[mousedown, window:mouseup] > window:mousemove!",
-      :zoom "wheel!",
-      :mark {:fill "#333", :fillOpacity 0.125, :stroke "white"},
-      :resolve "global"}},
-    :mark {:type "point", :filled true, :color "green"},
-    :encoding
-    {:x {:field "dose", :type "quantitative", :scale {:type "log"}},
-     :y {:field "response", :type "quantitative", :aggregate "mean"}}}
-   #_{:mark {:type "errorbar", :ticks true},
-    :encoding
-    {:x {:field "dose", :type "quantitative", :scale {:zero false}},
-     :y {:field "response", :type "quantitative"},
-     :color {:value "#4682b4"}}}]}
- (hmi/svgl! "Exploring"))
+ (hc/xform
+  {:usermeta :USERDATA
+   :height 600,
+   :width 600,
+   :data
+   {:values
+    [{:dose 0.5, :response 32659}
+     {:dose 0.5, :response 40659}
+     {:dose 0.5, :response 29000}
+     {:dose 1, :response 31781}
+     {:dose 1, :response 30781}
+     {:dose 1, :response 35781}
+     {:dose 2, :response 30054}
+     {:dose 4, :response 29398}
+     {:dose 5, :response 27779}
+     {:dose 10, :response 27915}
+     {:dose 15, :response 27410}
+     {:dose 20, :response 25819}
+     {:dose 50, :response 23999}
+     {:dose 50, :response 25999}
+     {:dose 50, :response 20999}]},
+   :layer
+   [{:selection
+     {:grid
+      {:type "interval",
+       :bind "scales",
+       :on "[mousedown, window:mouseup] > window:mousemove!",
+       :encodings ["x" "y"],
+       :translate "[mousedown, window:mouseup] > window:mousemove!",
+       :zoom "wheel!",
+       :mark {:fill "#333", :fillOpacity 0.125, :stroke "white"},
+       :resolve "global"}},
+     :mark {:type "point", :filled true, :color "green"},
+     :encoding
+     {:x {:field "dose", :type "quantitative", :scale {:type "log"}},
+      :y {:field "response", :type "quantitative", :aggregate "mean"}}}
+    #_{:mark {:type "errorbar", :ticks true},
+       :encoding
+       {:x {:field "dose", :type "quantitative", :scale {:zero false}},
+        :y {:field "response", :type "quantitative"},
+        :color {:value "#4682b4"}}}]})
+ hmi/sv!)
+
 
 ;;; Geo Example
 (->>
- {;;:usermeta {:test1 :nothing}
-  :width 500,
-  :height 300,
-  :data {:url "data/airports.csv"},
-  :projection {:type "albersUsa"},
-  :mark "circle",
-  :encoding {:longitude {:field "longitude", :type "quantitative"},
-             :latitude {:field "latitude", :type "quantitative"},
-             :tooltip [{:field "name", :type "nominal"}
-                       {:field "longitude", :type "quantitative"}
-                       {:field "latitude", :type "quantitative"}],
-             :size {:value 10}},
-  :config {:view {:stroke "transparent"}}}
- (hmi/svgl! "Exploring" :geo))
+ (hc/xform
+  {:usermeta :USERDATA
+   :width 500,
+   :height 300,
+   :data {:url "data/airports.csv"},
+   :projection {:type "albersUsa"},
+   :mark "circle",
+   :encoding {:longitude {:field "longitude", :type "quantitative"},
+              :latitude {:field "latitude", :type "quantitative"},
+              :tooltip [{:field "name", :type "nominal"}
+                        {:field "longitude", :type "quantitative"}
+                        {:field "latitude", :type "quantitative"}],
+              :size {:value 10}},
+   :config {:view {:stroke "transparent"}}}
+  :TID :geo)
+ hmi/sv!)
 
 
 ;;; Multi Chart - cols and rows
-;;; First, init tabs
-(hmi/stabs! "Exploring"
-            {:id :multi, :label "Multi",
-             :opts {:vgl {:export false}
-                    :layout {:order :row, :size "auto"}}})
-;;; Now graphs
+;;;
 (->>
  [(let [data (->> (range 0.005 0.999 0.001)
-                  (mapv (fn[p] {:x p, :y (- (log2 p)) :col "SI"})))]
+                  (mapv (fn[p] {:x p, :y (- (log2 p)) :col "SI"})))
+        topts {:vgl #_{:export false},{:export {:png true :svg false}}
+               :layout {:order :row, :size "auto"}}]
     ;; Self Info - unexpectedness
     (hc/xform ht/simple-layer-chart
-              :USERDATA {:test1 :nothing}
+              :TID :multi :TOPTS topts
               :TITLE "Self Information (unexpectedness)"
               :HEIGHT 300, :WIDTH 350
               :LAYER [(hc/xform ht/line-layer
@@ -171,9 +191,11 @@
                                :y (- (- (* p (log2 p)))
                                      (* (- 1 p) (log2 (- 1 p))))})))]
     (hc/xform ht/simple-layer-chart
-              :USERDATA {:test2 [{:id 1 :label "One" :val 1}
-                                 {:id 2 :label "Two" :val 2}
-                                 {:id 3 :label "Three" :val 3}]}
+              :USERDATA (merge (hc/get-default :USERDATA)
+                               {:test2 [{:id 1 :label "One" :val 1}
+                                        {:id 2 :label "Two" :val 2}
+                                        {:id 3 :label "Three" :val 3}]})
+              :TID :multi
               :TITLE "Entropy (Unpredictability)"
               :HEIGHT 300, :WIDTH 350
               :LAYER [(hc/xform ht/gen-encode-layer
@@ -181,13 +203,8 @@
                                 :XTITLE "Probability of event" :YTITLE "H(p)")
                       (hc/xform ht/xrule-layer :AGG "mean")]
               :DATA data))]
- (hmi/svgl! "Exploring" :multi))
+ hmi/sv!)
 
-;;; Add export for PNG
-(hmi/sopts! "Exploring" :multi
-            (merge hc/default-opts
-                   {:vgl {:export {:png true :svg false}}
-                    :layout {:order :row, :size "auto"}}))
 
 
 ;;; Some distributions
@@ -200,25 +217,27 @@
     pdist))
 ;;(p/mean obsdist) => 5.7
 (->>
- [(hc/xform ht/simple-layer-chart
-            :TITLE "A Real (obvserved) distribution with incorrect simple mean"
-            :HEIGHT 400 :WIDTH 450
-            :LAYER
-            [(hc/xform ht/bar-layer
-                       :XTITLE "Count"
-                       :YTITLE "Probability")
-             (hc/xform ht/xrule-layer :AGG "mean")]
-            :DATA (mapv (fn[[x y]] {:x x :y y :m 5.7}) obsdist))
-  (hc/xform ht/simple-layer-chart
-            :TITLE "The same distribution with correct weighted mean"
-            :HEIGHT 400 :WIDTH 450
-            :LAYER
-            [(hc/xform ht/bar-layer
-                       :XTITLE "Count"
-                       :YTITLE "Probability")
-             (hc/xform ht/xrule-layer :X "m")]
-            :DATA (mapv (fn[[x y]] {:x x :y y :m 5.7}) obsdist))]
- (hmi/svgl! "Exploring" :dists))
+ (let [topts {:vgl #_{:export false},{:export {:png true :svg false}}
+              :layout {:order :row, :size "auto"}}]
+   [(hc/xform ht/simple-layer-chart
+      :TID :dists :TOPTS topts
+      :TITLE "A Real (obvserved) distribution with incorrect simple mean"
+      :HEIGHT 400 :WIDTH 450
+      :LAYER
+      [(hc/xform ht/bar-layer :XTITLE "Count" :YTITLE "Probability")
+       (hc/xform ht/xrule-layer :AGG "mean")]
+      :DATA (mapv (fn[[x y]] {:x x :y y :m 5.7}) obsdist))
+
+    (hc/xform ht/simple-layer-chart
+      :TID :dists
+      :TITLE "The same distribution with correct weighted mean"
+      :HEIGHT 400 :WIDTH 450
+      :LAYER
+      [(hc/xform ht/bar-layer :XTITLE "Count" :YTITLE "Probability")
+       (hc/xform ht/xrule-layer :X "m")]
+      :DATA (mapv (fn[[x y]] {:x x :y y :m 5.7}) obsdist))])
+ hmi/sv!)
+
 
 (->>
  (let [data (concat (->> obsdist
@@ -235,8 +254,7 @@
               :X "dist" :XTYPE "nominal" :XTITLE ""
               :Y "y" :YTITLE "Probability"
               :COLUMN "cnt" :COLTYPE "ordinal"}))
- (hmi/svgl! "Exploring" :dists))
-
+ (hmi/sv! "Exploring" :dists))
 
 
 (->
@@ -256,7 +274,7 @@
               :Y "y" :YTITLE "Probability"
               :COLUMN "cnt" :COLTYPE "ordinal"
               }))
- hmi/svgl!)
+ hmi/sv!)
 
 
 
@@ -273,7 +291,7 @@
               :Y "cnt" :YTITLE "Count"
               :COLUMN "sq" :COLTYPE "nominal"
               }))
- hmi/svgl!)
+ hmi/sv!)
 
 
 
@@ -320,7 +338,7 @@
                     :continuousBandSize 1}
               :view {:stroke "transparent"},
               :axis {:domainWidth 1}}}
-    hmi/svgl!)
+    hmi/sv!)
 
 
 ;;; :background "beige"
@@ -365,7 +383,7 @@
                            (range 0.06 0.98 0.01))}
       }
 
-     hmi/svgl!)
+     hmi/sv!)
 
 (->> {:title  {:text "JSD minimum entropy: True P to Binomial Q estimate"
                :offset 5}
@@ -402,7 +420,7 @@
                            (range 0.06 0.98 0.01))}
       }
 
-     hmi/svgl!)
+     hmi/sv!)
 
 
 (->> {:title  {:text "Minimum entropy: True P to Binomial Q estimate"
@@ -459,7 +477,7 @@
                             (range 0.06 0.98 0.01))) }
       }
 
-     hmi/svgl!)
+     hmi/sv!)
 
 
 (count panclus.clustering/ntsq)
@@ -498,7 +516,7 @@
                   :color {:value "red"}}}]
      :data {:values (conj credata
                           {:x 1 :y 1.1 :m 9.0} {:x 2 :y 1.63 :m 9.0})}}
-    hmi/svgl!)
+    hmi/sv!)
 
 
 
@@ -614,4 +632,4 @@
 
       }
 
-     hmi/svgl!)
+     hmi/sv!)

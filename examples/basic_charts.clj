@@ -215,25 +215,23 @@
     pdist))
 ;;(p/mean obsdist) => 5.7
 (->>
- (let [topts {:vgl #_{:export false},{:export {:png true :svg false}}
-              :layout {:order :row, :size "auto"}}]
-   [(hc/xform ht/simple-layer-chart
-      :TID :dists :TOPTS topts
-      :TITLE "A Real (obvserved) distribution with incorrect simple mean"
-      :HEIGHT 400 :WIDTH 450
-      :LAYER
-      [(hc/xform ht/bar-layer :XTITLE "Count" :YTITLE "Probability")
-       (hc/xform ht/xrule-layer :AGG "mean")]
-      :DATA (mapv (fn[[x y]] {:x x :y y :m 5.7}) obsdist))
+ [(hc/xform ht/simple-layer-chart
+            :TID :dists :TOPTS {:order :row, :size "auto"}
+            :TITLE "A Real (obvserved) distribution with incorrect simple mean"
+            :HEIGHT 400 :WIDTH 450
+            :LAYER
+            [(hc/xform ht/bar-layer :XTITLE "Count" :YTITLE "Probability")
+             (hc/xform ht/xrule-layer :AGG "mean")]
+            :DATA (mapv (fn[[x y]] {:x x :y y :m 5.7}) obsdist))
 
-    (hc/xform ht/simple-layer-chart
-      :TID :dists
-      :TITLE "The same distribution with correct weighted mean"
-      :HEIGHT 400 :WIDTH 450
-      :LAYER
-      [(hc/xform ht/bar-layer :XTITLE "Count" :YTITLE "Probability")
-       (hc/xform ht/xrule-layer :X "m")]
-      :DATA (mapv (fn[[x y]] {:x x :y y :m 5.7}) obsdist))])
+  (hc/xform ht/simple-layer-chart
+            :TID :dists
+            :TITLE "The same distribution with correct weighted mean"
+            :HEIGHT 400 :WIDTH 450
+            :LAYER
+            [(hc/xform ht/bar-layer :XTITLE "Count" :YTITLE "Probability")
+             (hc/xform ht/xrule-layer :X "m")]
+            :DATA (mapv (fn[[x y]] {:x x :y y :m 5.7}) obsdist))]
  hmi/sv!)
 
 

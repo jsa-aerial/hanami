@@ -95,15 +95,15 @@
 (defonce app-db (rgt/atom {}))
 
 (def default-opts
-  {:defopts {:vgl {:export true
-                   :renderer "canvas" #_"svg"
-                   :mode "vega-lite" #_vega}
-             :layout {:order :col
-                      :eltsper 2
-                      :size "none"}}})
+  {:vgl {:export true
+         :renderer "canvas" #_"svg"
+         :mode "vega-lite" #_vega}
+   :tab {:order :col
+         :eltsper 2
+         :size "none"}})
 
 (defn update-adb
-  ([] (com/update-db app-db default-opts))
+  ([] (com/update-db app-db :default-opts default-opts))
   ([keypath vorf] #_(printchan "UPDATE-ADB " keypath vorf)
    (com/update-db app-db keypath vorf))
   ([kp1 vof1 kp2 vof2 & kps-vs]
@@ -165,18 +165,21 @@
 
 
 (defn visualize
-  [spec elem uopts] #_(printchan :SPEC spec, :UOPTS uopts)
+  [spec elem] #_(printchan :SPEC spec)
   (when spec
-    (let [spec (clj->js spec)
-          opts {:renderer (get-in uopts [:vgl :renderer] "canvas")
-                :mode     (get-in uopts [:vgl :mode] "vega-lite")
-                :actions  {:export (get-in uopts [:vgl :export] false),
+    (let [vopts (-> spec :usermeta :opts)
+          vmode (get vopts :mode)
+          default-hover (if (= vmode "vega-lite") false js/undefined)
+          spec (clj->js spec)
+          opts {:renderer (get vopts :renderer "canvas")
+                :mode     "vega"
+                :hover    (get vopts :hover default-hover)
+                :actions  {:export (get vopts :export false),
                            :source false,
                            :editor false,
                            :compiled false}}
-          vega-spec (js/vl.compile spec)]
-      #_(update-adb :vgl-as-vg vega-spec)
-      (-> (js/vegaEmbed elem spec (clj->js opts))
+          vega (if (= vmode "vega-lite") (->> spec js/vl.compile .-spec) spec)]
+      (-> (js/vegaEmbed elem vega (clj->js opts))
           (.then (fn [res]
                    #_(js/vegaTooltip.vega res.view spec)
                    #_(js/vegaTooltip.vegaLite res.view spec)))
@@ -185,17 +188,16 @@
 
 (defn vgl
   "Reagent component to render vega/vega-lite visualizations."
-  [spec opts]
+  [spec]
   (printchan "VGL called")
   (rgt/create-class
    {:display-name "VGL"
 
     :component-did-mount
     (fn [comp]
-      (let [argv (rest (rgt/argv comp))
-            opts (second argv)]
+      (let [argv (rest (rgt/argv comp))]
         (printchan "Did-Mount: called")
-        (visualize spec (rgt/dom-node comp) opts)))
+        (visualize spec (rgt/dom-node comp))))
 
     :component-did-update
     (fn [comp old-useless-argv]
@@ -206,19 +208,18 @@
       ;; new-argv-2nd-way gives the complete argument set.
       (let [new-useful-argv (rgt/children comp)
             new-argv-2nd-way (rgt/argv comp) ; first elt some fn?!?
-            new-spec (-> new-argv-2nd-way rest first)
-            opts (-> new-argv-2nd-way rest second)]
+            new-spec (-> new-argv-2nd-way rest first)]
         #_(printchan :ARGV1 new-useful-argv :ARGV2 (rest new-argv-2nd-way))
-        (visualize new-spec (rgt/dom-node comp) opts)))
+        (visualize new-spec (rgt/dom-node comp))))
 
     :reagent-render
-    (fn [spec opts]
+    (fn [spec]
       [box :child [:div#app]])}))
 
 
 (defn vis-list [tabid spec-children-pairs opts]
-  (let [layout (if (= (get-in opts [:layout :order]) :row) h-box v-box)
-        eltnum (get-in opts [:layout :eltsper] 3)
+  (let [layout (if (= (get-in opts [:order]) :row) h-box v-box)
+        eltnum (get-in opts [:eltsper] 3)
         numspecs (count spec-children-pairs)
         spec-chunks (->> spec-children-pairs
                          (partition-all eltnum)
@@ -226,7 +227,7 @@
     (printchan "VIS-LIST : " numspecs)
     (for [sub-pairs spec-chunks]
       [layout
-       :size (get-in opts [:layout :size] "auto")
+       :size (get-in opts [:size] "auto")
        :gap "20px"
        :children
        (for [[spec children] sub-pairs]
@@ -234,14 +235,14 @@
              #_(printchan :NSPEC spec children)
              [v-box :gap "10px"
               :children [[h-box :gap "5px" :children children]
-                         [vgl spec opts]]]))])))
+                         [vgl spec]]]))])))
 
 (defn hanami []
   (if-let [tabval (get-cur-tab)]
     (let [tabid (tabval :id)
           specs (tabval :specs)
           compvis (tabval :compvis)
-          opts (tabval :opts (get-adb [:main :opts]))]
+          opts (tabval :opts (get-adb [:main :opts :tab]))]
       (cond
         compvis
         (do (printchan "hanami called - has compvis")
@@ -261,9 +262,9 @@
 
 (defn tabs []
   (printchan "TABS called ...")
-  (let [opts (or (get-cur-tab :opts) (get-adb [:main :opts]))
-        size (get-in opts [:layout :size] "auto")
-        order (get-in opts [:layout :order] :col)
+  (let [opts (or (get-cur-tab :opts) (get-adb [:main :opts :tab]))
+        size (get-in opts [:size] "auto")
+        order (get-in opts [:order] :col)
         layout (if (= order :row) v-box h-box)]
     [layout
      :size size
@@ -311,9 +312,12 @@
 (defn merge-old-new-opts [oldopts newopts]
   (cond
     (and oldopts newopts)
-    (sp/transform [(sp/submap [:vgl :layout]) sp/MAP-VALS]
-                  #(merge % (if (% :mode) (newopts :vgl) (newopts :layout)))
-                  oldopts)
+    (if (or (oldopts :tab) (oldopts :vgl))
+      (sp/transform [(sp/submap [:vgl :tab]) sp/MAP-VALS]
+                    #(merge % newopts)
+                    oldopts)
+      (merge oldopts newopts))
+
     oldopts oldopts
     newopts newopts
     :else (get-adb [:main :opts])))
@@ -371,7 +375,7 @@
                   oldef (get-tab-field tid)
                   specs (when specs
                           (->> specs com/ev))
-                  main-opts (get-adb [:main :opts])
+                  main-opts (get-adb [:main :opts :tab])
                   instrumentor (-> :instrumentor get-adb first)
                   spec-children-pairs (mapv #(vector % (instrumentor
                                                         {:tabid tid
@@ -379,18 +383,16 @@
                                                          :opts opts}))
                                             specs)]
               (if (not oldef)
-                (let [opts (merge-old-new-opts main-opts opts)]
-                  (add-tab (assoc newdef
-                                  :opts (merge-old-new-opts main-opts opts)
-                                  :spec-children-pairs spec-children-pairs
-                                  :specs specs)))
+                (add-tab (assoc newdef
+                                :opts (merge-old-new-opts main-opts opts)
+                                :spec-children-pairs spec-children-pairs
+                                :specs specs))
 
-                (let [oldopts (or (oldef :opts) main-opts)
-                      newopts (merge-old-new-opts oldopts opts)]
+                (let [oldopts (or (oldef :opts) main-opts)]
                   (replace-tab tid
                                {:id tid
                                 :label (or label (get-tab-field tid :label))
-                                :opts newopts
+                                :opts (merge-old-new-opts oldopts opts)
                                 :spec-children-pairs spec-children-pairs
                                 :specs specs})))))
           tabdefs)))
@@ -613,12 +615,9 @@
   (add-tab
    {:id :p1
     :label "BarChart"
-    :opts {:vgl {:export true
-                 :renderer "canvas" #_"svg"
-                 :mode "vega-lite" #_vega}
-           :layout {:order :col
-                    :eltsper 2
-                    :size "none"}}
+    :opts  {:order :col
+            :eltsper 2
+            :size "none"}
     :specs [js/vglspec]})
 
   (add-tab {:id :p2
@@ -642,9 +641,8 @@
   (add-tab {:id :px
            :label "MultiChartSVG"
             :opts (merge-old-new-opts
-                   (get-adb [:main :opts])
-                   {:vgl {:renderer "svg"}
-                    :layout {:size "auto"}})
+                   (get-adb [:defopts :tab])
+                   {:size "auto"})
             :specs [js/vglspec js/vglspec2
                     js/vglspec3 js/vglspec]})
 
@@ -654,8 +652,7 @@
   {:op :tabs
    :data [{:id :px
            :label "MultiChartSVG"
-           :opts {:vgl {:renderer "svg"}
-                  :layout {:size "auto"}}
+           :opts {:size "auto"}
            :specs [js/vglspec js/vglspec2
                    js/vglspec3 js/vglspec]}]}
   )

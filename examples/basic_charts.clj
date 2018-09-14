@@ -235,6 +235,32 @@
  hmi/sv!)
 
 
+
+
+
+
+
+
+(->>
+ (hc/xform
+  ht/contour-chart
+  :OPTS (merge (hc/default-opts :vgl) {:mode "vega"})
+  :X "Horsepower", :XTITLE "Engine Horsepower"
+  :Y "Miles_per_Gallon" :YTITLE "Miles/Gallon"
+  :UDATA "data/cars.json"
+  :XFORM-EXPR #(let [d1 (% :X)
+                     d2 (% :Y)]
+                 (format "datum['%s'] != null && datum['%s'] !=null" d1 d2)))
+ hmi/sv!)
+
+
+
+
+
+;;; =====================================================================;;;
+
+
+
 (->>
  (let [data (concat (->> obsdist
                          (mapv (fn[[x y]]

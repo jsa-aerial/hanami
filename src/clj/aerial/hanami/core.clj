@@ -191,6 +191,14 @@
   (doseq [id uuids]
     (srv/send-msg (get-adb [id :ws]) {:op op :data data})))
 
+
+(defn so!
+  ([uuid-name opts]
+   (s! (get-adb uuid-name) :opts {:main opts}))
+  ([uuid-name tid opts]
+   (s! (get-adb uuid-name) :opts {:tab tid :opts opts})))
+
+
 (defn get-msgop [spec]
   (or (->> spec com/ev first :usermeta :msgop) :data))
 
@@ -204,15 +212,15 @@
         (get-msgop vgl-maps)
         vgl-maps)))
 
-(defn sopts!
-  ([uuid-name opts]
-   (s! (get-adb uuid-name) :opts {:main opts}))
-  ([uuid-name tid opts]
-   (s! (get-adb uuid-name) :opts {:tab tid :opts opts})))
+(defn sd! [data-maps]
+  )
 
 
 
 (comment
+
+  {:vid :v1
+   :data [1 2 3 4]}
 
   (start-server 3003 :idfn (constantly "Basics"))
   (stop-server)

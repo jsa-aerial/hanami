@@ -8,9 +8,9 @@
   {:vgl {:export {:png true, :svg false}
          :renderer "canvas" #_"svg"
          :mode "vega-lite" #_vega}
-   :layout {:order :col
-            :eltsper 2
-            :size "none"}})
+   :tab {:order :col
+         :eltsper 2
+         :size "none"}})
 
 
 (def RMV com.rpl.specter/NONE)

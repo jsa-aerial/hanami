@@ -1,4 +1,6 @@
 (ns aerial.hanami.templates
+  #?(:cljs
+     (:require [aerial.hanami.utils :as hu :refer [format]]))
   )
 
 

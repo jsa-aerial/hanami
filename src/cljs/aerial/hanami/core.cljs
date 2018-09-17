@@ -118,6 +118,15 @@
     (str "cnvs-" (swap! id inc))))
 
 
+(defn get-vspec [vid]
+  (sp/select-one [sp/ATOM :vspecs sp/ATOM vid]
+                 app-db))
+
+(defn update-vspecs [vid vspec]
+  (sp/setval [sp/ATOM :vspecs sp/ATOM vid]
+             vspec app-db))
+
+
 (defn get-tab-field
   ([tid]
    (sp/select-one [sp/ATOM :tabs :active sp/ATOM sp/ALL #(= (% :id) tid)]
@@ -339,6 +348,7 @@
               [:main :opts] opts
               [:main :session-name] (rgt/atom "")
               [:vgl-as-vg] :rm
+              [:vspecs] (rgt/atom {})
               [:tabs] (let [cur-ratom (rgt/atom nil)
                             tabs-ratom (rgt/atom [])]
                         {:current cur-ratom
@@ -377,11 +387,16 @@
                           (->> specs com/ev))
                   main-opts (get-adb [:main :opts :tab])
                   instrumentor (-> :instrumentor get-adb first)
-                  spec-children-pairs (mapv #(vector % (instrumentor
-                                                        {:tabid tid
-                                                         :spec %
-                                                         :opts opts}))
-                                            specs)]
+
+                  spec-children-pairs
+                  (mapv #(do (when-let [vid (get-in % [:usermeta :vid])]
+                               (update-vspecs vid %))
+                             (vector % (instrumentor
+                                        {:tabid tid
+                                         :spec %
+                                         :opts opts})))
+                        specs)]
+
               (if (not oldef)
                 (add-tab (assoc newdef
                                 :opts (merge-old-new-opts main-opts opts)
@@ -398,11 +413,19 @@
           tabdefs)))
 
 
-(defn update-data [data-maps]
+(defn update-data
+  "Originally meant as general updater of vis plot/chart data
+  values. But to _render_ these, requires knowledge of the application
+  pages/structure. So, this is not currently used. If we can figure
+  out Vega chageSets and how they update, we may be able to make this
+  a general op in Hanami."
+  [data-maps app-fn]
   (printchan :UPDATE-DATA data-maps)
-  (mapv (fn [{:keys [tid vid data]}]
-          :???)
-        data-maps))
+  (app-fn (mapv (fn [{:keys [usermeta data]}]
+                  (let [vid (usermeta :vid)
+                        spec (dissoc (get-vspec vid) :data)]
+                    (assoc-in spec [:data :values] data)))
+                data-maps)))
 
 
 (defmulti user-msg :op)
@@ -421,8 +444,8 @@
       :tabs
       (update-tabs data)
 
-      :data
-      (update-data data)
+      #_:data
+      #_(update-data data)
 
       :specs
       (let [{:keys [tab specs]} data]

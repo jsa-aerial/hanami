@@ -213,7 +213,11 @@
         vgl-maps)))
 
 (defn sd! [data-maps]
-  )
+  (let [data-maps (com/ev data-maps)
+        session-name (get-session-name data-maps)]
+    (s! (get-adb session-name)
+        (get-msgop data-maps)
+        data-maps)))
 
 
 

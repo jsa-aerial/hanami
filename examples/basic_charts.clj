@@ -85,7 +85,8 @@
              :USERDATA
              (merge
               (hc/get-default :USERDATA)
-              {:slider `[[gap :size "10px"] [label :label "Add Bar"]
+              {:vid :bc1
+               :slider `[[gap :size "10px"] [label :label "Add Bar"]
                          [label :label ~minstr]
                          [slider
                           :model :m1
@@ -101,6 +102,13 @@
              :X "a" :XTYPE "ordinal" :XTITLE "Foo" :Y "b" :YTITLE "Bar"
              :DATA data))
  hmi/sv!)
+
+(hmi/sd! {:usermeta {:msgop :data :vid :bc1}
+          :data (mapv #(assoc % :b (+ 50 (% :b)))
+                      [{:a "A", :b 28 },{:a "B", :b 55 },{:a "C", :b 43 },
+                       {:a "D", :b 91 },{:a "E", :b 81 },{:a "F", :b 53 },
+                       {:a "G", :b 19 },{:a "H", :b 87 },{:a "I", :b 52 }])})
+
 
 
 (->>
@@ -236,15 +244,13 @@
 
 
 
-
-
-
-
-
+;;; Contour maps (a Vega template!)
+;;;
 (->>
  (hc/xform
-  ht/contour-chart
+  ht/contour-plot
   :OPTS (merge (hc/default-opts :vgl) {:mode "vega"})
+  :HEIGHT 400, :WIDTH 500
   :X "Horsepower", :XTITLE "Engine Horsepower"
   :Y "Miles_per_Gallon" :YTITLE "Miles/Gallon"
   :UDATA "data/cars.json"
@@ -253,6 +259,16 @@
                  (format "datum['%s'] != null && datum['%s'] !=null" d1 d2)))
  hmi/sv!)
 
+(->>
+ (hc/xform
+  ht/contour-plot
+  :HEIGHT 500, :WIDTH 600
+  :OPTS (merge (hc/default-opts :vgl) {:mode "vega"})
+  :DATA (take 400 (repeatedly #(do {:x (rand-int 300) :y (rand-int 50)})))
+  :XFORM-EXPR #(let [d1 (% :X)
+                     d2 (% :Y)]
+                 (format "datum['%s'] != null && datum['%s'] !=null" d1 d2)))
+ hmi/sv!)
 
 
 

@@ -22,7 +22,7 @@
 
    [re-com.core
     :as rcm
-    :refer [h-box v-box box gap line
+    :refer [h-box v-box box gap line h-split v-split
             button row-button md-icon-button md-circle-icon-button info-button
             input-text input-password input-textarea
             label title p
@@ -271,14 +271,18 @@
 
 (defn tabs []
   (printchan "TABS called ...")
-  (let [opts (or (get-cur-tab :opts) (get-adb [:main :opts :tab]))
-        size (get-in opts [:size] "auto")
-        order (get-in opts [:order] :col)
+  (let [tabval (get-cur-tab)
+        opts   (or (and tabval (tabval :opts)) (get-adb [:main :opts :tab]))
+        extfn  (get-in opts [:extfn])
+        size   (get-in opts [:size] "auto")
+        order  (get-in opts [:order] :col)
         layout (if (= order :row) v-box h-box)]
-    [layout
-     :size size
-     :gap "10px"
-     :children (hanami)]))
+    (if extfn
+      (extfn tabval)
+      [layout
+       :size size
+       :gap "10px"
+       :children (hanami)])))
 
 (defn hanami-main []
   (printchan "Hanami-main called ...")
@@ -566,6 +570,68 @@
   (start :elem (js/document.querySelector "#app")
          :port 3003
          :instrumentor-fn test-instrumentor)
+  (add-tab {:id :xvgl
+            :label "<->"
+            :opts {:extfn (tab<-> :NA)}})
+
+
+  (defn tab<-> [tabval]
+    (let [input (rgt/atom "")
+          output (rgt/atom "")]
+      (fn [tabval] (printchan "TAB<-> called ")
+        [v-box :gap "5px"
+         :children
+         [[h-box :gap "10px"
+           :children
+           [[gap :size "10px"]
+            [md-circle-icon-button
+             :md-icon-name "zmdi-circle-o"
+             :tooltip "Clear"
+             :on-click
+             #(do (reset! input "") (reset! output ""))]
+            [md-circle-icon-button
+             :md-icon-name "zmdi-long-arrow-right"
+             :tooltip "Translate VGL to VG (Clj)"
+             :on-click
+             #(reset! output
+                      (if (= @input "")
+                        ""
+                        (try
+                          (with-out-str
+                            (-> (js/JSON.parse @input)
+                                js/vl.compile .-spec
+                                #_js/JSON.stringify
+                                (js->clj :keywordize-keys true)
+                                cljs.pprint/pprint))
+                          (catch js/Error e (str e)))))]
+            [md-circle-icon-button
+             :md-icon-name "zmdi-forward"
+             :tooltip "Translate JSON to Clj"
+             :on-click
+             #(reset! output
+                      (if (= @input "")
+                        ""
+                        (try
+                          (with-out-str
+                            (cljs.pprint/pprint
+                             (js->clj (js/JSON.parse @input)
+                                      :keywordize-keys true)))
+                          (catch js/Error e (str e)))))]]]
+          [line]
+          [h-split
+           :panel-1 [box :size "auto"
+                     :child [input-textarea
+                             :model input
+                             :placeholder "JSON VGL/VG"
+                             :on-change #(reset! input %)
+                             :width "500px" :rows 20]]
+           :panel-2 [box :size "auto"
+                     :child [input-textarea
+                             :model output
+                             :placeholder "Clj"
+                             :on-change #(reset! output %)
+                             :width "500px" :rows 20]]
+           :size    "auto"]]])))
 
   (defn bar-slider-fn [tid val]
     (let [tabval (get-tab-field tid)

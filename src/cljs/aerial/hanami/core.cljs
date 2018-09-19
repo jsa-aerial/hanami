@@ -445,7 +445,7 @@
 
       :register
       (do (register data)
-          (user-msg {:op :app-register :data data}))
+          (user-msg {:op :app-init :data data}))
 
       :opts
       (update-opts data)
@@ -576,10 +576,6 @@
          :port 3003
          :instrumentor-fn test-instrumentor)
 
-  
-
-
-  
 
   (defn bar-slider-fn [tid val]
     (let [tabval (get-tab-field tid)

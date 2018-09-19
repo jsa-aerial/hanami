@@ -109,6 +109,26 @@ Renders as (left, before slider move; right, after slider move)
 ![Hanami pic 3](resources/public/images/instrumented-chart-1b.png?raw=true)
 
 
+An example using a Vega template for contour plotting. An important point to recognize here is that Vega specifications are also pure data, so the exact same recursive transformation works on Vega templates as Vega Lite templates:
+
+```Clojure
+(hc/xform
+  ht/contour-plot
+  :OPTS (merge (hc/default-opts :vgl) {:mode "vega"})
+  :HEIGHT 400, :WIDTH 500
+  :X "Horsepower", :XTITLE "Engine Horsepower"
+  :Y "Miles_per_Gallon" :YTITLE "Miles/Gallon"
+  :UDATA "data/cars.json"
+  :XFORM-EXPR #(let [d1 (% :X)
+                     d2 (% :Y)]
+                 (format "datum['%s'] != null && datum['%s'] !=null" d1 d2)))
+```
+
+This generates far too much to show here, as Vega is a much lower level formal specification language than Vega Lite. This renders as:
+
+![Hanami pic 3.1](resources/public/images/contour-1.png?raw=true)
+
+
 A number of other examples appear at the end of this README, along with their transformations and renderings.
 
 
@@ -330,9 +350,9 @@ Both of these transform into similar amounts of VGL output, but the first is som
 
 And the rendered visualizations are:
 
-![Hanami pic 4](resources/public/images/real-vs-binomial-col.png?raw=true)
+![Hanami pic 4.1](resources/public/images/real-vs-binomial-col.png?raw=true)
 
-![Hanami pic 5](resources/public/images/real-vs-binomial-row.png?raw=true)
+![Hanami pic 4.2](resources/public/images/real-vs-binomial-row.png?raw=true)
 
 
 This is a nice example of how one visualization (the row grouping) can bring out the salient information so much better than another (the col grouping)
@@ -412,7 +432,7 @@ This one is interesting in that it combines some nice straight ahead Clojure dat
  {:bar {:binSpacing 1, :discreteBandSize 5, :continuousBandSize 5}}}
  ```
 
-![Hanami pic 6](resources/public/images/lowess-tnseq-smoothing.png?raw=true)
+![Hanami pic 5](resources/public/images/lowess-tnseq-smoothing.png?raw=true)
 
 
 

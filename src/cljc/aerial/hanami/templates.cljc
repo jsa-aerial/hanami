@@ -61,11 +61,13 @@
   {:x {:field :X
        :type :XTYPE
        :axis {:title :XTITLE, :grid :XGRID}
-       :scale :XSCALE}
+       :scale :XSCALE
+       :aggregate :XAGG}
    :y {:field :Y
        :type :YTYPE
        :axis {:title :YTITLE, :grid :YGRID}
-       :scale :YSCALE}
+       :scale :YSCALE
+       :aggregate :YAGG}
    :row :ROWDEF
    :column :COLDEF
    :color :COLOR

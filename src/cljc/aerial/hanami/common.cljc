@@ -48,7 +48,7 @@
          ;; Data, transforms, and encodings
          :DATA RMV, :UDATA RMV, :NDATA RMV
          :TRANSFORM RMV
-         :AGG RMV
+         :AGG RMV, :XAGG RMV, :YAGG RMV
          :X "x", :XTYPE, "quantitative", :XTITLE RMV, :XSCALE RMV, :XGRID RMV
          :Y "y", :YTYPE, "quantitative", :YTITLE RMV, :YSCALE RMV, :YGRID RMV
          :ROWDEF ht/default-row :ROW RMV, :ROWTYPE RMV

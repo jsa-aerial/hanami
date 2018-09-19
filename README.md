@@ -435,6 +435,35 @@ This one is interesting in that it combines some nice straight ahead Clojure dat
 ![Hanami pic 5](resources/public/images/lowess-tnseq-smoothing.png?raw=true)
 
 
+We can do something more interesting here in this case, as we may want to get close ups of various sections of such a plot. Instead of looking at the entire genome, we can focus on chunks of it with selection brushes using an overlay+detail display:
+
+```Clojure
+(hc/xform ht/vconcat-chart
+   :TITLE "Raw vs 1-4 lowess smoothing" :TOFFSET 5
+   :DATA (concat base-xy lowess-1 lowess-2 lowess-3 lowess-4)
+   :VCONCAT [(hc/xform ht/simple-layer-chart
+               :LAYER
+               (mapv #(hc/xform
+                       ht/gen-encode-layer :WIDTH 1000
+                       :MARK (if (= "NoL" %) "circle" "line")
+                       :TRANSFORM [{:filter {:field "NM" :equal %}}]
+                       :XSCALE {:domain {:selection "brush"}}
+                       :COLOR "NM", :XTITLE "Position", :YTITLE "Count")
+                     ["NoL" "L1" "L2" "L3"]))
+             (hc/xform ht/gen-encode-layer
+               :MARK "circle"
+               :WIDTH 1000, :HEIGHT 60
+               :TRANSFORM [{:filter {:field "NM" :equal "NoL"}}]
+               :SELECTION {:brush {:type "interval", :encodings ["x"]}}
+               :COLOR "NM" :XTITLE "Position", :YTITLE "Count")])
+```
+
+Here are two snapshots of the resulting interactive visualization:
+
+![Hanami pic 5.1](resources/public/images/lowess-overlay-detail-1.png?raw=true)
+![Hanami pic 5.2](resources/public/images/lowess-overlay-detail-2.png?raw=true)
+
+
 
 And lastly a quite involved example from a real application for RNASeq Differential Gene Expression:
 

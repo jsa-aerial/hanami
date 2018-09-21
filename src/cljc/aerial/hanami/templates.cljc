@@ -70,6 +70,7 @@
        :axis {:title :YTITLE, :grid :YGRID}
        :scale :YSCALE
        :aggregate :YAGG}
+   :opacity :OPACITY
    :row :ROWDEF
    :column :COLDEF
    :color :COLOR

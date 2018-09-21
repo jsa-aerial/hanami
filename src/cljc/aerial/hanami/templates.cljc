@@ -60,11 +60,13 @@
 (def xy-encoding
   {:x {:field :X
        :type :XTYPE
+       :timeUnit :TIMEUNIT
        :axis {:title :XTITLE, :grid :XGRID}
        :scale :XSCALE
        :aggregate :XAGG}
    :y {:field :Y
        :type :YTYPE
+       :timeUnit :TIMEUNIT
        :axis {:title :YTITLE, :grid :YGRID}
        :scale :YSCALE
        :aggregate :YAGG}
@@ -108,7 +110,8 @@
    :encoding :ENCODING})
 
 (def gen-encode-layer
-  {:transform :TRANSFORM
+  {:height :HEIGHT, :width :WIDTH
+   :transform :TRANSFORM
    :selection :SELECTION
    :mark :MARK
    :encoding :ENCODING})

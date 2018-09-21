@@ -48,10 +48,12 @@
          ;; Data, transforms, and encodings
          :DATA RMV, :UDATA RMV, :NDATA RMV
          :TRANSFORM RMV
-         :OPACITY RMV, :TIMEUNIT RMV
+         :OPACITY RMV
          :AGG RMV, :XAGG RMV, :YAGG RMV
-         :X "x", :XTYPE, "quantitative", :XTITLE RMV, :XSCALE RMV, :XGRID RMV
-         :Y "y", :YTYPE, "quantitative", :YTITLE RMV, :YSCALE RMV, :YGRID RMV
+         :X "x", :XTYPE, "quantitative", :XTITLE RMV,
+         :XSCALE RMV, :XGRID RMV, :XUNIT RMV
+         :Y "y", :YTYPE, "quantitative", :YTITLE RMV,
+         :YSCALE RMV, :YGRID RMV, :YUNIT RMV
          :ROWDEF ht/default-row :ROW RMV, :ROWTYPE RMV
          :COLDEF ht/default-col :COLUMN RMV, :COLTYPE RMV
          :POINT RMV, :MSIZE RMV

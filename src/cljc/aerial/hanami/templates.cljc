@@ -60,13 +60,13 @@
 (def xy-encoding
   {:x {:field :X
        :type :XTYPE
-       :timeUnit :TIMEUNIT
+       :timeUnit :XUNIT
        :axis {:title :XTITLE, :grid :XGRID}
        :scale :XSCALE
        :aggregate :XAGG}
    :y {:field :Y
        :type :YTYPE
-       :timeUnit :TIMEUNIT
+       :timeUnit :YUNIT
        :axis {:title :YTITLE, :grid :YGRID}
        :scale :YSCALE
        :aggregate :YAGG}

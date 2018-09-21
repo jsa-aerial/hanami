@@ -83,6 +83,7 @@
 
 (def xrule-layer
   {:mark "rule"
+   :transform :TRANSFORM
    :encoding {:x {:field :X
                   :type :XTYPE
                   :aggregate :AGG}
@@ -91,6 +92,7 @@
 
 (def yrule-layer
   {:mark "rule"
+   :transform :TRANSFORM
    :encoding {:y {:field :Y
                   :type :YTYPE
                   :aggregate :AGG}
@@ -100,14 +102,20 @@
 
 (def bar-layer
   {:mark "bar"
+   :selection :SELECTION
+   :transform :TRANSFORM
    :encoding :ENCODING})
 
 (def line-layer
   {:mark {:type "line", :point :POINT}
+   :selection :SELECTION
+   :transform :TRANSFORM
    :encoding :ENCODING})
 
 (def point-layer
   {:mark "circle"
+   :selection :SELECTION
+   :transform :TRANSFORM
    :encoding :ENCODING})
 
 (def gen-encode-layer

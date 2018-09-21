@@ -185,7 +185,6 @@
     (hc/xform ht/simple-layer-chart
               :TID :multi :TOPTS {:order :row, :size "auto"}
               :TITLE "Self Information (unexpectedness)"
-              :HEIGHT 300, :WIDTH 350
               :LAYER [(hc/xform ht/line-layer
                                 :XTITLE "Probability of event"
                                 :YTITLE "-log(p)")

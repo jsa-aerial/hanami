@@ -50,10 +50,12 @@
          :TRANSFORM RMV
          :OPACITY RMV
          :AGG RMV, :XAGG RMV, :YAGG RMV
-         :X "x", :XTYPE, "quantitative", :XTITLE RMV,
-         :XSCALE RMV, :XGRID RMV, :XUNIT RMV
-         :Y "y", :YTYPE, "quantitative", :YTITLE RMV,
-         :YSCALE RMV, :YGRID RMV, :YUNIT RMV
+         :X "x", :XTYPE, "quantitative", :XUNIT RMV
+         :XSCALE RMV
+         :XTITLE RMV, :XGRID RMV, :XFORMAT RMV
+         :Y "y", :YTYPE, "quantitative", :YUNIT RMV
+         :YSCALE RMV
+         :YTITLE RMV, :YGRID RMV, :YFORMAT RMV
          :ROWDEF ht/default-row :ROW RMV, :ROWTYPE RMV
          :COLDEF ht/default-col :COLUMN RMV, :COLTYPE RMV
          :POINT RMV, :MSIZE RMV

@@ -61,13 +61,13 @@
   {:x {:field :X
        :type :XTYPE
        :timeUnit :XUNIT
-       :axis {:title :XTITLE, :grid :XGRID}
+       :axis {:title :XTITLE, :grid :XGRID, :format :XFORMAT}
        :scale :XSCALE
        :aggregate :XAGG}
    :y {:field :Y
        :type :YTYPE
        :timeUnit :YUNIT
-       :axis {:title :YTITLE, :grid :YGRID}
+       :axis {:title :YTITLE, :grid :YGRID, :format :YFORMAT}
        :scale :YSCALE
        :aggregate :YAGG}
    :opacity :OPACITY
@@ -118,11 +118,17 @@
    :transform :TRANSFORM
    :encoding :ENCODING})
 
+(def area-layer
+  {:mark "area"
+   :selection :SELECTION
+   :transform :TRANSFORM
+   :encoding :ENCODING})
+
 (def gen-encode-layer
   {:height :HEIGHT, :width :WIDTH
+   :mark :MARK
    :transform :TRANSFORM
    :selection :SELECTION
-   :mark :MARK
    :encoding :ENCODING})
 
 

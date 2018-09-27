@@ -520,7 +520,7 @@
 
 (defn set-session-name [name]
   (let [old-uid (get-adb [:main :uid])
-        name (if (= name "") (old-uid :name))]
+        name (if (= name "") (old-uid :name) name)]
     (sp/setval [sp/ATOM :main :session-name sp/ATOM] name app-db)
     (when (not= name (old-uid :name))
       (update-adb [:main :uid :name] name)

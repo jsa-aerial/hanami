@@ -158,7 +158,7 @@
   (assoc view-base :mark "area"))
 
 
-(def simple-layer-chart
+(def layer-chart
   {:usermeta :USERDATA
    :title  :TITLE
    :height :HEIGHT

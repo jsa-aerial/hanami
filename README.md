@@ -55,7 +55,7 @@ To install, add the following to your project `:dependencies`:
 ```
 
 ```Clojure
-(hc/xform ht/simple-point-chart
+(hc/xform ht/point-chart
   :UDATA "data/cars.json"
   :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")
 ```
@@ -84,7 +84,7 @@ And when sent to a viewer, results in, where the mouse is hovering over the poin
 An example of an instrumented chart:
 
 ```Clojure
-(hc/xform ht/simple-bar-chart
+(hc/xform ht/bar-chart
   :USERDATA
   {:test1 `[[gap :size "10px"] [label :label "Add Bar"]
             [label :label ~minstr]
@@ -179,7 +179,7 @@ A few 'subcomponents':
    :mark :MARK
    :encoding :ENCODING})
 
-(def simple-layer-chart
+(def layer-chart
   {:usermeta :USERDATA
    :title  :TITLE
    :height :HEIGHT
@@ -215,7 +215,7 @@ And a full chart. This one does faceted composing with optional interactivity. M
 
 ### Walk through example of transformation
 
-It's worth having a preliminary look at what happens with this simple chart and its transformations. The value of `ht/simple-point-chart` is:
+It's worth having a preliminary look at what happens with this simple chart and its transformations. The value of `ht/point-chart` is:
 
 ```Clojure
 {:usermeta :USERDATA
@@ -229,7 +229,7 @@ It's worth having a preliminary look at what happens with this simple chart and 
  :mark {:type "circle", :size :MSIZE}
  :encoding :ENCODING}
 ```
-In the above transform we specified values for `:UDATA`, `:X`, `:Y`, and `:COLOR`. First, none of these are anywhere to be seen in `ht/simple-point-chart` so where do they come from? Second, what happened to all those other fields like `:usermeta` and those values like `:SELECTION`. Both questions have answers rooted in the map of default _substitution keys_ and values for transformations. There is nothing special about these defaults and a user can completely change them if they do not like the key names or their values. However, out of the box, Hanami provides a starting set and  here is a subset of those substitutions that answer our two questions and also where some other values come from:
+In the above transform we specified values for `:UDATA`, `:X`, `:Y`, and `:COLOR`. First, none of these are anywhere to be seen in `ht/point-chart` so where do they come from? Second, what happened to all those other fields like `:usermeta` and those values like `:SELECTION`. Both questions have answers rooted in the map of default _substitution keys_ and values for transformations. There is nothing special about these defaults and a user can completely change them if they do not like the key names or their values. However, out of the box, Hanami provides a starting set and  here is a subset of those substitutions that answer our two questions and also where some other values come from:
 
 ```Clojure
   :BACKGROUND "floralwhite"
@@ -361,7 +361,7 @@ This is a nice example of how one visualization (the row grouping) can bring out
 The next is a visualization for an investigation into using lowess smoothing of TNSeq fitness data.
 
 ```Clojure
-(hc/xform ht/simple-layer-chart
+(hc/xform ht/layer-chart
   :TITLE "Raw vs 1-4 lowess smoothing" :TOFFSET 5
   :HEIGHT 500 :WIDTH 700
   :DATA (concat base-xy lowess-1 lowess-2 lowess-3 lowess-4)
@@ -441,7 +441,7 @@ We can do something more interesting here in this case, as we may want to get cl
 (hc/xform ht/vconcat-chart
    :TITLE "Raw vs 1-4 lowess smoothing" :TOFFSET 5
    :DATA (concat base-xy lowess-1 lowess-2 lowess-3 lowess-4)
-   :VCONCAT [(hc/xform ht/simple-layer-chart
+   :VCONCAT [(hc/xform ht/layer-chart
                :LAYER
                (mapv #(hc/xform
                        ht/gen-encode-layer :WIDTH 1000
@@ -480,7 +480,7 @@ And lastly a quite involved example from a real application for RNASeq Different
     :TOFFSET 40
     :DATA :data
     :HCONCAT[(hc/xform
-              ht/simple-point-chart
+              ht/point-chart
               :TITLE "MA Plot"
               :MSIZE 40
               :SELECTION (merge  (hc/xform ht/interval-scales :INAME "grid1")
@@ -488,7 +488,7 @@ And lastly a quite involved example from a real application for RNASeq Different
               :X "baseMean", :Y "log2FoldChange"
               :COLOR color, :SIZE size, :TOOLTIP tooltip)
              (hc/xform
-              ht/simple-point-chart
+              ht/point-chart
               :TITLE "Volcano Plot"
               :MSIZE 40
               :SELECTION (merge (hc/xform ht/interval-scales :INAME "grid2")

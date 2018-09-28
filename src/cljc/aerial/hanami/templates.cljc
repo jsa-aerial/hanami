@@ -131,10 +131,7 @@
    :selection :SELECTION
    :encoding :ENCODING})
 
-
-
-
-(def simple-bar-chart
+(def view-base
   {:usermeta :USERDATA
    :title :TITLE
    :height :HEIGHT
@@ -143,33 +140,22 @@
    :selection :SELECTION
    :data data-options
    :transform :TRANSFORM
-   :mark "bar",
    :encoding :ENCODING})
 
 
-(def simple-line-chart
-  {:usermeta :USERDATA
-   :title  :TITLE
-   :height :HEIGHT
-   :width :WIDTH
-   :background :BACKGROUND
-   :selection :SELECTION
-   :data data-options
-   :transform :TRANSFORM
-   :mark {:type "line", :point :POINT}
-   :encoding :ENCODING})
+(def bar-chart
+  (assoc view-base :mark "bar"))
 
-(def simple-point-chart
-  {:usermeta :USERDATA
-   :title  :TITLE
-   :height :HEIGHT
-   :width :WIDTH
-   :background :BACKGROUND
-   :selection :SELECTION
-   :data data-options
-   :transform :TRANSFORM
-   :mark {:type "circle", :size :MSIZE}
-   :encoding :ENCODING})
+(def line-chart
+  (assoc view-base
+         :mark {:type "line", :point :POINT}))
+
+(def point-chart
+  (assoc view-base
+         :mark {:type "circle", :size :MSIZE}))
+
+(def area-chart
+  (assoc view-base :mark "area"))
 
 
 (def simple-layer-chart
@@ -199,9 +185,7 @@
    :data data-options
    :config {:bar {:binSpacing 1
                   :discreteBandSize 5
-                  :continuousBandSize 5}
-            #_:view #_{:stroke "transparent"},
-            #_:axis #_{:domainWidth 1}}})
+                  :continuousBandSize 5}}})
 
 (def vconcat-chart
   {:usermeta :USERDATA

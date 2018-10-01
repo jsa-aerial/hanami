@@ -14,7 +14,7 @@
 
    [aerial.hanasu.server :as srv]
    [aerial.hanasu.common :as com]
-   [aerial.hanami.common
+   [aerial.hanami.common :as hc
     :refer [default-opts xform reset-defaults add-defaults]]
    [aerial.hanami.templates :as ht]
 
@@ -218,6 +218,14 @@
     (s! (get-adb session-name)
         (get-msgop data-maps)
         data-maps)))
+
+(defn su!
+  ([sub-map]
+   (let [new-map (merge @hc/_defaults sub-map)
+         session-name (or (new-map :SESSION-NAME) (new-map :session-name))]
+     (s! (get-adb session-name) :submap-update new-map)))
+  ([k v & kvs]
+   (su! (into {} (cons [k v] (->> kvs (partition-all 2) (map vec)))))))
 
 
 

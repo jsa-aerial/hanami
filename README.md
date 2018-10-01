@@ -18,7 +18,6 @@ To install, add the following to your project `:dependencies`:
 
     [aerial.hanami "0.2.0"]
 
-**NOTE** lib bundling/packaging is currently in flux and artifact not yet available...
 
 
 ## Features

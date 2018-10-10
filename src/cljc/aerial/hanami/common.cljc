@@ -40,20 +40,20 @@
 
 (def subkeyfns
   (atom {color-key
-         (fn[spec xkv subkey subval]
+         (fn[xkv subkey subval]
            (when (string? subval)
              (xform ht/default-mark-props (assoc xkv :MPFIELD subval))))
          shape-key
-         (fn[spec xkv subkey subval]
+         (fn[xkv subkey subval]
            (when (string? subval)
              (xform ht/default-mark-props (assoc xkv :MPFIELD subval))))
          title-key
-         (fn[spec xkv subkey subval]
+         (fn[xkv subkey subval]
            (when (string? subval)
              (xform ht/default-title (assoc xkv :TTEXT subval))))
          :TOOLTIP
-         (fn[spec xkv subkey subval]
-           (clojure.pprint/pprint spec) nil)}))
+         (fn[xkv subkey subval]
+           nil)}))
 
 (def _defaults
   (atom {;; General
@@ -130,7 +130,7 @@
           (let [subval (get xkv v v)
                 subval (if (fn? subval) (subval xkv) subval)
                 subkeyfn (@subkeyfns v)
-                subkeyfn-val (when subkeyfn (subkeyfn spec xkv v subval))]
+                subkeyfn-val (when subkeyfn (subkeyfn xkv v subval))]
             #_(clojure.pprint/pprint
                (if (not= v data-key) [v :SUBVAL subval] v))
             (cond

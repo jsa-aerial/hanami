@@ -67,6 +67,7 @@
              (let [mark (spec :mark)
                    mtype (cond (map? mark) (mark :type)
                                (string? mark) mark
+                               (keyword? mark) (get xkv mark)
                                :else nil)
                    point (when (map? mark) (get xkv :POINT))]
                (println :POINT point :MTYPE mtype)

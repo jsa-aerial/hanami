@@ -38,6 +38,23 @@
      (defn set-title-key! [key] (set! title-key key))))
 
 
+(def subkeyfns
+  (atom {color-key
+         (fn[spec xkv subkey subval]
+           (when (string? subval)
+             (xform ht/default-mark-props (assoc xkv :MPFIELD subval))))
+         shape-key
+         (fn[spec xkv subkey subval]
+           (when (string? subval)
+             (xform ht/default-mark-props (assoc xkv :MPFIELD subval))))
+         title-key
+         (fn[spec xkv subkey subval]
+           (when (string? subval)
+             (xform ht/default-title (assoc xkv :TTEXT subval))))
+         :TOOLTIP
+         (fn[spec xkv subkey subval]
+           (clojure.pprint/pprint spec) nil)}))
+
 (def _defaults
   (atom {;; General
          :BACKGROUND "floralwhite"
@@ -101,7 +118,7 @@
 
 
 (defn xform
-  ([x xkv]
+  ([spec xkv]
    (let [defaults @_defaults
          xkv (merge defaults xkv)]
      (sp/transform
@@ -111,35 +128,38 @@
           (let [xv (xform v xkv)]
             (if (seq xv) xv RMV))
           (let [subval (get xkv v v)
-                subval (if (fn? subval) (subval xkv) subval)]
+                subval (if (fn? subval) (subval xkv) subval)
+                subkeyfn (@subkeyfns v)
+                subkeyfn-val (when subkeyfn (subkeyfn spec xkv v subval))]
             #_(clojure.pprint/pprint
-             (if (not= v data-key) [v :SUBVAL subval] v))
+               (if (not= v data-key) [v :SUBVAL subval] v))
             (cond
+              ;; leaf value => termination
               (= v subval) v
 
-              (and (#{color-key shape-key} v) (string? subval))
-              (xform ht/default-mark-props (assoc xkv :MPFIELD subval))
+              ;; Special processing
+              subkeyfn-val subkeyfn-val
 
-              (and (= title-key v) (string? subval))
-              (xform ht/default-title (assoc xkv :TTEXT subval))
+              ;; Do not xform the data
+              (= v data-key) subval
 
-              (or (= v data-key)
-                  (string? subval)
+              ;; Potential new subkey as subval
+              (or (string? subval)
                   (not (coll? subval)))
               (recur subval)
 
               :else ;substitution val is coll
               (let [xv (xform subval xkv)]
                 (if (seq xv) xv RMV))))))
-      x)))
+      spec)))
 
-  ([x k v & kvs]
-   (xform x (into
-             {k v}
-             (->> kvs (partition-all 2)
-                  (mapv (fn[[k v]] [k v]))))))
+  ([spec k v & kvs]
+   (xform spec (into
+                {k v}
+                (->> kvs (partition-all 2)
+                     (mapv (fn[[k v]] [k v]))))))
 
-  ([x] (xform x {})))
+  ([spec] (xform spec {})))
 
 
 

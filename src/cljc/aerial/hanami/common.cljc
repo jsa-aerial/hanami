@@ -41,19 +41,35 @@
 (def subkeyfns
   (atom {color-key
          (fn[xkv subkey subval]
-           (when (string? subval)
-             (xform ht/default-mark-props (assoc xkv :MPFIELD subval))))
+           (if (string? subval)
+             (xform ht/default-mark-props (assoc xkv :MPFIELD subval))
+             subval))
+
          shape-key
          (fn[xkv subkey subval]
-           (when (string? subval)
-             (xform ht/default-mark-props (assoc xkv :MPFIELD subval))))
+           (if (string? subval)
+             (xform ht/default-mark-props (assoc xkv :MPFIELD subval))
+             subval))
+
          title-key
          (fn[xkv subkey subval]
-           (when (string? subval)
-             (xform ht/default-title (assoc xkv :TTEXT subval))))
+           (if (string? subval)
+             (xform ht/default-title (assoc xkv :TTEXT subval))
+             subval))
+
+         ;; Hack for broken VGL 3.0.0-rc6 - incorrect grouping by TT fields
          :TOOLTIP
          (fn[xkv subkey subval]
-           nil)}))
+           (when-let [spec (xkv ::spec)]
+             (let [mark (spec :mark)
+                   mtype (cond (map? mark) (mark :type)
+                               (string? mark) mark
+                               :else nil)
+                   point (when (map? mark) (get xkv :POINT))]
+               (println :POINT point :MTYPE mtype)
+               (if (and (not= point true) (#{:line "line"} mtype))
+                 RMV
+                 subval))))}))
 
 (def _defaults
   (atom {;; General
@@ -119,7 +135,8 @@
 
 (defn xform
   ([spec xkv]
-   (let [defaults @_defaults
+   (let [xkv (if (not (xkv ::spec)) (assoc xkv ::spec spec) xkv)
+         defaults @_defaults
          xkv (merge defaults xkv)]
      (sp/transform
       sp/ALL
@@ -130,15 +147,12 @@
           (let [subval (get xkv v v)
                 subval (if (fn? subval) (subval xkv) subval)
                 subkeyfn (@subkeyfns v)
-                subkeyfn-val (when subkeyfn (subkeyfn xkv v subval))]
+                subval (if subkeyfn (subkeyfn xkv v subval) subval)]
             #_(clojure.pprint/pprint
                (if (not= v data-key) [v :SUBVAL subval] v))
             (cond
               ;; leaf value => termination
               (= v subval) v
-
-              ;; Special processing
-              subkeyfn-val subkeyfn-val
 
               ;; Do not xform the data
               (= v data-key) subval

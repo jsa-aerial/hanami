@@ -48,8 +48,7 @@
 
 
 ;;; Simple scatter with template
-(->> (hc/xform ht/simple-point-chart
-       :HEIGHT 300 :WIDTH 400
+(->> (hc/xform ht/point-chart
        ;;:DATA (->> "http://localhost:3003/data/cars.json" slurp json/read-str)
        :UDATA "data/cars.json"
        :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")
@@ -81,7 +80,7 @@
        minstr (-> min str (str/split #"\.") first)
        max 10.0
        maxstr (-> max str (str/split #"\.") first (#(str "+" %)))]
-   (hc/xform ht/simple-bar-chart
+   (hc/xform ht/bar-chart
              :USERDATA
              (merge
               (hc/get-default :USERDATA)
@@ -148,7 +147,7 @@
      :encoding
      {:x {:field "dose", :type "quantitative", :scale {:type "log"}},
       :y {:field "response", :type "quantitative", :aggregate "mean"}}}
-    #_{:mark {:type "errorbar", :ticks true},
+    {:mark {:type "errorbar", :ticks true},
        :encoding
        {:x {:field "dose", :type "quantitative", :scale {:zero false}},
         :y {:field "response", :type "quantitative"},
@@ -176,13 +175,30 @@
  hmi/sv!)
 
 
+(->
+ (let [data (->> (range 0.005 0.999 0.001)
+                 (mapv (fn[p] {:x p, :y (- (log2 p)) :col "SI"})))]
+   (hc/xform ht/point-chart
+             :TID :multi :TOPTS {:order :row, :size "auto"}
+             :TITLE "Self Information (unexpectedness)"
+             :XTITLE "Probability of event", :YTITLE "-log(p)"
+             :DATA data))
+ hmi/sv!)
+
+(->
+ (hc/xform ht/line-chart
+           :TID :multi :TOPTS {:order :row, :size "auto"}
+           :DATA [{:x 1.0 :y 2.0} {:x 2.0 :y 3.0}])
+ hmi/sv!)
+
+
 ;;; Multi Chart - cols and rows
 ;;;
 (->>
  [(let [data (->> (range 0.005 0.999 0.001)
                   (mapv (fn[p] {:x p, :y (- (log2 p)) :col "SI"})))]
     ;; Self Info - unexpectedness
-    (hc/xform ht/simple-layer-chart
+    (hc/xform ht/layer-chart
               :TID :multi :TOPTS {:order :row, :size "auto"}
               :TITLE "Self Information (unexpectedness)"
               :LAYER [(hc/xform ht/line-layer
@@ -195,14 +211,13 @@
                   (mapv (fn[p] {:x p,
                                :y (- (- (* p (log2 p)))
                                      (* (- 1 p) (log2 (- 1 p))))})))]
-    (hc/xform ht/simple-layer-chart
+    (hc/xform ht/layer-chart
               :USERDATA (merge (hc/get-default :USERDATA)
                                {:test2 [{:id 1 :label "One" :val 1}
                                         {:id 2 :label "Two" :val 2}
                                         {:id 3 :label "Three" :val 3}]})
               :TID :multi
               :TITLE "Entropy (Unpredictability)"
-              :HEIGHT 300, :WIDTH 350
               :LAYER [(hc/xform ht/gen-encode-layer
                                 :MARK "line"
                                 :XTITLE "Probability of event" :YTITLE "H(p)")
@@ -222,7 +237,7 @@
     pdist))
 ;;(p/mean obsdist) => 5.7
 (->>
- [(hc/xform ht/simple-layer-chart
+ [(hc/xform ht/layer-chart
             :TID :dists :TOPTS {:order :row, :size "auto"}
             :TITLE "A Real (obvserved) distribution with incorrect simple mean"
             :HEIGHT 400 :WIDTH 450
@@ -231,7 +246,7 @@
              (hc/xform ht/xrule-layer :AGG "mean")]
             :DATA (mapv (fn[[x y]] {:x x :y y :m 5.7}) obsdist))
 
-  (hc/xform ht/simple-layer-chart
+  (hc/xform ht/layer-chart
             :TID :dists
             :TITLE "The same distribution with correct weighted mean"
             :HEIGHT 400 :WIDTH 450

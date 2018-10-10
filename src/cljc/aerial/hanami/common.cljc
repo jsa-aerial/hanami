@@ -38,6 +38,9 @@
      (defn set-title-key! [key] (set! title-key key))))
 
 
+;;; Subkeyfns may well make use of xform - defaults definitely do
+(declare xform)
+
 (def subkeyfns
   (atom {color-key
          (fn[xkv subkey subval]

@@ -139,7 +139,7 @@ A number of other examples appear at the end of this README, along with their tr
 
 _Templates_ are simply maps parameterized by _substitution keys_. Generally, templates will typically correspond to a legal VG or VGL specification or a legal subcomponent thereof. For example, a complete VGL specification (rendered as Clojure) is a legal template - even though it has no substitution keys. At the other extreme, templates can correspond to pieces of specifications or subcomponents. These will always have substitution keys - if they didn't there would be no point to them. Here are some examples as provided by the name space `aerial.hanami.templates`.
 
-A couple of 'fragments':
+A number of 'fragments':
 
 ```Clojure
 (def default-mark-props

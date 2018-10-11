@@ -154,6 +154,22 @@ A couple of 'fragments':
     :encodings :ENCODINGS,
     :zoom "wheel!",
     :resolve :IRESOLVE}})
+
+(def view-base
+  {:usermeta :USERDATA
+   :title :TITLE
+   :height :HEIGHT
+   :width :WIDTH
+   :background :BACKGROUND
+   :selection :SELECTION
+   :data data-options
+   :transform :TRANSFORM
+   :encoding :ENCODING})
+
+(def mark-base
+  {:type :MARK, :point :POINT,
+   :size :MSIZE, :color :MCOLOR,
+   :filled :MFILLED})
 ```
 
 A few 'subcomponents':
@@ -162,12 +178,17 @@ A few 'subcomponents':
 (def xy-encoding
   {:x {:field :X
        :type :XTYPE
-       :axis {:title :XTITLE, :grid :XGRID}
-       :scale :XSCALE}
+       :timeUnit :XUNIT
+       :axis {:title :XTITLE, :grid :XGRID, :format :XFORMAT}
+       :scale :XSCALE
+       :aggregate :XAGG}
    :y {:field :Y
        :type :YTYPE
-       :axis {:title :YTITLE, :grid :YGRID}
-       :scale :YSCALE}
+       :timeUnit :YUNIT
+       :axis {:title :YTITLE, :grid :YGRID, :format :YFORMAT}
+       :scale :YSCALE
+       :aggregate :YAGG}
+   :opacity :OPACITY
    :row :ROWDEF
    :column :COLDEF
    :color :COLOR
@@ -176,10 +197,15 @@ A few 'subcomponents':
    :tooltip :TOOLTIP})
 
 (def gen-encode-layer
-  {:transform :TRANSFORM
-   :selection :SELECTION
+  {:height :HEIGHT, :width :WIDTH
    :mark :MARK
+   :transform :TRANSFORM
+   :selection :SELECTION
    :encoding :ENCODING})
+
+(def line-chart
+  (assoc view-base
+         :mark (merge mark-base {:type "line"})))
 
 (def layer-chart
   {:usermeta :USERDATA
@@ -195,7 +221,7 @@ A few 'subcomponents':
 And a full chart. This one does faceted composing with optional interactivity. Most of the capability comes from `:ENCODING` and its default.
 
 ```Clojure
-(def row-grouped-bar-chart
+(def grouped-bar-chart
   {:usermeta :USERDATA
    :title  :TITLE
    :height :HEIGHT

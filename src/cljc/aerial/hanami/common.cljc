@@ -70,7 +70,6 @@
                                (keyword? mark) (get xkv mark)
                                :else nil)
                    point (when (map? mark) (get xkv :POINT))]
-               (println :POINT point :MTYPE mtype)
                (if (and (not= point true) (#{:line "line"} mtype))
                  RMV
                  subval))))}))
@@ -95,7 +94,7 @@
          :YTITLE RMV, :YGRID RMV, :YFORMAT RMV
          :ROWDEF ht/default-row :ROW RMV, :ROWTYPE RMV
          :COLDEF ht/default-col :COLUMN RMV, :COLTYPE RMV
-         :POINT RMV, :MSIZE RMV
+         :POINT RMV, :MSIZE RMV, :MCOLOR RMV, :MFILLED RMV
          :TOOLTIP ht/default-tooltip
          :ENCODING ht/xy-encoding
          :RESOLVE RMV

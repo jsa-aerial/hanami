@@ -142,20 +142,27 @@
    :transform :TRANSFORM
    :encoding :ENCODING})
 
+(def mark-base
+  {:type :MARK, :point :POINT,
+   :size :MSIZE, :color :MCOLOR,
+   :filled :MFILLED})
+
 
 (def bar-chart
-  (assoc view-base :mark "bar"))
+  (assoc view-base
+         :mark (merge mark-base {:type "bar"})))
 
 (def line-chart
   (assoc view-base
-         :mark {:type "line", :point :POINT}))
+         :mark (merge mark-base {:type "line"})))
 
 (def point-chart
   (assoc view-base
-         :mark {:type "circle", :size :MSIZE}))
+         :mark (merge mark-base {:type "circle"})))
 
 (def area-chart
-  (assoc view-base :mark "area"))
+  (assoc view-base
+         :mark (merge mark-base {:type "area"})))
 
 
 (def layer-chart

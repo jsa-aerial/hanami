@@ -133,17 +133,8 @@
      {:dose 50, :response 25999}
      {:dose 50, :response 20999}]},
    :layer
-   [{:selection
-     {:grid
-      {:type "interval",
-       :bind "scales",
-       :on "[mousedown, window:mouseup] > window:mousemove!",
-       :encodings ["x" "y"],
-       :translate "[mousedown, window:mouseup] > window:mousemove!",
-       :zoom "wheel!",
-       :mark {:fill "#333", :fillOpacity 0.125, :stroke "white"},
-       :resolve "global"}},
-     :mark {:type "point", :filled true, :color "green"},
+   [{:selection {:grid {:type "interval", :bind "scales"}},
+     :mark {:type "point", :filled true, :color "black"},
      :encoding
      {:x {:field "dose", :type "quantitative", :scale {:type "log"}},
       :y {:field "response", :type "quantitative", :aggregate "mean"}}}
@@ -153,6 +144,47 @@
         :y {:field "response", :type "quantitative"},
         :color {:value "#4682b4"}}}]})
  hmi/sv!)
+
+(->>
+ (hc/xform
+  {:usermeta :USERDATA
+   :height 600,
+   :width 600,
+   :data
+   {:values
+    [{:Dose 0.5, :Response 32659.00003,
+      :drc_dose 0.05, :drc_ll3 35597.08053881955},
+     {:Dose 0.5, :Response 40659.00002340234,
+      :drc_dose 1, :drc_ll3 35597.08053881955},
+     {:Dose 0.5, :Response 29000,
+      :drc_dose 2, :drc_ll3 35597.08053881955},
+     {:Dose 1, :Response 31781,
+      :drc_dose 5, :drc_ll3 35597.08053881955},
+     {:Dose 1, :Response 30781,
+      :drc_dose 10, :drc_ll3 35597.08053881955},
+     {:Dose 1, :Response 35781,
+      :drc_dose 50, :drc_ll3 35597.08053881955},
+     {:Dose 2, :Response 30054,
+      :drc_dose 200, :drc_ll3 35597.08053881955},
+     {:Dose 4, :Response 29398,
+      :drc_dose 1000, :drc_ll3 35597.08053881955}]},
+   :layer
+   [{:selection {:grid {:type "interval", :bind "scales"}},
+     :mark {:type "point", :filled true, :color "black"},
+     :encoding
+     {:x {:field "Dose", :type "quantitative", :scale {:type "log"}},
+      :y {:field "Response", :type "quantitative", :aggregate "mean"}}}
+    {:mark {:type "errorbar", :ticks true},
+       :encoding
+       {:x {:field "Dose", :type "quantitative", :scale {:zero false}},
+        :y {:field "Response", :type "quantitative"},
+        :color {:value "black"}}}
+    {:mark {:type "line", :color "red"},
+     :encoding
+     {:x {:field "drc_dose", :type "quantitative"},
+      :y {:field "drc_ll3", :type "quantitative"}}}]})
+ hmi/sv!)
+
 
 
 ;;; Geo Example
@@ -173,6 +205,7 @@
    :config {:view {:stroke "transparent"}}}
   :TID :geo)
  hmi/sv!)
+
 
 
 (->

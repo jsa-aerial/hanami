@@ -74,6 +74,15 @@
                  RMV
                  subval))))}))
 
+(defn update-subkeyfns
+  ([new-subkeyfn-map]
+   (swap! subkeyfns #(merge % new-subkeyfn-map)))
+  ([k vfn & kvfns]
+   (update-subkeyfns
+    (doseq [[k vfn] (-> k (cons (cons vfn kvfns)) (->> (partition-all 2)))]
+      (sp/setval [sp/ATOM k] vfn subkeyfns)))))
+
+
 (def _defaults
   (atom {;; General
          :BACKGROUND "floralwhite"
@@ -124,7 +133,21 @@
 (defn reset-defaults [default-map]
   (reset! _defaults default-map))
 
+(defn update-defaults
+  "Add, change, or remove substitution keys and their substitution
+  values from main substitution map"
+  ([new-defaults-map]
+   (swap! _defaults #(merge % new-defaults-map)))
+  ([k v & kvs]
+   (update-defaults
+    (doseq [[k v] (-> k (cons (cons v kvs)) (->> (partition-all 2)))]
+      (sp/setval [sp/ATOM k] v _defaults)))))
+
+(defn get-default [k] (@_defaults k))
+
+;;; Not properly general - use update-defaults
 (defn add-defaults
+  "Deprecated - use update-defaults"
   ([new-default-map]
    (swap! _defaults #(merge % new-default-map)))
   ([k v & kvs]
@@ -132,7 +155,6 @@
     (into {k v} (->> kvs (partition-all 2)
                      (mapv (fn[[k v]] [k v])))))))
 
-(defn get-default [k] (@_defaults k))
 
 
 

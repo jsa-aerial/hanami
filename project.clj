@@ -26,9 +26,9 @@
                  ;; [cljsjs/vega-embed "3.16.1-0"]
                  ;; [cljsjs/vega-tooltip "0.12.0-0"]
 
-                 [cljsjs/vega "4.2.0-0"]
-                 [cljsjs/vega-lite "3.0.0-rc6-0"]
-                 [cljsjs/vega-embed "3.20.0-0"]
+                 [cljsjs/vega "4.3.0-0"]
+                 [cljsjs/vega-lite "3.0.0-rc8-0"]
+                 [cljsjs/vega-embed "3.24.1-0"]
                  [cljsjs/vega-tooltip "0.13.0-0"]
                  ]
 

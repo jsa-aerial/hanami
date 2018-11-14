@@ -35,7 +35,7 @@
 #_(hmi/stop-server)
 
 
-(hc/add-defaults
+(hc/update-defaults
  :USERDATA {:tab {:id :TID, :label :TLBL, :opts :TOPTS}
             :opts :OPTS
             :vid :VID, :msgop :MSGOP, :session-name :SESSION-NAME}
@@ -63,6 +63,45 @@
               :y {:field "Miles_per_Gallon", :type "quantitative"},
               :color {:field "Origin", :type "nominal"}}})
  hmi/sv!)
+
+;;; with framing
+(let [text "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quod si ita est, sequitur id ipsum, quod te velle video, omnes semper beatos esse sapientes. Tamen a proposito, inquam, aberramus."]
+  (->> (hc/xform ht/point-chart
+         :USERDATA
+         (merge
+          (hc/get-default :USERDATA)
+          {:frame
+           {:top `[[gap :size "200px"]
+                   [p "Hi there. This is a "
+                    [:span.bold "paragraph"] " of "
+                    [:span.italic.bold "text"] " on top"]]
+            :left `[[gap :size "10px"]
+                    [p {:style {:width "100px" :min-width "50px"}}
+                     "Some text on the " [:span.bold "left:"] [:br] ~text]]
+            :right `[[gap :size "2px"]
+                     [p {:style {:width "200px" :min-width "50px"
+                                 :font-size "20px" :color "red"}}
+                      "Some text on the " [:span.bold "right:"] [:br]
+                      ~(.substring text 0 180)]]
+            :bottom `[[gap :size "200px"]
+                      [title :level :level3
+                       :label [p {:style {:font-size "large"}}
+                               "Some text on the "
+                               [:span.bold "bottom"] [:br]
+                               "With a cool info button "
+                               [info-button
+                                :info
+                                [:p
+                                 "Check out the nifty "
+                                 [hyperlink-href
+                                  :label  "ClojureScript Cheatsheet"
+                                  :href   "http://cljs.info/cheatsheet"
+                                  :target "_blank"]]]]]]
+            }
+           })
+         :UDATA "data/cars.json"
+         :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")
+       hmi/sv!))
 
 
 ;;; Simple Barchart with instrumented template

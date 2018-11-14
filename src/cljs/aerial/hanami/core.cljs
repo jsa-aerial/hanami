@@ -25,7 +25,7 @@
     :refer [h-box v-box box gap line h-split v-split
             button row-button md-icon-button md-circle-icon-button info-button
             input-text input-password input-textarea
-            label title p
+            label title hyperlink-href p
             single-dropdown
             checkbox radio-button slider progress-bar throbber
             horizontal-bar-tabs vertical-bar-tabs
@@ -51,7 +51,7 @@
             '[h-box v-box box gap line flex-child-style
               button row-button md-icon-button md-circle-icon-button info-button
               input-text input-password input-textarea
-              label title p
+              label title hyperlink-href p
               single-dropdown
               checkbox radio-button slider progress-bar throbber
               horizontal-bar-tabs vertical-bar-tabs
@@ -60,7 +60,7 @@
             [h-box v-box box gap line flex-child-style
              button row-button md-icon-button md-circle-icon-button info-button
              input-text input-password input-textarea
-             label title p
+             label title hyperlink-href p
              single-dropdown
              checkbox radio-button slider progress-bar throbber
              horizontal-bar-tabs vertical-bar-tabs
@@ -226,11 +226,11 @@
       [box :child [:div#app]])}))
 
 
-(defn vis-list [tabid spec-children-pairs opts]
+(defn vis-list [tabid spec-frame-pairs opts]
   (let [layout (if (= (get-in opts [:order]) :row) h-box v-box)
         eltnum (get-in opts [:eltsper] 3)
-        numspecs (count spec-children-pairs)
-        spec-chunks (->> spec-children-pairs
+        numspecs (count spec-frame-pairs)
+        spec-chunks (->> spec-frame-pairs
                          (partition-all eltnum)
                          (mapv vec))]
     (printchan "VIS-LIST : " numspecs)
@@ -239,12 +239,17 @@
        :size (get-in opts [:size] "auto")
        :gap "20px"
        :children
-       (for [[spec children] sub-pairs]
+       (for [[spec frame] sub-pairs]
          (do #_(js-delete spec "usermeta")
              #_(printchan :NSPEC spec children)
              [v-box :gap "10px"
-              :children [[h-box :gap "5px" :children children]
-                         [vgl spec]]]))])))
+              :children
+              [[h-box :gap "5px" :children (frame :top)]
+               [h-box :gap "5px"
+                :children [[h-box :children (frame :left)]
+                           [vgl spec]
+                           [h-box :children (frame :right)]]]
+               [h-box :gap "5px" :children (frame :bottom)]]]))])))
 
 (defn hanami []
   (if-let [tabval (get-cur-tab)]
@@ -258,9 +263,9 @@
             compvis)
 
         specs
-        (let [spec-children-pairs (tabval :spec-children-pairs)
-              ;;_ (printchan :SCPAIRS spec-children-pairs)
-              compvis (vis-list tabid spec-children-pairs opts)]
+        (let [spec-frame-pairs (tabval :spec-frame-pairs)
+              ;;_ (printchan :SCPAIRS spec-frame-pairs)
+              compvis (vis-list tabid spec-frame-pairs opts)]
           (printchan "hanami called - making compvis")
           (update-cur-tab :compvis compvis)
           compvis)
@@ -392,7 +397,7 @@
                   main-opts (get-adb [:main :opts :tab])
                   instrumentor (-> :instrumentor get-adb first)
 
-                  spec-children-pairs
+                  spec-frame-pairs
                   (mapv #(do (when-let [vid (get-in % [:usermeta :vid])]
                                (update-vspecs vid %))
                              (vector % (instrumentor
@@ -404,7 +409,7 @@
               (if (not oldef)
                 (add-tab (assoc newdef
                                 :opts (merge-old-new-opts main-opts opts)
-                                :spec-children-pairs spec-children-pairs
+                                :spec-frame-pairs spec-frame-pairs
                                 :specs specs))
 
                 (let [oldopts (or (oldef :opts) main-opts)]
@@ -412,7 +417,7 @@
                                {:id tid
                                 :label (or label (get-tab-field tid :label))
                                 :opts (merge-old-new-opts oldopts opts)
-                                :spec-children-pairs spec-children-pairs
+                                :spec-frame-pairs spec-frame-pairs
                                 :specs specs})))))
           tabdefs)))
 
@@ -579,35 +584,53 @@
 
   (defn bar-slider-fn [tid val]
     (let [tabval (get-tab-field tid)
-          spec-children-pairs (tabval :spec-children-pairs)]
+          spec-frame-pairs (tabval :spec-frame-pairs)]
       (printchan "Slider update " val)
       (update-tab-field tid :compvis nil)
       (update-tab-field
-       tid :spec-children-pairs
-       (mapv (fn[[spec children]]
+       tid :spec-frame-pairs
+       (mapv (fn[[spec frame]]
                (let [cljspec spec
                      data (mapv (fn[m] (assoc m :b (+ (m :b) val)))
                                 (get-in cljspec [:data :values]))
                      newspec (assoc-in cljspec [:data :values] data)]
-                 [newspec children]))
-             spec-children-pairs))))
+                 [newspec frame]))
+             spec-frame-pairs))))
 
   (defn test-instrumentor [{:keys [tabid spec opts]}]
     (printchan "Test Instrumentor called" :TID tabid #_:SPEC #_spec)
     (let [cljspec spec
-          udata (cljspec :usermeta)] (update-adb [:udata] udata)
+          udata (cljspec :usermeta)
+          default-frame {:top [], :bottom [],
+                         :left [[box :size "0px" :child ""]],
+                         :right [[box :size "0px" :child ""]]}]
+      (update-adb [:udata] udata)
       (cond
         (not (map? udata)) []
+
+        (udata :frame)
+        (let [frame-sides (udata :frame)]
+          (printchan :Frame-Instrumentor)
+          (update-adb [:dbg :frame]
+                      (->> (keys frame-sides)
+                           (reduce
+                            (fn[F k]
+                              (assoc F k (xform-recom
+                                          (frame-sides k) re-com-xref)))
+                            default-frame)))
+          (get-adb [:dbg :frame]))
 
         (udata :slider)
         (let [sval (rgt/atom "0.0")]
           (printchan :SLIDER-INSTRUMENTOR)
-          (xform-recom (udata :slider)
-                       :m1 sval
-                       :oc1 #(do (bar-slider-fn tabid %)
-                                 (reset! sval (str %)))
-                       :oc2 #(do (bar-slider-fn tabid (js/parseFloat %))
-                                 (reset! sval %))))
+          (merge default-frame
+                 {:top (xform-recom
+                        (udata :slider)
+                        :m1 sval
+                        :oc1 #(do (bar-slider-fn tabid %)
+                                  (reset! sval (str %)))
+                        :oc2 #(do (bar-slider-fn tabid (js/parseFloat %))
+                                  (reset! sval %)))}))
 
         (udata :test2)
         [[gap :size "10px"]
@@ -619,7 +642,7 @@
           :placeholder "Hi there"
           :width "100px"]]
 
-        :else []
+        :else default-frame
         )))
 
 

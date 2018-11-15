@@ -183,6 +183,7 @@
           opts {:renderer (get vopts :renderer "canvas")
                 :mode     "vega"
                 :hover    (get vopts :hover default-hover)
+                :defaultStyle true
                 :actions  {:export (get vopts :export false),
                            :source false,
                            :editor false,

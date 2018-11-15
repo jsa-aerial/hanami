@@ -71,17 +71,18 @@
          (merge
           (hc/get-default :USERDATA)
           {:frame
-           {:top `[[gap :size "200px"]
-                   [p "Hi there. This is a "
-                    [:span.bold "paragraph"] " of "
-                    [:span.italic.bold "text"] " on top"]]
+           {:top `[[gap :size "150px"]
+                   [p "An example showing a "
+                    [:span.bold "picture "] [:span.italic.bold "frame"]
+                    ". This is the top 'board'"
+                    [:br] ~text]]
             :left `[[gap :size "10px"]
                     [p {:style {:width "100px" :min-width "50px"}}
                      "Some text on the " [:span.bold "left:"] [:br] ~text]]
             :right `[[gap :size "2px"]
                      [p {:style {:width "200px" :min-width "50px"
                                  :font-size "20px" :color "red"}}
-                      "Some text on the " [:span.bold "right:"] [:br]
+                      "Some large text on the " [:span.bold "right:"] [:br]
                       ~(.substring text 0 180)]]
             :bottom `[[gap :size "200px"]
                       [title :level :level3

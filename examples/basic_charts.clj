@@ -65,43 +65,47 @@
  hmi/sv!)
 
 ;;; with framing
-(let [text "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quod si ita est, sequitur id ipsum, quod te velle video, omnes semper beatos esse sapientes. Tamen a proposito, inquam, aberramus."]
-  (->> (hc/xform ht/point-chart
-         :USERDATA
-         (merge
-          (hc/get-default :USERDATA)
-          {:frame
-           {:top `[[gap :size "150px"]
-                   [p "An example showing a "
-                    [:span.bold "picture "] [:span.italic.bold "frame"]
-                    ". This is the top 'board'"
-                    [:br] ~text]]
-            :left `[[gap :size "10px"]
-                    [p {:style {:width "100px" :min-width "50px"}}
-                     "Some text on the " [:span.bold "left:"] [:br] ~text]]
-            :right `[[gap :size "2px"]
-                     [p {:style {:width "200px" :min-width "50px"
-                                 :font-size "20px" :color "red"}}
-                      "Some large text on the " [:span.bold "right:"] [:br]
-                      ~(.substring text 0 180)]]
-            :bottom `[[gap :size "200px"]
-                      [title :level :level3
-                       :label [p {:style {:font-size "large"}}
-                               "Some text on the "
-                               [:span.bold "bottom"] [:br]
-                               "With a cool info button "
-                               [info-button
-                                :info
-                                [:p
-                                 "Check out the nifty "
-                                 [hyperlink-href
-                                  :label  "ClojureScript Cheatsheet"
-                                  :href   "http://cljs.info/cheatsheet"
-                                  :target "_blank"]]]]]]
-            }
-           })
-         :UDATA "data/cars.json"
-         :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")
+(let [text "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quod si ita est, sequitur id ipsum, quod te velle video, omnes semper beatos esse sapientes. Tamen a proposito, inquam, aberramus."
+      frame {:frame
+             {:top `[[gap :size "150px"]
+                     [p "An example showing a "
+                      [:span.bold "picture "] [:span.italic.bold "frame"]
+                      ". This is the top 'board'"
+                      [:br] ~text]]
+              :left `[[gap :size "10px"]
+                      [p {:style {:width "100px" :min-width "50px"}}
+                       "Some text on the " [:span.bold "left:"] [:br] ~text]]
+              :right `[[gap :size "2px"]
+                       [p {:style {:width "200px" :min-width "50px"
+                                   :font-size "20px" :color "red"}}
+                        "Some large text on the " [:span.bold "right:"] [:br]
+                        ~(.substring text 0 180)]]
+              :bottom `[[gap :size "200px"]
+                        [title :level :level3
+                         :label [p {:style {:font-size "large"}}
+                                 "Some text on the "
+                                 [:span.bold "bottom"] [:br]
+                                 "With a cool info button "
+                                 [info-button
+                                  :info
+                                  [:p "Check out Saite Visualizer!" [:br]
+                                   "Built with Hanami!" [:br]
+                                   [hyperlink-href
+                                    :label "Saite "
+                                    :href  "https://github.com/jsa-aerial/saite"
+                                    :target "_blank"]]]]]]}}]
+  (->> [(hc/xform ht/point-chart
+          :USERDATA
+          (merge
+           (hc/get-default :USERDATA) frame)
+          :UDATA "data/cars.json"
+          :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")
+        #_(hc/xform ht/point-chart
+          :USERDATA
+          (merge
+           (hc/get-default :USERDATA) frame)
+          :UDATA "data/cars.json"
+          :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")]
        hmi/sv!))
 
 
@@ -251,18 +255,13 @@
 (->
  (let [data (->> (range 0.005 0.999 0.001)
                  (mapv (fn[p] {:x p, :y (- (log2 p)) :col "SI"})))]
-   (hc/xform ht/point-chart
+   (hc/xform ht/line-chart
              :TID :multi :TOPTS {:order :row, :size "auto"}
              :TITLE "Self Information (unexpectedness)"
              :XTITLE "Probability of event", :YTITLE "-log(p)"
              :DATA data))
  hmi/sv!)
 
-(->
- (hc/xform ht/line-chart
-           :TID :multi :TOPTS {:order :row, :size "auto"}
-           :DATA [{:x 1.0 :y 2.0} {:x 2.0 :y 3.0}])
- hmi/sv!)
 
 
 ;;; Multi Chart - cols and rows

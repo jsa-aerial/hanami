@@ -5,6 +5,7 @@
             :url "http://opensource.org/licenses/MIT"}
   :dependencies [[org.clojure/clojure "1.9.0"]
                  [org.clojure/clojurescript "1.10.238"]
+                 #_[org.clojure/clojurescript "1.10.339"]
                  [org.clojure/core.async "0.4.474"]
                  [org.clojure/data.csv "0.1.3"]
 

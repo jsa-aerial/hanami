@@ -578,73 +578,76 @@
 
 (comment
 
-  (start :elem (js/document.querySelector "#app")
-         :port 3003
-         :instrumentor-fn test-instrumentor)
+  (do
+    (defn bar-slider-fn [tid val]
+      (let [tabval (get-tab-field tid)
+            spec-frame-pairs (tabval :spec-frame-pairs)]
+        (printchan "Slider update " val)
+        (update-tab-field tid :compvis nil)
+        (update-tab-field
+         tid :spec-frame-pairs
+         (mapv (fn[[spec frame]]
+                 (let [cljspec spec
+                       data (mapv (fn[m] (assoc m :b (+ (m :b) val)))
+                                  (get-in cljspec [:data :values]))
+                       newspec (assoc-in cljspec [:data :values] data)]
+                   [newspec frame]))
+               spec-frame-pairs))))
 
+    (defn test-instrumentor [{:keys [tabid spec opts]}]
+      (printchan "Test Instrumentor called" :TID tabid #_:SPEC #_spec)
+      (let [cljspec spec
+            udata (cljspec :usermeta)
+            default-frame {:top [], :bottom [],
+                           :left [[box :size "0px" :child ""]],
+                           :right [[box :size "0px" :child ""]]}]
+        (update-adb [:udata] udata)
+        (cond
+          (not (map? udata)) []
 
-  (defn bar-slider-fn [tid val]
-    (let [tabval (get-tab-field tid)
-          spec-frame-pairs (tabval :spec-frame-pairs)]
-      (printchan "Slider update " val)
-      (update-tab-field tid :compvis nil)
-      (update-tab-field
-       tid :spec-frame-pairs
-       (mapv (fn[[spec frame]]
-               (let [cljspec spec
-                     data (mapv (fn[m] (assoc m :b (+ (m :b) val)))
-                                (get-in cljspec [:data :values]))
-                     newspec (assoc-in cljspec [:data :values] data)]
-                 [newspec frame]))
-             spec-frame-pairs))))
+          (udata :frame)
+          (let [frame-sides (udata :frame)]
+            (printchan :Frame-Instrumentor)
+            (update-adb [:dbg :frame]
+                        (->> (keys frame-sides)
+                             (reduce
+                              (fn[F k]
+                                (assoc F k (xform-recom
+                                            (frame-sides k) re-com-xref)))
+                              default-frame)))
+            (get-adb [:dbg :frame]))
 
-  (defn test-instrumentor [{:keys [tabid spec opts]}]
-    (printchan "Test Instrumentor called" :TID tabid #_:SPEC #_spec)
-    (let [cljspec spec
-          udata (cljspec :usermeta)
-          default-frame {:top [], :bottom [],
-                         :left [[box :size "0px" :child ""]],
-                         :right [[box :size "0px" :child ""]]}]
-      (update-adb [:udata] udata)
-      (cond
-        (not (map? udata)) []
+          (udata :slider)
+          (let [sval (rgt/atom "0.0")]
+            (printchan :SLIDER-INSTRUMENTOR)
+            (merge default-frame
+                   {:top (xform-recom
+                          (udata :slider)
+                          :m1 sval
+                          :oc1 #(do (bar-slider-fn tabid %)
+                                    (reset! sval (str %)))
+                          :oc2 #(do (bar-slider-fn tabid (js/parseFloat %))
+                                    (reset! sval %)))}))
 
-        (udata :frame)
-        (let [frame-sides (udata :frame)]
-          (printchan :Frame-Instrumentor)
-          (update-adb [:dbg :frame]
-                      (->> (keys frame-sides)
-                           (reduce
-                            (fn[F k]
-                              (assoc F k (xform-recom
-                                          (frame-sides k) re-com-xref)))
-                            default-frame)))
-          (get-adb [:dbg :frame]))
-
-        (udata :slider)
-        (let [sval (rgt/atom "0.0")]
-          (printchan :SLIDER-INSTRUMENTOR)
+          (udata :test2)
           (merge default-frame
-                 {:top (xform-recom
-                        (udata :slider)
-                        :m1 sval
-                        :oc1 #(do (bar-slider-fn tabid %)
-                                  (reset! sval (str %)))
-                        :oc2 #(do (bar-slider-fn tabid (js/parseFloat %))
-                                  (reset! sval %)))}))
+                 {:right [[gap :size "10px"]
+                          [v-box :children
+                           [[label :label "Select a demo"]
+                            [single-dropdown
+                             :choices (udata :test2)
+                             :on-change #(printchan "Dropdown: " %)
+                             :model nil
+                             :placeholder "Hi there"
+                             :width "100px"]]]]})
 
-        (udata :test2)
-        [[gap :size "10px"]
-         [label :label "Select a demo"]
-         [single-dropdown
-          :choices (udata :test2)
-          :on-change #(printchan "Dropdown: " %)
-          :model nil
-          :placeholder "Hi there"
-          :width "100px"]]
+          :else default-frame
+          )))
 
-        :else default-frame
-        )))
+    (start :elem (js/document.querySelector "#app")
+           :port 3003
+           :instrumentor-fn test-instrumentor))
+
 
 
 

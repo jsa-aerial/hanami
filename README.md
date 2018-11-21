@@ -1,3 +1,21 @@
+
+Table of Contents
+=================
+
+   * [hanami](#hanami)
+      * [Installation](#installation)
+      * [Features](#features)
+      * [Examples](#examples)
+      * [Templates](#templates)
+         * [Walk through example of transformation](#walk-through-example-of-transformation)
+      * [API](#api)
+         * [Primary](#primary)
+            * [Common](#common)
+      * [Example Transform 'Gallery'](#example-transform-gallery)
+
+Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
+
+
 # hanami
 
 Interactive arts and charts visualizations with Clojure(Script), Vega-lite, and Vega. Flower viewing 花見 (hanami)
@@ -16,7 +34,7 @@ An important aspect of this approach is that parameterized templates can be used
 
 To install, add the following to your project `:dependencies`:
 
-    [aerial.hanami "0.2.0"]
+    [aerial.hanami "0.3.0"]
 
 
 
@@ -34,6 +52,7 @@ To install, add the following to your project `:dependencies`:
 * Enables specific application construction
   * Application level page header instrumentation (re-com enabled)
   * Application level external instrumentation of charts (re-com enabled)
+  * Full hiccup/re-com "picture framing" capability for independent charts
   * Multiple simultaneous (named) applications
   * Multiple sessions per application
     * Shared named sessions

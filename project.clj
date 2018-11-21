@@ -22,11 +22,6 @@
                  [reagent "0.7.0"]
                  #_[reagent "0.8.1"]
 
-                 ;; [cljsjs/vega "3.3.1-0"]
-                 ;; [cljsjs/vega-lite "2.6.0-0"]
-                 ;; [cljsjs/vega-embed "3.16.1-0"]
-                 ;; [cljsjs/vega-tooltip "0.12.0-0"]
-
                  [cljsjs/vega "4.3.0-0"]
                  [cljsjs/vega-lite "3.0.0-rc8-0"]
                  [cljsjs/vega-embed "3.24.1-0"]
@@ -38,7 +33,7 @@
 
   :source-paths ["src/cljc" "src/clj" "src/cljs"]
 
-  ;:prep-tasks ["compile" ["cljsbuild" "once" "min"]]
+  :prep-tasks ["compile" ["cljsbuild" "once" "min"]]
 
   :cljsbuild {:builds
               [{:id "dev"

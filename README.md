@@ -11,16 +11,26 @@ Table of Contents
 =================
 
    * [hanami](#hanami)
-      * [Installation](#installation)
-      * [Features](#features)
-      * [Examples](#examples)
+   * [Installation](#installation)
+   * [Features](#features)
+   * [Examples](#examples)
+      * [Simple cars](#simple-cars)
+      * [Instrumented barchart](#instrumented-barchart)
+      * [Contour plot using Vega template](#contour-plot-using-vega-template)
+   * [Templates](#templates)
+      * [Walk through example of transformation](#walk-through-example-of-transformation)
+   * [Application Construction](#application-construction)
+      * [Header](#header)
+      * [Tabs](#tabs)
       * [Picture Frames](#picture-frames)
-      * [Templates](#templates)
-         * [Walk through example of transformation](#walk-through-example-of-transformation)
+         * [Hiccup and simple Re-Com](#hiccup-and-simple-re-com)
+         * [Instrumented](#instrumented)
+      * [Sessions](#sessions)
+      * [Data Streaming](#data-streaming)
       * [API](#api)
          * [Primary](#primary)
             * [Common](#common)
-      * [Example Transform 'Gallery'](#example-transform-gallery)
+   * [Example Transform 'Gallery'](#example-transform-gallery)
 
 [toc](https://github.com/ekalinin/github-markdown-toc)
 
@@ -33,7 +43,7 @@ In keeping with this central data oriented tenet, Hanami eschews the typical API
 An important aspect of this approach is that parameterized templates can be used to build other such templates by being higher level substitutions. In addition templates can be composed and this is another important idiomatic use. Furthermore, templates may be merged, though typically this is after transformation. The overall result enables the construction of sharable libraries of templates providing reusable plots, charts, and entire visualizations. Generally these will be domain and/or task specific. Hanami itself provides only a small set of very generic templates, which have proven useful in constructing more domain/task specific end results.
 
 
-## Installation
+# Installation
 
 To install, add the following to your project `:dependencies`:
 
@@ -41,7 +51,8 @@ To install, add the following to your project `:dependencies`:
 
 
 
-## Features
+
+# Features
 
 * Parameterized templates with recursive transformations
   * Takes the place of the typical static procedural/functional API
@@ -65,7 +76,9 @@ To install, add the following to your project `:dependencies`:
 * Uses light weight websocket messaging system
 
 
-## Examples
+
+
+# Examples
 
 ```Clojure
 (ns hanami.examples
@@ -74,6 +87,9 @@ To install, add the following to your project `:dependencies`:
             [aerial.hanami.core :as hmi]
             ...)
 ```
+
+
+## Simple cars
 
 ```Clojure
 (hc/xform ht/point-chart
@@ -101,6 +117,8 @@ And when sent to a viewer, results in, where the mouse is hovering over the poin
 
 ![Hanami pic 1](resources/public/images/hanami-cars-1.png?raw=true)
 
+
+## Instrumented barchart
 
 An example of an instrumented chart:
 
@@ -133,6 +151,8 @@ Renders as (left, before slider move; right, after slider move)
 ![Hanami pic 3](resources/public/images/instrumented-chart-1b.png?raw=true)
 
 
+## Contour plot using Vega template
+
 An example using a Vega template for contour plotting. An important point to recognize here is that Vega specifications are also pure data, so the exact same recursive transformation works on Vega templates as Vega Lite templates:
 
 ```Clojure
@@ -156,10 +176,9 @@ This generates far too much to show here, as Vega is a much lower level formal s
 A number of other examples appear at the end of this README, along with their transformations and renderings.
 
 
-## Picture Frames
 
 
-## Templates
+# Templates
 
 _Templates_ are simply maps parameterized by _substitution keys_. Generally, templates will typically correspond to a legal VG or VGL specification or a legal subcomponent thereof. For example, a complete VGL specification (rendered as Clojure) is a legal template - even though it has no substitution keys. At the other extreme, templates can correspond to pieces of specifications or subcomponents. These will always have substitution keys - if they didn't there would be no point to them. Here are some examples as provided by the name space `aerial.hanami.templates`.
 
@@ -265,7 +284,7 @@ And a full chart. This one does faceted composing with optional interactivity. M
 ```
 
 
-### Walk through example of transformation
+## Walk through example of transformation
 
 It's worth having a preliminary look at what happens with this simple chart and its transformations. The value of `ht/point-chart` is:
 
@@ -329,6 +348,26 @@ Further, we have these in the `ht` namespace, where our chart template is also d
 
 
 
+# Application Construction
+
+## Header
+
+
+## Tabs
+
+
+## Picture Frames
+
+
+### Hiccup and simple Re-Com
+
+
+### Instrumented
+
+## Sessions
+
+## Data Streaming
+
 ## API
 
 As noted, there isn't much of a functional/procedural API and no objects or protocols (classes/interfaces) are involved. There are three primary functions. One on the server side, one on the browser/client side and one common to both. There are handful of other ancillary functions common to both sides involving the abiltiy to change default substitution map.
@@ -350,7 +389,7 @@ This is the recursive transformation function. `x` is a _template_ (see above). 
 
 
 
-## Example Transform 'Gallery'
+# Example Transform 'Gallery'
 
 Here is the same data (observed distribution vs binomial models) as row and column grouped (faceted) charts.
 

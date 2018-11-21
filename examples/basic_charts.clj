@@ -252,6 +252,9 @@
 
 
 
+hc/subkeyfns
+(hc/update-subkeyfns :TOOLTIP hc/RMV)
+
 (->
  (let [data (->> (range 0.005 0.999 0.001)
                  (mapv (fn[p] {:x p, :y (- (log2 p)) :col "SI"})))]
@@ -261,6 +264,7 @@
              :XTITLE "Probability of event", :YTITLE "-log(p)"
              :DATA data))
  hmi/sv!)
+
 
 
 

@@ -1,4 +1,4 @@
-(defproject aerial.hanami "0.3.0"
+(defproject aerial.hanami "0.4.0"
   :description "Clojure(Script) client/server vega-lite-2 based dynamic interactive plots and charts"
   :url "https://github.com/jsa-aerial/hanami"
   :license {:name "The MIT License (MIT)"
@@ -15,7 +15,7 @@
 
                  [com.rpl/specter "1.1.1"]
 
-                 [aerial.hanasu "0.2.1"]
+                 [aerial.hanasu "0.2.2"]
 
                  [com.andrewmcveigh/cljs-time "0.5.2"]
                  [re-com "2.1.0"]
@@ -48,7 +48,8 @@
                            ;; in the default browser once Figwheel has
                            ;; started and compiled your application.
                            ;; Comment this out once it no longer serves you.
-                           :open-urls ["http://localhost:3449/index.html"]}
+                           :open-urls #_["http://localhost:3449/indexH.html"]
+                           ["http://localhost:3003"]}
 
                 :compiler {:main aerial.hanami.core
                            :asset-path "js/compiled/out"

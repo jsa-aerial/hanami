@@ -142,35 +142,38 @@
 
 
 
-(defn landing-handler [request]
+(defn landing-page [request index-path]
   #_(printchan request)
   (content-type
    {:status 200
-    :body (io/input-stream (io/resource "public/index.html"))}
+    :body (io/input-stream (io/resource index-path))}
    "text/html"))
 
-(def hanami-routes
+(defn hanami-routes [& {:keys [landing-handler index-path]
+                        :or {landing-handler landing-page
+                             index-path "public/index.html"}}]
   (apply routes
          (conj (srv/hanasu-handlers)
-               (GET "/" request (landing-handler request))
+               (GET "/" request (landing-handler request index-path))
                (route/resources "/"))))
 
-(def hanami-handler
-  (-> hanami-routes
-      #_(ring.middleware.defaults/wrap-defaults
-       ring.middleware.defaults/site-defaults)
-      #_(wrap-cljsjs)
-      #_(wrap-gzip)))
+(defn hanami-handler [hanami-routes & middle-ware-stack]
+  (reduce (fn[R mwfn] (mwfn R)) hanami-routes middle-ware-stack)
+  #_[(ring.middleware.defaults/wrap-defaults
+      ring.middleware.defaults/site-defaults)
+     (wrap-cljsjs)
+     (wrap-gzip)])
 
 
 (defn start-server
-  [port & {:keys [idfn title logo img connfn]
-           :or {idfn (partial gensym "hanami-")
+  [port & {:keys [route-handler idfn title logo img connfn]
+           :or {route-handler (hanami-handler (hanami-routes))
+                idfn (partial gensym "hanami-")
                 connfn identity
                 title "花見 Hanami"
                 logo "logo.png"
                 img "Himeji_sakura.jpg"}}]
-  (let [ch (srv/start-server port :main-handler hanami-handler)]
+  (let [ch (srv/start-server port :main-handler route-handler)]
     (printchan "Server start, reading msgs from " ch)
     (update-adb :chan ch
                 :idfn [idfn] :connfn [connfn]

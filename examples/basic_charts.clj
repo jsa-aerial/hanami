@@ -30,6 +30,8 @@
 
 (hmi/start-server
  3003
+ :route-handler (hmi/hanami-handler
+                 (hmi/hanami-routes :index-path "public/Fig/index.html"))
  :idfn (constantly "Exploring")
  :connfn connfn)
 #_(hmi/stop-server)

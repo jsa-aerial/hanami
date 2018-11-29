@@ -380,6 +380,9 @@ You can specifiy frames from either the server or client side of your applicatio
 
 A couple of examples. These are actually taken from [Saite](https://github.com/jsa-aerial/saite), which is an interactive, exploratory and ad-hoc visualization application written with Hanami. Worth noting is that Saite assumes an interactive REPL model of exploration on the server side, pushing visualizations to the client. Hence, the only active components that can be used are those that are self contained, like information buttons or modal panels.
 
+Picture frames are fully automatic if you use the default tab system. If you use custom tabs or completely custom layout, and want to make use of frames, you should call `vis-list` on the client side (Cljs) for automatic rendering. As always, if you do not want to use any of this, you should use the `vgl` reagent vega/vega-lite component.
+
+
 
 ```Clojure
 (let [_ (hc/add-defaults

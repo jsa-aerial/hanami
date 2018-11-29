@@ -23,8 +23,6 @@ Table of Contents
       * [Header](#header)
       * [Tabs](#tabs)
       * [Picture Frames](#picture-frames)
-         * [Hiccup and simple Re-Com](#hiccup-and-simple-re-com)
-         * [Instrumented](#instrumented)
       * [Sessions](#sessions)
       * [Data Streaming](#data-streaming)
       * [API](#api)
@@ -460,14 +458,8 @@ A couple of examples. These are actually taken from [Saite](https://github.com/j
        hmi/sv!))
 ```
 
-![Hanami picture frame](resources/public/images/picture-frame-all-quads.png?raw=true)
+![Hanami picture frame](resources/public/images/picture-frame-all-quads-ex.png?raw=true)
 
-
-
-### Hiccup and simple Re-Com
-
-
-### Instrumented
 
 ## Sessions
 

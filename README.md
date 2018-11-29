@@ -356,7 +356,7 @@ Further, we have these in the `ht` namespace, where our chart template is also d
 
 ## Picture Frames
 
-Picture frames are simply a way to automatically encase your visualizations with 'meta' level instrumentation and / or arbitrary annotations. They are composed of four individual parts corresponding to the top, bottom, left, and right quadrants. Picture frames (or simply frames) are specified by in the `usermeta` data of a specification. By default Hanami uses the substitution key `:USERDATA` for this. So, the format is:
+Picture frames are simply a way to automatically encase your visualizations with 'meta' level instrumentation and / or arbitrary annotations. They are composed of four individual parts corresponding to the top, bottom, left, and right quadrants. Picture frames (or simply frames) are specified in the `usermeta` data of a specification via the `:frame` key. By default Hanami uses the substitution key `:USERDATA` for this. So, the format is:
 
 ```Clojure
 {...
@@ -378,10 +378,9 @@ You can specifiy frames from either the server or client side of your applicatio
 
 **NOTE**: if you are _instrumenting_ your visualization (using active components - input box, dropdowns, selection lists, etc.) the _functions_ updating the relevant model(s) of / for these components _must_ be written over on the ClojureScript side (client). This is because, Hanami does not use a self hosted ClojureScript, but rather the cross compiled (with Google Closure) variant. Hence, you cannot, for example, write function code on the server side and have it eval'd on the client!
 
-A couple of examples. These are actually taken from [Saite](https://github.com/jsa-aerial/saite), which is an interactive, exploratory and ad-hoc visualization application written with Hanami. Worth noting is that Saite assumes an interactive REPL model of exploration on the server side, pushing visualizations to the client. Hence, the only active components that can be used are those that are self contained, like information buttons or modal panels.
-
 Picture frames are fully automatic if you use the default tab system. If you use custom tabs or completely custom layout, and want to make use of frames, you should call `vis-list` on the client side (Cljs) for automatic rendering. As always, if you do not want to use any of this, you should use the `vgl` reagent vega/vega-lite component.
 
+A couple of examples. These are actually taken from [Saite](https://github.com/jsa-aerial/saite), which is an interactive, exploratory and ad-hoc visualization application written with Hanami. Worth noting is that Saite assumes an interactive REPL model of exploration on the server side, pushing visualizations to the client. Hence, the only active components that can be used are those that are self contained, like information buttons or modal panels.
 
 
 ```Clojure

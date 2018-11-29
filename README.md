@@ -10,7 +10,7 @@ Interactive arts and charts visualizations with Clojure(Script), Vega-lite, and 
 Table of Contents
 =================
 
-   * [hanami](#hanami)
+   * [Hanami](#hanami)
    * [Installation](#installation)
    * [Features](#features)
    * [Examples](#examples)
@@ -34,7 +34,7 @@ Table of Contents
 
 [toc](https://github.com/ekalinin/github-markdown-toc)
 
-# hanami
+# Hanami
 
 **Hanami** is a Clojure(Script) library and framework for creating interactive visualization applications based in [Vega-Lite](https://vega.github.io/vega-lite/) (VGL) and/or [Vega](https://vega.github.io/vega/) (VG) specifications. These specifications are declarative and completely specified by _data_ (JSON maps). VGL compiles into the lower level grammar of VG which in turn compiles to a runtime format utilizting lower level runtime environments such as [D3](https://d3js.org/), HTML5 Canvas, and [WebGL](https://github.com/vega/vega-webgl-renderer). In addition to VGL and VG, Hanami is built on top of [Reagent](http://reagent-project.github.io/) and [Re-Com](https://github.com/Day8/re-com).
 
@@ -343,7 +343,7 @@ Further, we have these in the `ht` namespace, where our chart template is also d
    :size :SIZE
    :shape :SHAPE
    :tooltip :TOOLTIP})
-````
+```
 
 
 
@@ -357,6 +357,111 @@ Further, we have these in the `ht` namespace, where our chart template is also d
 
 
 ## Picture Frames
+
+Picture frames are simply a way to automatically encase your visualizations with 'meta' level instrumentation and / or arbitrary annotations. They are composed of four individual parts corresponding to the top, bottom, left, and right quadrants. Picture frames (or simply frames) are specified by in the `usermeta` data of a specification. By default Hanami uses the substitution key `:USERDATA` for this. So, the format is:
+
+```Clojure
+{...
+ :USERDATA {...
+            :frame {:top ...
+                    :bottom ...
+                    :left ...
+                    :right ...}
+            ...
+            }
+}
+```
+
+![Hanami picture frame](resources/public/images/picture-frame-layout.png?raw=true)
+
+All of the quadrants are optional and `:frame {}` is legal. The value of a quadrant can be any legal mix of strings, hiccup, and / or active components. Where 'legal' here means 'yields a legal DOM branch'. A great resource for active components, which Hanami provides as part of its package, is [Re-Com](https://github.com/Day8/re-com). This is especially true if you are not a CSS/flex and / or component savant.
+
+You can specifiy frames from either the server or client side of your application. Working on the client side from within ClojureScript can make this more 'natural', as you are in the actual environment (browser/DOM) where things are running and rendering. However, specifying from the server side is fully supported, as long as Re-Com use is quoted (or more typical and useful, backquoted).
+
+**NOTE**: if you are _instrumenting_ your visualization (using active components - input box, dropdowns, selection lists, etc.) the _functions_ updating the relevant model(s) of / for these components _must_ be written over on the ClojureScript side (client). This is because, Hanami does not use a self hosted ClojureScript, but rather the cross compiled (with Google Closure) variant. Hence, you cannot, for example, write function code on the server side and have it eval'd on the client!
+
+A couple of examples. These are actually taken from [Saite](https://github.com/jsa-aerial/saite), which is an interactive, exploratory and ad-hoc visualization application written with Hanami. Worth noting is that Saite assumes an interactive REPL model of exploration on the server side, pushing visualizations to the client. Hence, the only active components that can be used are those that are self contained, like information buttons or modal panels.
+
+
+```Clojure
+(let [_ (hc/add-defaults
+         :NAME #(-> :SIDE % name cljstr/capitalize)
+         :STYLE hc/RMV)
+      frame-template {:frame
+                      {:SIDE `[[gap :size :GAP]
+                               [p {:style :STYLE}
+                                "This is the " [:span.bold :NAME]
+                                " 'board' of a picture "
+                                [:span.italic.bold "frame."]]]}}
+      frame-top (hc/xform
+                 frame-template :SIDE :top :GAP "10px")
+
+      frame-left (hc/xform
+                  frame-template :SIDE :left :GAP "10px"
+                  :STYLE {:width "100px" :min-width "50px"})
+      frame-right (merge-with merge
+                   (hc/xform
+                    frame-template :SIDE :right :GAP "2px"
+                    :STYLE {:width "100px" :min-width "50px"})
+                   (hc/xform
+                    frame-template :SIDE :left :GAP "2px"
+                    :STYLE {:width "100px" :min-width "50px"
+                            :color "white"}))
+      frame-bot (hc/xform
+                 frame-template :SIDE :bottom :GAP "10px")]
+  (->> (mapv #(hc/xform ht/point-chart
+                :HEIGHT 200 :WIDTH 250
+                :USERDATA (merge (hc/get-default :USERDATA) %)
+                :UDATA "data/cars.json"
+                :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")
+             [frame-top frame-left frame-bot frame-right])
+       hmi/sv!))
+```
+
+![Hanami picture frame](resources/public/images/picture-frame-quads.png?raw=true)
+
+```Clojure
+(let [text "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quod si ita est, sequitur id ipsum, quod te velle video, omnes semper beatos esse sapientes. Tamen a proposito, inquam, aberramus."
+      frame {:frame
+             {:top `[[gap :size "150px"]
+                     [p "An example showing a "
+                      [:span.bold "picture "] [:span.italic.bold "frame"]
+                      ". This is the top 'board'"
+                      [:br] ~text]]
+              :left `[[gap :size "10px"]
+                      [p {:style {:width "100px" :min-width "50px"}}
+                       "Some text on the " [:span.bold "left:"] [:br] ~text]]
+              :right `[[gap :size "2px"]
+                       [p {:style {:width "200px" :min-width "50px"
+                                   :font-size "20px" :color "red"}}
+                        "Some large text on the " [:span.bold "right:"] [:br]
+                        ~(.substring text 0 180)]]
+              :bottom `[[gap :size "200px"]
+                        [title :level :level3
+                         :label [p {:style {:font-size "large"}}
+                                 "Some text on the "
+                                 [:span.bold "bottom"] [:br]
+                                 "With a cool info button "
+                                 [info-button
+                                  :position :right-center
+                                  :info
+                                  [:p "Check out Saite Visualizer!" [:br]
+                                   "Built with Hanami!" [:br]
+                                   [hyperlink-href
+                                    :label "Saite "
+                                    :href  "https://github.com/jsa-aerial/saite"
+                                    :target "_blank"]]]]]]}}]
+  (->> [(hc/xform ht/point-chart
+          :USERDATA
+          (merge
+           (hc/get-default :USERDATA) frame)
+          :UDATA "data/cars.json"
+          :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")]
+       hmi/sv!))
+```
+
+![Hanami picture frame](resources/public/images/picture-frame-all-quads.png?raw=true)
+
 
 
 ### Hiccup and simple Re-Com

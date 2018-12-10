@@ -10,7 +10,7 @@
             #_[aerial.utils.string :as str]
             #_[aerial.utils.coll :as coll]
 
-            [aerial.hanami.common :as hc]
+            [aerial.hanami.common :as hc :refer [RMV]]
             [aerial.hanami.templates :as ht]
             [aerial.hanami.core :as hmi]))
 
@@ -56,6 +56,7 @@
        :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")
      hmi/sv!)
 
+;;; Same as above but 'template' == base vega-lite spec 
 (->>
  (hc/xform
   {:usermeta :USERDATA
@@ -65,6 +66,7 @@
               :y {:field "Miles_per_Gallon", :type "quantitative"},
               :color {:field "Origin", :type "nominal"}}})
  hmi/sv!)
+
 
 ;;; with framing
 (let [text "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quod si ita est, sequitur id ipsum, quod te velle video, omnes semper beatos esse sapientes. Tamen a proposito, inquam, aberramus."

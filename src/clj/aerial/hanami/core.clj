@@ -54,6 +54,22 @@
   ([key-path] (com/get-db app-db key-path)))
 
 
+(defn set-dbg [dbg-path on-off]
+  (let [dbg-path (com/ev dbg-path)
+        path (->> dbg-path (concat [:dbg]) vec)]
+    (update-adb path on-off)))
+
+(defn dbgon [dbg-path]
+  (set-dbg dbg-path true))
+
+(defn dbgoff [dbg-path]
+  (set-dbg dbg-path false))
+
+(defn dbg? [dbg-path]
+  (let [dbg-path (com/ev dbg-path)
+        path (->> dbg-path (concat [:dbg]) vec)]
+    (get-adb path)))
+
 
 
 
@@ -74,7 +90,8 @@
                 new-name (conj new-name-uuids uuid))))
 
 (defn msg-handler [msg]
-  (printchan :MSG-HANDLER :MSG msg)
+  (when (dbg? [:pchan :msg])
+    (printchan :MSG-HANDLER :MSG msg))
   (let [{:keys [op data]} (msg :data)]
     (case op
       :set-session-name

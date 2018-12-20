@@ -6,6 +6,8 @@
 
 (def default-opts
   {:vgl {:export {:png true, :svg true}
+         :editor true
+         :source false
          :renderer "canvas" #_"svg"
          :mode "vega-lite" #_vega}
    :tab {:order :row

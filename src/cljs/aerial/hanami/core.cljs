@@ -185,8 +185,8 @@
                 :hover    (get vopts :hover default-hover)
                 :defaultStyle true
                 :actions  {:export (get vopts :export false),
-                           :source false,
-                           :editor false,
+                           :source (get vopts :source false),
+                           :editor (get vopts :editor false),
                            :compiled false}}
           vega (if (= vmode "vega-lite") (->> spec js/vl.compile .-spec) spec)]
       (-> (js/vegaEmbed elem vega (clj->js opts))

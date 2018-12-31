@@ -247,9 +247,12 @@
               :children
               [[h-box :gap "5px" :children (frame :top)]
                [h-box :gap "5px"
-                :children [[h-box :children (frame :left)]
-                           [vgl spec]
-                           [h-box :children (frame :right)]]]
+                :children (if spec
+                            [[h-box :children (frame :left)]
+                             [vgl spec]
+                             [h-box :children (frame :right)]]
+                            [[h-box :children (frame :left)]
+                             [h-box :children (frame :right)]])]
                [h-box :gap "5px" :children (frame :bottom)]]]))])))
 
 (defn hanami []
@@ -381,6 +384,9 @@
 
 
 
+(defn empty-chart? [spec]
+  (and (-> spec keys count (= 1)) (-> spec keys first (= :usermeta))))
+
 (defn make-tabdefs [specs]
   (let [grps (group-by #(->> % :usermeta :tab :id) (com/ev specs))]
     (mapv (fn[[id specs]]
@@ -401,7 +407,8 @@
                   spec-frame-pairs
                   (mapv #(do (when-let [vid (get-in % [:usermeta :vid])]
                                (update-vspecs vid %))
-                             (vector % (instrumentor
+                             (vector (if (empty-chart? %) nil %)
+                                     (instrumentor
                                         {:tabid tid
                                          :spec %
                                          :opts opts})))

@@ -25,7 +25,7 @@
   {:field :COLUMN :type :COLTYPE})
 
 (def data-options
-  {:values :DATA :url :UDATA, :name :NDATA})
+  {:values :VALDATA, :url :UDATA, :name :NDATA})
 
 
 (def interval-scales
@@ -147,6 +147,9 @@
    :size :MSIZE, :color :MCOLOR,
    :filled :MFILLED})
 
+
+(def empty-chart
+  {:usermeta :USERDATA})
 
 (def bar-chart
   (assoc view-base

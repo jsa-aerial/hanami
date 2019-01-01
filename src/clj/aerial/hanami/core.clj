@@ -18,7 +18,6 @@
     :refer [default-opts xform reset-defaults add-defaults]]
    [aerial.hanami.templates :as ht]
 
-   [clojure.data.json :as json]
    [clojure.core.async :as async  :refer (<! >! go-loop)]
    [clojure.java.io :as io])
 

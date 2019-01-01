@@ -15,7 +15,7 @@
 
                  [com.rpl/specter "1.1.1"]
 
-                 [aerial.hanasu "0.2.2"]
+                 [aerial.hanasu "0.2.3"]
 
                  [com.andrewmcveigh/cljs-time "0.5.2"]
                  [re-com "2.1.0"]

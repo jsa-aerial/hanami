@@ -1,7 +1,8 @@
 (ns aerial.hanami.common
   (:require
    [com.rpl.specter :as sp]
-   [aerial.hanami.templates :as ht]))
+   [aerial.hanami.templates :as ht]
+   #?(:clj [aerial.hanami.data :as data])))
 
 
 (def default-opts
@@ -17,6 +18,7 @@
 
 (def RMV com.rpl.specter/NONE)
 (def data-key :DATA)
+(def fdata-key :FDATA)
 (def color-key :COLOR)
 (def shape-key :SHAPE)
 (def title-key :TITLE)
@@ -26,6 +28,8 @@
    (do
      (defn set-data-key! [key]
        (alter-var-root (var data-key) (constantly key)))
+     (defn set-fdata-key! [key]
+       (alter-var-root (var fdata-key) (constantly key)))
      (defn set-color-key! [key]
        (alter-var-root (var color-key) (constantly key)))
      (defn set-shape-key! [key]
@@ -35,6 +39,7 @@
    :cljs
    (do
      (defn set-data-key!  [key] (set! data-key  key))
+     (defn set-fdata-key! [key] (set! fdata-key key))
      (defn set-color-key! [key] (set! color-key key))
      (defn set-shape-key! [key] (set! shape-key key))
      (defn set-title-key! [key] (set! title-key key))))
@@ -62,6 +67,16 @@
              (xform ht/default-title (assoc xkv :TTEXT subval))
              subval))
 
+         #?@(:clj
+             [fdata-key
+              (fn [xkv subkey subval]
+                (cond (= subval RMV) RMV
+
+                      (vector? subval)
+                      (data/get-data (first subval) (second subval))
+
+                      :else (data/get-data subval)))])
+
          ;; Hack for broken VGL 3.0.0-rc6 - incorrect grouping by TT fields
          :TOOLTIP
          (fn[xkv subkey subval]
@@ -85,6 +100,14 @@
       (sp/setval [sp/ATOM k] vfn subkeyfns)))))
 
 
+(defn get-data-vals [xkv]
+  (let [data (xkv data-key)
+        fdata (xkv fdata-key)
+        fdatafn (@subkeyfns fdata-key)]
+    (cond (not= data RMV) data
+          (not= fdata RMV) (if fdatafn (fdatafn xkv fdata-key fdata) RMV)
+          :else RMV)))
+
 (def _defaults
   (atom {;; General
          :BACKGROUND "floralwhite"
@@ -93,7 +116,8 @@
          :USERDATA RMV
 
          ;; Data, transforms, and encodings
-         :DATA RMV, :UDATA RMV, :NDATA RMV
+         :VALDATA get-data-vals
+         :DATA RMV, :FDATA RMV, :SDATA RMV, :UDATA RMV, :NDATA RMV
          :TRANSFORM RMV
          :OPACITY RMV
          :AGG RMV, :XAGG RMV, :YAGG RMV

@@ -69,6 +69,10 @@
         path (->> dbg-path (concat [:dbg]) vec)]
     (get-adb path)))
 
+(defn print-when [dbg-path & args]
+  (when (dbg? dbg-path)
+    (apply printchan args)))
+
 
 
 

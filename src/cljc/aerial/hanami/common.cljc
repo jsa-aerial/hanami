@@ -154,7 +154,18 @@
          :CFIELD :X, :CTYPE :XTYPE, :LTYPE "symbol" :LTITLE "" :LOFFSET 0
          :CSCALE {:scheme {:name "greenblue" :extent [0.4 1]}}
          :CLEGEND {:type :LTYPE :offset :LOFFSET :title :LTITLE}
+
+         ;; Vega layout transforms
+         :KEY :id, :PARENTKEY :parent, :NAME :name
+         :LAYOUT "tidy", :ORIENT "horizontal", :LINKSHAPE "diagonal"
+         :CSCHEME "greenblue"
+         :SIGNALS RMV
          }))
+
+;;; :SIGNALS
+;;; [{:name "labels", :value true, :bind {:input "checkbox"}}]
+;;; :OPACITY {:signal "labels ? 1 : 0"}
+
 
 (defn reset-defaults [default-map]
   (reset! _defaults default-map))

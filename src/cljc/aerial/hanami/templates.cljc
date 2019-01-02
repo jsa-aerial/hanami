@@ -320,8 +320,8 @@
            :transform [{:type "stratify", :key :KEY, :parentKey :PARENTKEY}
                        {:type "tree",
                         :method :LAYOUT
-                        :size [{:signal "height"} {:signal "width - 100"}],
-                        :as ["y" "x" "depth" "children"]}]}
+                        :size :TREESIZE,
+                        :as :TREEAS}]}
           {:name "links",
            :source "tree",
            :transform
@@ -347,8 +347,8 @@
            {:type "text",
             :from {:data "tree"},
             :encode {:enter {:text {:field :NAME},
-                             :fontSize {:value 9},
-                             :baseline {:value "middle"}},
+                             :fontSize {:value :FONTSIZE},
+                             :baseline {:value :BASELINE}},
                      :update {:x {:field :X},
                               :y {:field :Y},
                               :dx

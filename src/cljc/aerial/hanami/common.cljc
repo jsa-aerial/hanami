@@ -158,7 +158,10 @@
          ;; Vega layout transforms
          :KEY :id, :PARENTKEY :parent, :NAME :name
          :LAYOUT "tidy", :ORIENT "horizontal", :LINKSHAPE "diagonal"
+         :TREESIZE [{:signal "height"} {:signal "width - 100"}]
+         :TREEAS ["y" "x" "depth" "children"]
          :CSCHEME "greenblue"
+         :FONTSIZE 9, :BASELINE "middle"
          :SIGNALS RMV
          }))
 

@@ -292,7 +292,9 @@
    :signals [{:name "count",
               :value 10,
               :bind {:input "select", :options [1 5 10 20]}}
-             {:name "points", :value true, :bind {:input "checkbox"}}],
+             {:name "points",
+              :value true,
+              :bind {:input "checkbox"}}],
    :data [{:name "source",
            :values :DATA :url :UDATA
            :transform [{:type "filter",
@@ -304,3 +306,53 @@
                         :y {:expr #(format "scale('y', datum.%s)" (% :Y))},
                         :size [{:signal "width"} {:signal "height"}],
                         :count {:signal "count"}}]}]})
+
+
+(def tree-layout
+  {:usermeta :USERDATA
+   :$schema "https://vega.github.io/schema/vega/v4.json",
+   :width :WIDTH,
+   :height :HEIGHT,
+   :padding 5,
+   :signals :SIGNALS
+   :data [{:name "tree",
+           :values :VALDATA :url :UDATA
+           :transform [{:type "stratify", :key :KEY, :parentKey :PARENTKEY}
+                       {:type "tree",
+                        :method :LAYOUT
+                        :size [{:signal "height"} {:signal "width - 100"}],
+                        :as ["y" "x" "depth" "children"]}]}
+          {:name "links",
+           :source "tree",
+           :transform
+           [{:type "treelinks"}
+            {:type "linkpath",
+             :orient :ORIENT
+             :shape :LINKSHAPE}]}],
+   :scales [{:name "color",
+             :type "sequential",
+             :range {:scheme :CSCHEME},
+             :domain {:data "tree", :field :CFIELD},
+             :zero true}],
+   :marks [{:type "path",
+            :from {:data "links"},
+            :encode {:update {:path {:field "path"},
+                              :stroke {:value "#ccc"}}}}
+           {:type "symbol",
+            :from {:data "tree"},
+            :encode {:enter {:size {:value 100}, :stroke {:value "#fff"}},
+                     :update {:x {:field :X},
+                              :y {:field :Y},
+                              :fill {:scale "color", :field :CFIELD}}}}
+           {:type "text",
+            :from {:data "tree"},
+            :encode {:enter {:text {:field :NAME},
+                             :fontSize {:value 9},
+                             :baseline {:value "middle"}},
+                     :update {:x {:field :X},
+                              :y {:field :Y},
+                              :dx
+                              {:signal "datum.children ? -7 : 7"},
+                              :align
+                              {:signal "datum.children ? 'right' : 'left'"},
+                              :opacity :OPACITY}}}]})

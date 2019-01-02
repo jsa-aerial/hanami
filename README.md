@@ -45,7 +45,7 @@ An important aspect of this approach is that parameterized templates can be used
 
 To install, add the following to your project `:dependencies`:
 
-    [aerial.hanami "0.3.0"]
+    [aerial.hanami "0.5.0"]
 
 
 
@@ -373,6 +373,8 @@ Picture frames are simply a way to automatically encase your visualizations with
 ![Hanami picture frame](resources/public/images/picture-frame-layout.png?raw=true)
 
 All of the quadrants are optional and `:frame {}` is legal. The value of a quadrant can be any legal mix of strings, hiccup, and / or active components. Where 'legal' here means 'yields a legal DOM branch'. A great resource for active components, which Hanami provides as part of its package, is [Re-Com](https://github.com/Day8/re-com). This is especially true if you are not a CSS/flex and / or component savant.
+
+As of version 0.5.0, picture frames may be 'empty' in that they do not need to have an associated visualization. To make this a bit simpler, there is a new template for these cases `ht/empty-chart`.
 
 You can specifiy frames from either the server or client side of your application. Working on the client side from within ClojureScript can make this more 'natural', as you are in the actual environment (browser/DOM) where things are running and rendering. However, specifying from the server side is fully supported, as long as Re-Com use is quoted (or more typical and useful, backquoted).
 

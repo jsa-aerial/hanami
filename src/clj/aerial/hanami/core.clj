@@ -93,8 +93,7 @@
                 new-name (conj new-name-uuids uuid))))
 
 (defn msg-handler [msg]
-  (when (dbg? [:pchan :msg])
-    (printchan :MSG-HANDLER :MSG msg))
+  (print-when [:pchan :msg] :MSG-HANDLER :MSG msg)
   (let [{:keys [op data]} (msg :data)]
     (case op
       :set-session-name

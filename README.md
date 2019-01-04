@@ -164,7 +164,7 @@ Hanami visualizations may be instrumented with external active componets (react/
 
 Which requires the active component implementing the instrument to be coded over on the client side. For this simple example, the test code on the client is a branch inside of a `cond` testing for the `:slider` key and value and then processing it:
 
-```
+```Clojure
       (let [cljspec spec
             udata (cljspec :usermeta)
             default-frame {:top [], :bottom [],

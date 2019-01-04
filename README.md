@@ -17,7 +17,7 @@ Table of Contents
       * [Simple cars](#simple-cars)
       * [Instrumented barchart](#instrumented-barchart)
       * [Contour plot using Vega template](#contour-plot-using-vega-template)
-   * [Templates](#templates)
+   * [Templates and Substitution Keys](#templates-and-substitution-keys)
       * [Walk through example of transformation](#walk-through-example-of-transformation)
    * [Application Construction](#application-construction)
       * [Header](#header)
@@ -36,9 +36,13 @@ Table of Contents
 
 **Hanami** is a Clojure(Script) library and framework for creating interactive visualization applications based in [Vega-Lite](https://vega.github.io/vega-lite/) (VGL) and/or [Vega](https://vega.github.io/vega/) (VG) specifications. These specifications are declarative and completely specified by _data_ (JSON maps). VGL compiles into the lower level grammar of VG which in turn compiles to a runtime format utilizting lower level runtime environments such as [D3](https://d3js.org/), HTML5 Canvas, and [WebGL](https://github.com/vega/vega-webgl-renderer). In addition to VGL and VG, Hanami is built on top of [Reagent](http://reagent-project.github.io/) and [Re-Com](https://github.com/Day8/re-com).
 
-In keeping with this central data oriented tenet, Hanami eschews the typical API approach for generating specifications in favor of using recursive transforms of parameterized templates. This is also in keeping with the data transformation focus in functional programming, which is espcially nice in Clojure(Script).
+In keeping with the central data oriented tenet, Hanami eschews the typical API approach for generating specifications in favor of using recursive transforms of parameterized templates. This is also in keeping with the data transformation focus in functional programming, which is espcially nice in Clojure(Script).
 
-An important aspect of this approach is that parameterized templates can be used to build other such templates by being higher level substitutions. In addition templates can be composed and this is another important idiomatic use. Furthermore, templates may be merged, though typically this is after transformation. The overall result enables the construction of sharable libraries of templates providing reusable plots, charts, and entire visualizations. Generally these will be domain and/or task specific. Hanami itself provides only a small set of very generic templates, which have proven useful in constructing more domain/task specific end results.
+An important aspect of this approach is that parameterized templates can be used to build other such templates by being higher level substitutions. In addition templates can be composed and this is an important idiomatic use. Furthermore, templates may be merged, though typically this is after transformation. The overall result enables the construction of sharable libraries of templates providing reusable plots, charts, and entire visualizations. Generally these will be domain and/or task specific. Hanami itself provides only a small set of very generic templates, which have proven useful in constructing more domain/task specific end results.
+
+Hence, templates are a means to abstract all manner of visualization aspects and requirements. In this sense they are similar to what [Altair](https://altair-viz.github.io/) provides but without the complications and limitations of an OO class/method based approach.
+
+
 
 
 # Installation
@@ -89,13 +93,27 @@ To install, add the following to your project `:dependencies`:
 
 ## Simple cars
 
+As a first example let's compare a Hanami template with corresponding Altair code. This is a the typical scatter plot example from the Vega-Lite developers used in many tutorials and by others in varios places. First, the Altair:
+
+```Python
+cars = data.cars()
+
+alt.Chart(cars).mark_point().encode(
+    x='Horsepower',
+    y='Miles_per_Gallon',
+    color='Origin',
+    ).interactive()
+```
+
+Hanami template version:
+
 ```Clojure
 (hc/xform ht/point-chart
   :UDATA "data/cars.json"
   :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")
 ```
 
-Transforms to:
+Which transforms to this Vega-Lite JSON specification:
 
 ```Clojure
 {:data {:url "data/cars.json"},
@@ -111,14 +129,15 @@ Transforms to:
      {:field "Miles_per_Gallon", :type "quantitative"}]}}
  ```
 
-And when sent to a viewer, results in, where the mouse is hovering over the point given by [132, 32.7]:
+
+When rendered, both the Altair code and Hanami template, result in the following visualization, where the mouse is hovering over the point given by [132, 32.7]:
 
 ![Hanami pic 1](resources/public/images/hanami-cars-1.png?raw=true)
 
 
 ## Instrumented barchart
 
-An example of an instrumented chart:
+Hanami visualizations may be instrumented with external active componets (react/reagent/re-com) to enable external transforms on them. An example of an instrumented chart:
 
 ```Clojure
 (hc/xform ht/bar-chart
@@ -143,7 +162,30 @@ An example of an instrumented chart:
   :DATA data)
 ```
 
-Renders as (left, before slider move; right, after slider move)
+Which requires the active component implementing the instrument to be coded over on the client side. For this simple example, the test code on the client is a branch inside of a `cond` testing for the `:slider` key and value and then processing it:
+
+```
+      (let [cljspec spec
+            udata (cljspec :usermeta)
+            default-frame {:top [], :bottom [],
+                           :left [[box :size "0px" :child ""]],
+                           :right [[box :size "0px" :child ""]]}]
+        (cond
+          ...
+          (udata :slider)
+          (let [sval (rgt/atom "0.0")]
+            (printchan :SLIDER-INSTRUMENTOR)
+            (merge default-frame
+                   {:top (xform-recom
+                          (udata :slider)
+                          :m1 sval
+                          :oc1 #(do (bar-slider-fn tabid %)
+                                    (reset! sval (str %)))
+                          :oc2 #(do (bar-slider-fn tabid (js/parseFloat %))
+                                    (reset! sval %)))}))
+```
+
+When this chart is rendered, it shows as (left, before slider move; right, after slider move)
 
 ![Hanami pic 2](resources/public/images/instrumented-chart-1a.png?raw=true)
 ![Hanami pic 3](resources/public/images/instrumented-chart-1b.png?raw=true)
@@ -171,14 +213,39 @@ This generates far too much to show here, as Vega is a much lower level formal s
 ![Hanami pic 3.1](resources/public/images/contour-1.png?raw=true)
 
 
+Another interesting Vega template example is based on the `tree-layout` template. Using this template for such layouts abstracts away a good deal of low level complexity. In this example a software system module dependency graph is rendered.
+
+```
+(hc/xform
+ ht/tree-layout
+ :OPTS (merge (hc/default-opts :vgl) {:mode "vega"})
+ :WIDTH 650, :HEIGHT 1600
+ :UDATA "data/flare.json"
+ :LINKSHAPE "line" :LAYOUT "cluster"
+ :CFIELD "depth")
+ ```
+
+![Hanami pic 3.2](resources/public/images/tree-layout-1.png?raw=true)
+
+
+
+
 A number of other examples appear at the end of this README, along with their transformations and renderings.
 
 
 
 
-# Templates
+# Templates and Substitution Keys
 
-_Templates_ are simply maps parameterized by _substitution keys_. Generally, templates will typically correspond to a legal VG or VGL specification or a legal subcomponent thereof. For example, a complete VGL specification (rendered as Clojure) is a legal template - even though it has no substitution keys. At the other extreme, templates can correspond to pieces of specifications or subcomponents. These will always have substitution keys - if they didn't there would be no point to them. Here are some examples as provided by the name space `aerial.hanami.templates`.
+_Templates_ are simply maps parameterized by _substitution keys_. Generally, templates will typically correspond to a legal VG or VGL specification or a legal subcomponent thereof. For example, a complete VGL specification (rendered as Clojure) is a legal template - even though it has no substitution keys. At the other extreme, templates can correspond to pieces of specifications or subcomponents. These will always have substitution keys - if they didn't there would be no point to them.
+
+_Substitution Keys_ can be considered or thought of in two ways. They are the keys in the substitution map(s) of the recursive transformer `hc/xform`. There is a default map `hc/_defaults` (which is an atom containing the map) with various default substitution keys and their corresponding default values. This map can be updated and `xform` can also be supplied a variadic list of substitution keys and their values for a given invocation.
+
+The second way of thinking about substitution keys is that they are the starting values of keys in templates. So, they represent parameterized values of keys in templates.
+
+
+
+Here are some examples as provided by the name space `aerial.hanami.templates`.
 
 A number of 'fragments':
 

@@ -17,6 +17,7 @@ Table of Contents
       * [Simple cars](#simple-cars)
       * [Instrumented barchart](#instrumented-barchart)
       * [Contour plot using Vega template](#contour-plot-using-vega-template)
+      * [Tree Layout using Vega template](#tree-layout-using-vega-template)
    * [Templates and Substitution Keys](#templates-and-substitution-keys)
       * [Walk through example of transformation](#walk-through-example-of-transformation)
    * [Application Construction](#application-construction)
@@ -213,9 +214,11 @@ This generates far too much to show here, as Vega is a much lower level formal s
 ![Hanami pic 3.1](resources/public/images/contour-1.png?raw=true)
 
 
+## Tree Layout using Vega template
+
 Another interesting Vega template example is based on the `tree-layout` template. Using this template for such layouts abstracts away a good deal of low level complexity. In this example a software system module dependency graph is rendered.
 
-```
+```Clojure
 (hc/xform
  ht/tree-layout
  :OPTS (merge (hc/default-opts :vgl) {:mode "vega"})

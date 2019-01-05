@@ -18,7 +18,14 @@ Table of Contents
       * [Instrumented barchart](#instrumented-barchart)
       * [Contour plot using Vega template](#contour-plot-using-vega-template)
       * [Tree Layout using Vega template](#tree-layout-using-vega-template)
-   * [Templates and Substitution Keys](#templates-and-substitution-keys)
+   * [Templates, Substitution Keys and Transformations](#templates-substitution-keys-and-transformations)
+      * [Function values for substitution keys](#function-values-for-substitution-keys)
+      * [Subtitution Key Functions](#subtitution-key-functions)
+      * [Basic transformation rules](#basic-transformation-rules)
+      * [Example predefined templates](#example-predefined-templates)
+      * [Example predefined substitution keys](#example-predefined-substitution-keys)
+      * [Data Sources and Data Substitution Keys](#data-sources-and-data-substitution-keys)
+         * [File data source](#file-data-source)
       * [Walk through example of transformation](#walk-through-example-of-transformation)
    * [Application Construction](#application-construction)
       * [Header](#header)
@@ -216,7 +223,7 @@ This generates far too much to show here, as Vega is a much lower level formal s
 
 ## Tree Layout using Vega template
 
-Another interesting Vega template example is based on the `tree-layout` template. Using this template for such layouts abstracts away a good deal of low level complexity. In this example a software system module dependency graph is rendered.
+Another interesting Vega example uses the `tree-layout` template. Using this template for such layouts abstracts away a good deal of low level complexity. In this example a software system module dependency graph is rendered.
 
 ```Clojure
 (hc/xform
@@ -238,7 +245,7 @@ A number of other examples appear at the end of this README, along with their tr
 
 
 
-# Templates and Substitution Keys
+# Templates, Substitution Keys and Transformations
 
 _Templates_ are simply maps parameterized by _substitution keys_. Generally, templates will typically correspond to a legal VG or VGL specification or a legal subcomponent thereof. For example, a complete VGL specification (rendered as Clojure) is a legal template - even though it has no substitution keys. At the other extreme, templates can correspond to pieces of specifications or subcomponents. These will always have substitution keys - if they didn't there would be no point to them.
 
@@ -246,15 +253,65 @@ _Substitution Keys_ can be considered or thought of in two ways. They are the ke
 
 The second way of thinking about substitution keys is that they are the starting values of keys in templates. So, they represent parameterized values of keys in templates.
 
+As an example consider the following. In a template we have a field and value `:field :X`. The `:X` here is a substitution key - it will be replaced as the value of `:field` during transformation by _its_ value in the current substitution map. In the default substitution map `hc/_defaults` `:X` has a value of "x", so the result will be `:field "x"`.
 
+A more complex example would be the field and value `:encoding :ENCODING` in the predefined subcomponent `ht/view-base` which lays out the structure of a Vega-Lite _view_.  As before `:ENCODING` will be replaced during transformation by the value of `:ENCODING` in the substitution map. However, the default value of `:ENCODING` is the predefined subcomponent `ht/xy-encoding`. This value is a map describing the structure of a view's `x-y` encodings and contains many fields with their own substitution keys. So, to produce a final value, `ht/xy-encoding` is recursively transformed so that the final value of `:encoding` is a fully realized `x-y` encoding for the view being processed. `ht/view-base` has several other such fields and is itself recursively transformed in the context of the current substitution map. And its final value will be the base of a chart, such as a line chart (`ht/line-chart`) or area chart (`ht/area-chart`), or some new plot/chart/layout/etc of your own for some domain specific application.
+
+
+## Function values for substitution keys
+
+A substitution key may have a function of one argument for its value: `(fn[submap] ...)`. The `submap` parameter is the current substitution map in the transformation. This map contains the special key `::hc/spec` whose value is the initial (input) specification as well as all current substitution keys and their current values. This is useful in cases where a substitution key's value should be computed from other values. For example, a typical ([Saite]() does this by default) use case would be to compute the _label_ (display name) of a tab from its _id_:
+
+```Clojure
+        :TLBL #(-> :TID % name cljstr/capitalize)
+```
+
+This takes the tab's id, which here is a keyword, converts to a string and returns the capitalized version.
+
+
+## Subtitution Key Functions
+
+A more general version of the function as value of a substitution key is provided by the `hc/subkeyfns` map and associated processing. The function `hc/update-subkeyfns` (see [API](#api)) can be used to register a function for a subtitution key. This is a 'global' function - separate from any value given for the key. These functions take three arguments: `(fn[submap, subkey, subval] ...)`.
+
+Where the `submap` parameter is the current substitution map in the transformation; the `subkey` parameter is the substitution key for this function; and the `subval` parameter is the _value_ of the substitution key.
+
+These functions can be very useful in providing a further level of abstractions is template specifications. For example, it is very typical that a `color` specification is intended for the mark of a chart (line-chart, bar-chart, point-chart, etc). providing a simple string indicating the data element to facet with colors makes for a cleaner abstraction, but this needs to be converted to correct full form `field` and `type` element. Having a subkeyfn for the `hc/color-key` (default `:COLOR`) supports this sort of processing:
+
+```Clojure
+        color-key
+         (fn[xkv subkey subval]
+           (if (string? subval)
+             (xform ht/default-mark-props (assoc xkv :MPFIELD subval))
+             subval))
+```
+
+There is a default set of such keys provided with this particular case being one of them. There are a few others, including one which implements the [file](#file-data-source) data source capability for specifications.
+
+
+## Basic transformation rules
+
+There are some important rules that guide certain aspects of the recursive transformation process. First, while the simplest way to look at the transformation process is as a
+
+
+## Example predefined templates
 
 Here are some examples as provided by the name space `aerial.hanami.templates`.
 
 A number of 'fragments':
 
 ```Clojure
+(def default-tooltip
+  [{:field :X :type :XTYPE}
+   {:field :Y :type :YTYPE}])
+
 (def default-mark-props
   {:field :MPFIELD :type :MPTYPE})
+
+(def default-row
+  {:field :ROW :type :ROWTYPE})
+
+(def data-options
+  {:values :VALDATA, :url :UDATA, :name :NDATA})
 
 (def interval-scales
   {:INAME
@@ -266,37 +323,26 @@ A number of 'fragments':
     :zoom "wheel!",
     :resolve :IRESOLVE}})
 
-(def view-base
-  {:usermeta :USERDATA
-   :title :TITLE
-   :height :HEIGHT
-   :width :WIDTH
-   :background :BACKGROUND
-   :selection :SELECTION
-   :data data-options
-   :transform :TRANSFORM
-   :encoding :ENCODING})
-
 (def mark-base
   {:type :MARK, :point :POINT,
    :size :MSIZE, :color :MCOLOR,
    :filled :MFILLED})
 ```
 
-A few 'subcomponents':
+A couple 'subcomponents':
 
 ```Clojure
 (def xy-encoding
   {:x {:field :X
        :type :XTYPE
        :timeUnit :XUNIT
-       :axis {:title :XTITLE, :grid :XGRID, :format :XFORMAT}
+       :axis :XAXIS
        :scale :XSCALE
        :aggregate :XAGG}
    :y {:field :Y
        :type :YTYPE
        :timeUnit :YUNIT
-       :axis {:title :YTITLE, :grid :YGRID, :format :YFORMAT}
+       :axis :YAXIS
        :scale :YSCALE
        :aggregate :YAGG}
    :opacity :OPACITY
@@ -307,31 +353,33 @@ A few 'subcomponents':
    :shape :SHAPE
    :tooltip :TOOLTIP})
 
-(def gen-encode-layer
-  {:height :HEIGHT, :width :WIDTH
-   :mark :MARK
-   :transform :TRANSFORM
+(def view-base
+  {:usermeta :USERDATA
+   :title :TITLE
+   :height :HEIGHT
+   :width :WIDTH
+   :background :BACKGROUND
    :selection :SELECTION
+   :data data-options
+   :transform :TRANSFORM
    :encoding :ENCODING})
+```
+
+And some charts.
+
+```Clojure
+;; Useful for empty picture frames
+(def empty-chart
+  {:usermeta :USERDATA})
 
 (def line-chart
   (assoc view-base
          :mark (merge mark-base {:type "line"})))
 
-(def layer-chart
-  {:usermeta :USERDATA
-   :title  :TITLE
-   :height :HEIGHT
-   :width :WIDTH
-   :background :BACKGROUND
-   :layer :LAYER
-   :resolve :RESOLVE
-   :data data-options})
-```
+(def point-chart
+  (assoc view-base
+         :mark (merge mark-base {:type "circle"})))
 
-And a full chart. This one does faceted composing with optional interactivity. Most of the capability comes from `:ENCODING` and its default.
-
-```Clojure
 (def grouped-bar-chart
   {:usermeta :USERDATA
    :title  :TITLE
@@ -350,6 +398,52 @@ And a full chart. This one does faceted composing with optional interactivity. M
             :view {:stroke "transparent"},
             :axis {:domainWidth 1}}})
 ```
+
+## Example predefined substitution keys
+
+All of these are taken from `hc/_defaults` They are chosen so as to indicate how some aspects of the above template examples get transformed.
+
+```Clojure
+         :BACKGROUND "floralwhite"
+
+         ;; Note that removed things will get Vega/Vega-Lite defaults
+         :TITLE RMV, :TOFFSET RMV
+
+         ;; get-data-vals is a function which handles :DATA and :FDATA
+         :VALDATA get-data-vals
+         :DATA RMV, :FDATA RMV, :SDATA RMV, :UDATA RMV, :NDATA RMV
+
+         ;; Describes the x encoding in xy-encoding. Similar for y encoding
+         :X "x", :XTYPE, "quantitative", :XUNIT RMV
+         :XSCALE RMV, :XAXIS {:title :XTITLE, :grid :XGRID, :format :XFORMAT}
+         :XTITLE RMV, :XGRID RMV, :XFORMAT RMV
+
+         ;; Note that by default then :ROWDEF -> {:field :ROW :type :ROWTYPE} ->
+         ;; {:field RMV, :type RMV} -> {} -> RMV. See transformation rules
+         ;; Similar for :COLDEF
+         :ROWDEF ht/default-row :ROW RMV, :ROWTYPE RMV
+
+         :TOOLTIP ht/default-tooltip
+         :ENCODING ht/xy-encoding
+
+         :TRANSFORM RMV
+         :SELECTION RMV
+```
+
+
+## Data Sources and Data Substitution Keys
+
+Visualizations are based in and so require data to realize them. Specifications provide several means of declaring the source and processing of data to be used in a visualization. The underlying Vega and Vega-Lite systems provide for several of these by various means. Hanami currently directly supports three of these plus a fourth. The keys and expected values are given in this section.
+
+* `:DATA` - expects an explicit vector of maps, each map defining the data fields and values
+* `:UDATA` - expects a relative URL (for example "data/cars.json") or a fully qualified URL to a `csv` or `json` data file.
+* `:NDATA` - expects a named Vega _data channel_.
+
+These three are based directly on the underlying Vega and Vega-Lite options. The fourth is provided by Hanami.
+
+### File data source
+
+
 
 
 ## Walk through example of transformation

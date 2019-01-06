@@ -534,7 +534,7 @@ We already have seen what the [default values](#example-predefined-substitution-
                       {:field "Miles_per_Gallon" :type "quantitative"}]}}
 ```
 
-By the [second](#basic-transformation-rules) of transformation, we also know that the `:axis`, `:row`, and `:column` fields will be replaced first by `{}` (since all of their fields default to `RMV`) and then by the [second](#basic-transformation-rules) they will be removed. So, conceptually, the 'next' version is:
+By the [second rule](#basic-transformation-rules) of transformation, we also know that the `:axis`, `:row`, and `:column` fields will be replaced first by `{}` (since all of their fields default to `RMV`) and then by the [third rule](#basic-transformation-rules) they will be removed. So, conceptually, the 'next' version is:
 
 ```Clojure
 {:height 300, :width 400, :background "floralwhite"

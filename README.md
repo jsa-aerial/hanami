@@ -513,7 +513,7 @@ We have already seen ([above](#example-predefined-templates)) what `view-base`, 
  :encoding :ENCODING}
  ```
 
-We already have seen what the default values of the substitution keys here are. In the transform, explicit values are given for `:UDATA`, `:X`, `:Y`, and `:COLOR`. We will see about `:COLOR` a bit later, but with the values for the first three, conceptually, we have a "first version":
+We already have seen what the [default values](#example-predefined-substitution-keys) of the substitution keys here are. In the transform, explicit values are given for `:UDATA`, `:X`, `:Y`, and `:COLOR`. We will see about `:COLOR` a bit later, but with the values for the first three, conceptually, we have a "first version":
 
 ```Clojure
 {:height 300

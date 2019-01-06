@@ -98,6 +98,12 @@ To install, add the following to your project `:dependencies`:
             ...)
 ```
 
+In all of the documentation, these namespaces are referred to by the shorthand provided in this require example.
+
+* `aerial.hanami.common` == `hc`
+* `aerial.hanami.templates` == `ht`
+* `aerial.hanami.core` == `hmi`
+
 
 ## Simple cars
 
@@ -260,7 +266,7 @@ A more complex example would be the field and value `:encoding :ENCODING` in the
 
 ## Function values for substitution keys
 
-A substitution key may have a function of one argument for its value: `(fn[submap] ...)`. The `submap` parameter is the current substitution map in the transformation. This map contains the special key `::hc/spec` whose value is the initial (input) specification as well as all current substitution keys and their current values. This is useful in cases where a substitution key's value should be computed from other values. For example, a typical ([Saite]() does this by default) use case would be to compute the _label_ (display name) of a tab from its _id_:
+A substitution key may have a function of one argument for its value: `(fn[submap] ...)`. The `submap` parameter is the current substitution map in the transformation. This map contains the special key `::hc/spec` whose value is the initial (input) specification as well as all current substitution keys and their current values. This is useful in cases where a substitution key's value should be computed from other values. For example, a typical ([Saite](https://github.com/jsa-aerial/saite#user-tabs) does this by default) use case would be to compute the _label_ (display name) of a tab from its _id_:
 
 ```Clojure
         :TLBL #(-> :TID % name cljstr/capitalize)
@@ -292,6 +298,8 @@ There is a default set of such keys provided with this particular case being one
 
 There are some important rules that guide certain aspects of the recursive transformation process. These aspects are really only important in advanced template contruction, but if you find yourself in such circumstances, they are quite useful and helpful.
 
+* Defaults for substitution keys are always overridden by values given for them in a call to `hc/xform`.
+
 * Any field whose final value is the special `hc/RMV` value, will be removed from the corresponding specification or subcomponent thereof.
 
 * Any field whose final value is an empty collection, will have this value replaced by `hc/RMV` and thus removed from its containing collection and specification. This is a very important transformation rule as it enables highly general substitution values. See for example such values as `hc/data-options`.
@@ -301,7 +309,7 @@ There are some important rules that guide certain aspects of the recursive trans
 
 ## Example predefined templates
 
-Here are some examples as provided by the name space `aerial.hanami.templates`.
+Here are some examples as provided by the name space `aerial.hanami.templates` which is always referred to in documentation as `ht/`.
 
 A number of 'fragments':
 
@@ -410,10 +418,13 @@ And some charts.
 All of these are taken from `hc/_defaults` They are chosen so as to indicate how some aspects of the above template examples get transformed.
 
 ```Clojure
+         :USERDATA RMV
          :BACKGROUND "floralwhite"
+         :OPACITY RMV
 
          ;; Note that removed things will get Vega/Vega-Lite defaults
          :TITLE RMV, :TOFFSET RMV
+         :HEIGHT 300, :WIDTH 400, :DHEIGHT 60
 
          ;; get-data-vals is a function which handles :DATA and :FDATA
          :VALDATA get-data-vals
@@ -423,6 +434,14 @@ All of these are taken from `hc/_defaults` They are chosen so as to indicate how
          :X "x", :XTYPE, "quantitative", :XUNIT RMV
          :XSCALE RMV, :XAXIS {:title :XTITLE, :grid :XGRID, :format :XFORMAT}
          :XTITLE RMV, :XGRID RMV, :XFORMAT RMV
+
+         ;; Aggregation transforms
+         :AGG RMV, :XAGG RMV, :YAGG RMV
+
+         ;; Mark properties
+         :POINT RMV, :MSIZE RMV, :MCOLOR RMV, :MFILLED RMV
+         :MPTYPE "nominal", :SHAPE RMV, :SIZE RMV
+
 
          ;; Note that by default then :ROWDEF -> {:field :ROW :type :ROWTYPE} ->
          ;; {:field RMV, :type RMV} -> {} -> RMV. See transformation rules
@@ -445,7 +464,7 @@ Visualizations are based in and so require data to realize them. Specifications 
 * `:UDATA` - expects a relative URL (for example "data/cars.json") or a fully qualified URL to a `csv` or `json` data file.
 * `:NDATA` - expects a named Vega _data channel_.
 
-These three are based directly on the underlying Vega and Vega-Lite options. The fourth is provided by Hanami.
+These three are based directly on the underlying Vega and Vega-Lite options. The fourth, file data sources, is provided by Hanami.
 
 ### File data source
 
@@ -453,7 +472,7 @@ These three are based directly on the underlying Vega and Vega-Lite options. The
 
 The filepath is a full path for the OS and can denote a file with extensions 'clj', 'edn', 'json', or 'csv'. These extensions indicate the file types - no other checking is done. For the 'clj', 'edn', and 'json' the content must be a vector of maps, where each map is a record of data fields and their values. CSV files are converted to vectors of maps, each map built from the column names and a row's corresponding values.
 
-For 'csv', a type-vec-or-map may be provided as the second value of a vector pair (tuple). This can be either a vector of type indicators in 1-1 correspondence with the column names of the csv file, or a map where each key is one of the column names and the value is a type indicator. Type indicators supported are: "string", "int", "float", and "double". In either case, the strings in a row associated with the type indicators are converted per the indicator.
+For 'csv', a type-vec-or-map may be provided as the second value of a vector pair (tuple). This can be either a vector of type indicators in 1-1 correspondence with the column names of the csv file, or a map where each key is one of the column names and the value is a type indicator. Type indicators supported are: "string", "int", "float", and "double". In either case, the strings in a row associated with the type indicators are converted per the indicator. The default type indicator for the case of maps is "string", i.e., return the original string value.
 
 Example:
 
@@ -462,67 +481,86 @@ Example:
   :FDATA ["/Data/RNAseq/Exp-xyz/Out/dge-xyz.csv" {"dge" "float"}])
 ```
 
+This will create a vector of maps from the csv content, where the "dge" field in each map will have its value converted to a floating point number.
+
 
 ## Walk through example of transformation
 
-It's worth having a preliminary look at what happens with this simple chart and its transformations. The value of `ht/point-chart` is:
+It's worth having a look at what happens with the simple [car chart](#simple-cars) template example and its transformations. The value of `ht/point-chart` is:
+
+```Clojure
+(def point-chart
+  (assoc view-base
+         :mark (merge mark-base {:type "circle"})))
+```
+
+We have already seen ([above](#example-predefined-templates)) what `view-base`, `data-options`, and `mark-base` are, so we know that the starting value of `point-chart` is:
 
 ```Clojure
 {:usermeta :USERDATA
- :title  :TITLE
+ :title :TITLE
  :height :HEIGHT
  :width :WIDTH
  :background :BACKGROUND
+ :mark {:type "circle"
+        :point :POINT
+        :size :MSIZE
+        :color :MCOLOR
+        :filled :MFILLED},
  :selection :SELECTION
- :data :DATA-OPTIONS
+ :data {:values :VALDATA, :url :UDATA, :name :NDATA}
  :transform :TRANSFORM
- :mark {:type "circle", :size :MSIZE}
  :encoding :ENCODING}
-```
-In the above transform we specified values for `:UDATA`, `:X`, `:Y`, and `:COLOR`. First, none of these are anywhere to be seen in `ht/point-chart` so where do they come from? Second, what happened to all those other fields like `:usermeta` and those values like `:SELECTION`. Both questions have answers rooted in the map of default _substitution keys_ and values for transformations. There is nothing special about these defaults and a user can completely change them if they do not like the key names or their values. However, out of the box, Hanami provides a starting set and  here is a subset of those substitutions that answer our two questions and also where some other values come from:
+ ```
+
+We already have seen what the default values of the substitution keys here are. In the transform, explicit values are given for `:UDATA`, `:X`, `:Y`, and `:COLOR`. We will see about `:COLOR` a bit later, but with the values for the first three, conceptually, we have a "first version":
 
 ```Clojure
-  :BACKGROUND "floralwhite"
-  :TITLE RMV
-  :XTITLE RMV, :XGRID RMV, :XSCALE RMV
-  :YTITLE RMV, :YGRID RMV, :YSCALE RMV
-  :HEIGHT 300
-  :WIDTH 400
-  :USERDATA RMV
-  :DATA-OPTIONS ht/data-options
-  :DATA RMV, :UDATA RMV, :NDATA RMV
-  :TRANSFORM RMV
-  :MSIZE RMV
-  :ENCODING ht/xy-encoding
-  :SIZE RMV, :SHAPE RMV
-  :TOOLTIP ht/default-tooltip
+{:height 300
+ :width 400
+ :background "floralwhite"
+ :mark {:type "circle"}
+ :data {:url "data/cars.json"}
+ :encoding {:x {:field "Horsepower"
+                :type "quantitative"
+                :axis {:title :XTITLE, :grid :XGRID, :format :XFORMAT}}
+            :y {:field "Miles_per_Gallon"
+                :type "quantitative"
+                :axis {:title :YTITLE, :grid :YGRID, :format :YFORMAT}}
+            :row {:field :ROW :type :ROWTYPE}
+            :column {:field :COLUMN :type :COLTYPE}
+            :color :COLOR
+            :tooltip [{:field "Horsepower" :type "quantitative"}
+                      {:field "Miles_per_Gallon" :type "quantitative"}]}}
 ```
-Defaults for substitution keys are always overridden by values given for them in a call to `xform`. Any RMV value indicates removal - the key in a template associated with a substitution key whose value is RMV is removed from the template.
 
-Further, we have these in the `ht` namespace, where our chart template is also defined:
+By the [second](#basic-transformation-rules) of transformation, we also know that the `:axis`, `:row`, and `:column` fields will be replaced first by `{}` (since all of their fields default to `RMV`) and then by the [second](#basic-transformation-rules) they will be removed. So, conceptually, the 'next' version is:
 
 ```Clojure
-(def default-tooltip
-  [{:field :X :type :XTYPE}
-   {:field :Y :type :YTYPE}])
-
-(def default-mark-props
-  {:field :MPFIELD :type :MPTYPE})
-
-(def xy-encoding
-  {:x {:field :X
-       :type :XTYPE
-       :axis {:title :XTITLE, :grid :XGRID}
-       :scale :XSCALE}
-   :y {:field :Y
-       :type :YTYPE
-       :axis {:title :YTITLE, :grid :YGRID}
-       :scale :YSCALE}
-   :color :COLOR
-   :size :SIZE
-   :shape :SHAPE
-   :tooltip :TOOLTIP})
+{:height 300, :width 400, :background "floralwhite"
+ :mark {:type "circle"}
+ :data {:url "data/cars.json"}
+ :encoding {:x {:field "Horsepower" :type "quantitative"}
+            :y {:field "Miles_per_Gallon" :type "quantitative"}
+            :color :COLOR
+            :tooltip [{:field "Horsepower" :type "quantitative"}
+                      {:field "Miles_per_Gallon" :type "quantitative"}]}}
 ```
+
+OK, `:COLOR` is all we have left. As shown in the section on [substitution key functions](#subtitution-key-functions) Hanami has a default such function for the `hc/color-key` (default `:COLOR`). If the `subval` of the key is a string, then this function returns the value `(xform ht/default-mark-props (assoc xkv :MPFIELD subval))`. As we know from above, the value of `ht/default-mark-props` is `{:field :MPFIELD :type :MPTYPE}` and so the function here returns `{:field "Origin" :type "nominal"}`. So, the final value of the transformation is:
+
+```Clojure
+{:height 300, :width 400, :background "floralwhite"
+ :mark {:type "circle"}
+ :data {:url "data/cars.json"}
+ :encoding {:x {:field "Horsepower" :type "quantitative"}
+            :y {:field "Miles_per_Gallon" :type "quantitative"}
+            :color {:field "Origin" :type "nominal"}
+            :tooltip [{:field "Horsepower" :type "quantitative"}
+                      {:field "Miles_per_Gallon" :type "quantitative"}]}}
+```
+
+The reason for caveat uses of 'conceptually' in the above description is the [final rule](#basic-transformation-rules) of transformation. Which says that the actual transformation process is via a depth first walk and replacement. So, for example, `:encoding` would have only had its full final value, not any intermediate value(s).
 
 
 

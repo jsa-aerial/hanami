@@ -24,7 +24,7 @@ Table of Contents
       * [Basic transformation rules](#basic-transformation-rules)
       * [Example predefined templates](#example-predefined-templates)
       * [Example predefined substitution keys](#example-predefined-substitution-keys)
-      * [Data Sources and Data Substitution Keys](#data-sources-and-data-substitution-keys)
+      * [Data Sources](#data-sources)
          * [File data source](#file-data-source)
       * [Walk through example of transformation](#walk-through-example-of-transformation)
    * [Application Construction](#application-construction)
@@ -290,7 +290,13 @@ There is a default set of such keys provided with this particular case being one
 
 ## Basic transformation rules
 
-There are some important rules that guide certain aspects of the recursive transformation process. First, while the simplest way to look at the transformation process is as a
+There are some important rules that guide certain aspects of the recursive transformation process. These aspects are really only important in advanced template contruction, but if you find yourself in such circumstances, they are quite useful and helpful.
+
+* Any field whose final value is the special `hc/RMV` value, will be removed from the corresponding specification or subcomponent thereof.
+
+* Any field whose final value is an empty collection, will have this value replaced by `hc/RMV` and thus removed from its containing collection and specification. This is a very important transformation rule as it enables highly general substitution values. See for example such values as `hc/data-options`.
+
+* While the simplest way to look at the transformation process is as a continuous transform until the last output is the same as the input, the actual processing is a preorder depth first walk and replacement. Typically, this implementation detail should not factor in to any template authoring, as they should be declarative in nature. However, there may be cases where this ordering can help in constructing proper substitution keys and values.
 
 
 ## Example predefined templates
@@ -431,7 +437,7 @@ All of these are taken from `hc/_defaults` They are chosen so as to indicate how
 ```
 
 
-## Data Sources and Data Substitution Keys
+## Data Sources
 
 Visualizations are based in and so require data to realize them. Specifications provide several means of declaring the source and processing of data to be used in a visualization. The underlying Vega and Vega-Lite systems provide for several of these by various means. Hanami currently directly supports three of these plus a fourth. The keys and expected values are given in this section.
 

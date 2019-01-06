@@ -22,6 +22,7 @@ Table of Contents
       * [Function values for substitution keys](#function-values-for-substitution-keys)
       * [Subtitution Key Functions](#subtitution-key-functions)
       * [Basic transformation rules](#basic-transformation-rules)
+      * [Meta data and the :USERDATA key](#meta-data-and-the-userdata-key)
       * [Example predefined templates](#example-predefined-templates)
       * [Example predefined substitution keys](#example-predefined-substitution-keys)
       * [Data Sources](#data-sources)
@@ -30,6 +31,10 @@ Table of Contents
    * [Application Construction](#application-construction)
       * [Header](#header)
       * [Tabs](#tabs)
+      * [Messages](#messages)
+         * [Registration](#registration)
+         * [Tab updates](#tab-updates)
+         * [User messages](#user-messages)
       * [Picture Frames](#picture-frames)
       * [Sessions](#sessions)
       * [Data Streaming](#data-streaming)
@@ -307,6 +312,67 @@ There are some important rules that guide certain aspects of the recursive trans
 * While the simplest way to look at the transformation process is as a continuous transform until the last output is the same as the input, the actual processing is a preorder depth first walk and replacement. Typically, this implementation detail should not factor in to any template authoring, as they should be declarative in nature. However, there may be cases where this ordering can help in constructing proper substitution keys and values.
 
 
+## Meta data and the `:USERDATA` key
+
+Vega and Vega-Lite support the inclusion of application specific meta data in specifications via the `:usermeta` top level key in a specification. To Vega and Vega-Lite, this key is completely transparent and is not used in any way by their processing. This affords applications using them to include application specific data, in particular, _control_ data.
+
+Hanami defaults the `:usermeta` field to the substitution key `:USERDATA`, which has a default value of `RMV`. So, by default, there is no application meta data. However, several aspects of Hanami's [messaging system](#api), [session management](#sessions), [picture frames](#picture-frames) and [tab](#tabs) system expect and make use of control data supplied via the `:usermeta` field and associated values for the `:USERDATA` substitution key. So, if you plan on using any of that, you will need to supply a value for this key - either as a default (via `hc/update-defaults`) or explicitly in a transform (`hc/xform`). Of course, if you have your own application specific meta/control data that needs to be supplied to clients, you can provide your own fields and values here.
+
+Hanami understands the following 'special' fields:
+
+* `:tab` - value is a map of fields (`:id`, `:label`, `:opts`) identifying and controlling tabs.
+  * `:id` - value is an id for the tab. Typically a keyword
+  * `:label` - value is the display name for the tab
+  * `:opts` - value is a map of fields (`:order`, `:eltsper`, and `:size`)
+    * `:order` - value is either `:row` or `:col` for either row based grid layouts or column based grid layouts
+    * `:eltsper` - value is an integer for the maximum number of row or col entries. For example a value of 2 would mean 2XN grids for rows and Nx2 grids for columns
+    * `:size` - value is a flexbox size indicator. Best known values are "auto" for row based grids and "none" for column based grids
+
+* `:opts` - value is a map of fields controlling Vega/Vega-Lite options. This is **not** the `[:tab :opts]` path and value!
+  * `:export` - value is a map of boolean value fields (`:png`, `:svg`). Setting these true will provide implicit saving options in the popup Vega-Embed options button (typically upper left circle with "..." content).
+  * `:renderer - value is either "canvas" or "svg"
+  * `:mode` - value is either "vega-lite" or "vega". Indicates whether the specification is a Vega spec or a Vega-Lite spec (that will be compiled to Vega before rendering)
+  Hanami default values are in `hc/default-opts` which defaults to
+```Clojure
+{:vgl {:export {:png true, :svg true}
+         :editor true
+         :source false
+         :renderer "canvas" #_"svg"
+         :mode "vega-lite" #_vega}
+   :tab {:order :row
+         :eltsper 2
+         :size "auto"}}
+```
+
+* `:vid` - value is an application specific identifier of the associated visualization (if any)
+
+* `:msgop` - value is one of `:register`, `:tabs`, or some application specific operator. These messages are from the server to the client. `:register` is sent on client connection for [registration](#registration) purposes. `:tabs` is used to [update tabs](#tab-updates) and their content, if tabs are used. [User messages](#user-messages) have application specific operators and are sent when your application deems they should be sent.
+
+* `:session-name` - the name of session(s) which will receive the complete specification (either via a `:tabs` message or some user message)
+
+
+```Clojure
+{:tab {:id :TID, :label :TLBL, :opts :TOPTS},
+ :opts :OPTS,
+ :vid :VID,
+ :msgop :MSGOP,
+ :session-name :SESSION-NAME}
+
+:OPTS
+{:export {:png true, :svg false},
+ :renderer "canvas",
+ :mode "vega-lite"}
+
+:SESSION-NAME "Exploring"
+:TID :expl1
+:TLBL #(-> :TID % name cljstr/capitalize)
+:TOPTS {:order :row, :eltsper 2, :size "auto"}
+
+:VID hc/RMV
+:MSGOP :tabs
+```
+
+
 ## Example predefined templates
 
 Here are some examples as provided by the name space `aerial.hanami.templates` which is always referred to in documentation as `ht/`.
@@ -571,6 +637,15 @@ The reason for caveat uses of 'conceptually' in the above description is the [fi
 
 
 ## Tabs
+
+
+## Messages
+
+### Registration
+
+### Tab updates
+
+### User messages
 
 
 ## Picture Frames

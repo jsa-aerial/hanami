@@ -443,7 +443,18 @@ These three are based directly on the underlying Vega and Vega-Lite options. The
 
 ### File data source
 
+:FDATA <filepath | [filepath, type-vector-or-map]]
 
+The filepath is a full path for the OS and can denote a file with extensions 'clj', 'edn', 'json', or 'csv'. These extensions indicate the file types - no other checking is done. For the 'clj', 'edn', and 'json' the content must be a vector of maps, where each map is a record of data fields and their values. CSV files are converted to vectors of maps, each map built from the column names and a row's corresponding values.
+
+For 'csv', a type-vec-or-map may be provided as the second value of a vector pair (tuple). This can be either a vector of type indicators in 1-1 correspondence with the column names of the csv file, or a map where each key is one of the column names and the value is a type indicator. Type indicators supported are: "string", "int", "float", and "double". In either case, the strings in a row associated with the type indicators are converted per the indicator.
+
+Example:
+
+```Clojure
+(hc/xform my-plot-template
+  :FDATA ["/Data/RNAseq/Exp-xyz/Out/dge-xyz.csv" {"dge" "float"}])
+```
 
 
 ## Walk through example of transformation

@@ -330,18 +330,15 @@ Hanami understands the following 'special' fields:
 
 * `:opts` - value is a map of fields controlling Vega/Vega-Lite options. This is **not** the `[:tab :opts]` path and value!
   * `:export` - value is a map of boolean value fields (`:png`, `:svg`). Setting these true will provide implicit saving options in the popup Vega-Embed options button (typically upper left circle with "..." content).
-  * `:renderer - value is either "canvas" or "svg"
+  * `:renderer` - value is either "canvas" or "svg"
   * `:mode` - value is either "vega-lite" or "vega". Indicates whether the specification is a Vega spec or a Vega-Lite spec (that will be compiled to Vega before rendering)
-  Hanami default values are in `hc/default-opts` which defaults to
+  Hanami default values are in (`hc/default-opts` :vgl) which defaults to
 ```Clojure
-{:vgl {:export {:png true, :svg true}
-         :editor true
-         :source false
-         :renderer "canvas" #_"svg"
-         :mode "vega-lite" #_vega}
-   :tab {:order :row
-         :eltsper 2
-         :size "auto"}}
+{:export {:png true, :svg true}
+ :editor true
+ :source false
+ :renderer "canvas" #_"svg"
+ :mode "vega-lite" #_vega}
 ```
 
 * `:vid` - value is an application specific identifier of the associated visualization (if any)

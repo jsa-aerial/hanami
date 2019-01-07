@@ -39,8 +39,8 @@ Table of Contents
       * [Sessions](#sessions)
       * [Data Streaming](#data-streaming)
       * [API](#api)
-         * [Primary](#primary)
-            * [Common](#common)
+         * [Templates and Substitution keys](#templates-and-substitution-keys)
+         * [Message system](#message-system)
    * [Example Transform 'Gallery'](#example-transform-gallery)
 
 [toc](https://github.com/ekalinin/github-markdown-toc)
@@ -344,10 +344,13 @@ Hanami understands the following 'special' fields:
 
 * `:msgop` - value is one of `:register`, `:tabs`, or some application specific operator. These messages are from the server to the client. `:register` is sent on client connection for [registration](#registration) purposes. `:tabs` is used to [update tabs](#tab-updates) and their content, if tabs are used. [User messages](#user-messages) have application specific operators and are sent when your application deems they should be sent.
 
-* `:session-name` - the name of session(s) which will receive the complete specification (either via a `:tabs` message or some user message)
+* `:session-name` - the name of session(s) which will receive the complete specification (either via a `:tabs` message or some user message).
+
+As an example, [Saite](https://github.com/jsa-aerial/saite#user-tabs) has an init function as part of its start up which sets the values of `:USERDATA` and subsequent defining substitution keys as:
 
 
 ```Clojure
+:USERDATA
 {:tab {:id :TID, :label :TLBL, :opts :TOPTS},
  :opts :OPTS,
  :vid :VID,
@@ -629,6 +632,24 @@ The reason for caveat uses of 'conceptually' in the above description is the [fi
 
 # Application Construction
 
+Hanami is an visualization application developement enabler. It is a library with optional framework aspects provided for both server side (Clojure) and client side (ClojureScript) development. The client is most typically expected to be in the browser, but technically may not be.
+
+The library portion of Hanami centers on
+
+* [Templates, Substitution Keys and Transformations](#templates-substitution-keys-and-transformat
+ions)
+* Simple, potent, _clean_ [messaging](#messages) system
+* Clean single point [Reagent](http://reagent-project.github.io/) (React lifecycle) component for compiling, _both_ Vega and Vega-Lite and rendering the result.
+
+
+These bits are not opionated in how to go about developing a domain specific visualization application. There is no constraint on how page(s) are to be laid out, what sort of ancillary and support components should be used, what CSS is used, etc. You can use Hiccup or [Re-Com](https://github.com/Day8/re-com) or whatever to layout and structure your application. Nor is there any opinion about the structure of the server side. And while there are a set of defaults, there are no requirements or expectations about the form, makeup, or content of templates and substitution keys. You can replace, augment, or chaange any of all of the defaults.
+
+
+The framework portion of Hanami _is_ opinionated, though not too stringently. It consists of
+
+* Client side application [header](#header) as provided by a user supplied
+
+
 ## Header
 
 
@@ -761,21 +782,25 @@ A couple of examples. These are actually taken from [Saite](https://github.com/j
 
 ## API
 
-As noted, there isn't much of a functional/procedural API and no objects or protocols (classes/interfaces) are involved. There are three primary functions. One on the server side, one on the browser/client side and one common to both. There are handful of other ancillary functions common to both sides involving the abiltiy to change default substitution map.
+As noted, with respect to abstracting visualizations (ala' something like [Altair](https://altair-viz.github.io/)) there isn't much of an API and no classes, objects, or methods are involved. Most of what API there is centers on application development and start up. This is split across the server and the client side.
 
-### Primary
 
-#### Common
+### Templates and Substitution keys
 
-In name space `aerial.hanami.common`
+This applies across both the server and client - the facilities are available in both server and client. They are in `aerial.hanami.common`, in this documentation aka `hc`. **NOTE** this namespace, along with `aerial.hanami.templates` (aka `ht`), is available on _both_ the client and server.
 
-```Clojure
-(xform
-  ([x xkv] ...)
-  ([x k v & kvs] ...))
-```
+* `(defn update-subkeyfns [k vfn & kvfns])`: Updates the [substitution key function map](#subtitution-key-functions). `k` is a substitution key, `vfn` is either a function `(fn [submap, subkey, subval] ...)` or the special `hc/RMV` value. The latter case will _remove_ any current key `k` and its value.
 
-This is the recursive transformation function. `x` is a _template_ (see above). In both the 2 and 3+ argument cases, the remaining arguments involve providing _substitution keys_ and values. In the two argument case these are supplied as a `map`, while the 3+ argument case you provide them in the usual key/value pair `rest` style of clojure. Each key should correspond to a _substitution key_ (see above in **Templates**) while the value will be what is inserted into a template during the transformation sequence.
+* `(defn update-defaults [k v & kvs])`: Updates the default [substitution key map](#example-predefined-substitution-keys). `k` is a substitution key, `v` is some appropriate value, including `hc/RMV`, which will remove the key.
+
+* `(defn get-default [k])`: Returns the current default value of substitution key `k`.
+
+* `(defn xform ([spec submap]) ([spec k v & kvs]) ([spec]))`: The template/specification transformation function. Generally, you will only call the second two arity signatures. The first is used for recursive transformation actions, so in the first signature, `spec` is generally the current value of a recursive transformation. In the second and third signatures, `spec` is a template. [Recall](#templates-substitution-keys-and-transformations) legal templates may be already complete fully realized Vega or Vega-Lite specifications - this latter case is for what the third signature is intended. The second signature is what you will use in nearly all cases. `k` is a substitution key and `v` is the value it will have in the transformation. Hence you can override defaults and add specific keys for just a given transformation. Returns the fully transformed final value.
+
+
+### Message system
+
+This applies across both the server and client - the facilities are available in both server and client. They are in `aerial.hanami.core`, in this documentation aka `hc`. **NOTE** this namespace, exists on _both_ the client and server.
 
 
 

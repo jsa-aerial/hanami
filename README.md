@@ -36,6 +36,7 @@ Table of Contents
          * [Tab updates](#tab-updates)
          * [User messages](#user-messages)
       * [Picture Frames](#picture-frames)
+         * [Empty Frames](#empty-frames)
       * [Sessions](#sessions)
       * [Data Streaming](#data-streaming)
       * [API](#api)
@@ -774,6 +775,83 @@ A couple of examples. These are actually taken from [Saite](https://github.com/j
 ```
 
 ![Hanami picture frame](resources/public/images/picture-frame-all-quads-ex.png?raw=true)
+
+
+### Empty Frames
+
+As of version 0.5.0, picture frames can now be 'empty', i.e., they do not need an associated visualization. The basic layout is the same as for frames with visualizations:
+
+![Hanami empty frame](resources/public/images/empty-picframe-layout.png?raw=true)
+
+To make use of these simpler (and easier) there is a new standard template `ht/empty-chart` which can be used to create them. Empty frames enable a more general document structure supporting paragraphs of html/'text oriented' material along side or in place of standard visualizations with or without frames. Here are a couple of examples showing the basic capability:
+
+This example shows an empty frame with all 4 picture frame elements (areas) with various html/text information
+
+```Clojure
+(let [text "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quod si ita est, sequitur id ipsum, quod te velle video, omnes semper beatos esse sapientes. Tamen a proposito, inquam, aberramus."
+      frame {:frame
+             {:top `[[gap :size "50px"]
+                     [p {:style {:width "600px" :min-width "50px"}}
+                      "An example empty picture frame showing all four areas."
+                      " This is the " [:span.bold "top"] " area. "
+                       ~text ~text ~text]]
+              :left `[[gap :size "50px"]
+                      [p {:style {:width "300px" :min-width "50px"}}
+                       "The " [:span.bold "left "] "area as a column of text. "
+                       ~text ~text ~text ~text]]
+              :right `[[gap :size "70px"]
+                      [p {:style {:width "300px" :min-width "50px"}}
+                       "The " [:span.bold "right "] "area as a column of text. "
+                       ~text ~text ~text ~text]]
+              :bottom `[[gap :size "50px"]
+                        [v-box
+                         :children
+                         [ [p {:style {:width "600px" :min-width "50px"}}
+                           "The " [:span.bold "bottom "]
+                           "area showing a variety of text. "
+                           [:span.italic ~text] [:span.bold ~text]]
+                          [p {:style {:width "600px" :min-width "50px"
+                                      :color "red"}}
+                           ~text]]]]}}]
+  (->> (hc/xform
+        ht/empty-chart
+        :TID :picframes
+        :USERDATA (merge (hc/get-default :USERDATA) frame))
+       hmi/sv!))
+```
+
+![Hanami empty picframe](resources/public/images/picframe-empty.png?raw=true)
+
+This next eample shows a tab/page with two picture frames. The left being a frame with an associated chart, while the one on the right shows how you can structure text in columns.
+
+```Clojure
+(let [text "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quod si ita est, sequitur id ipsum, quod te velle video, omnes semper beatos esse sapientes. Tamen a proposito, inquam, aberramus."
+      frame1 {:frame
+              {:top `[[gap :size "50px"]
+                      [p "Here's a 'typical' chart/plot filled picture frame."
+                       "It only has the top area"
+                       [:br] ~text]]}}
+      frame2 {:frame
+              {:left `[[gap :size "20px"]
+                       [p {:style {:width "200px" :min-width "50px"}}
+                        "This is an empty frame with a " [:span.bold "left "]
+                        "column of text" [:br] ~text ~text ~text ~text]]
+               :right `[[gap :size "30px"]
+                        [p {:style {:width "200px" :min-width "50px"}}
+                         "And a " [:span.bold "right "]
+                         "column of text"
+                         [:br] ~text ~text ~text ~text]]}}]
+  (->> [(hc/xform ht/point-chart
+          :USERDATA (merge (hc/get-default :USERDATA) frame1)
+          :TID :picframes :UDATA "data/cars.json"
+          :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")
+        (hc/xform ht/empty-chart
+          :USERDATA (merge (hc/get-default :USERDATA) frame2)
+          :TID :picframes)]
+       hmi/sv!))
+```
+
+![Hanami picframe chart and empty](resources/public/images/picframe-chart-and-empty.png?raw=true)
 
 
 ## Sessions

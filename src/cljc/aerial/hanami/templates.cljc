@@ -215,10 +215,10 @@
    :data data-options
    :vconcat
    [{:mark :MARK,
-     :height HEIGHT, :width :WIDTH,
+     :height :HEIGHT, :width :WIDTH,
      :encoding :ENCODING}
     {:mark :MARK,
-     :height :DHEIGHT, :width WIDTH,
+     :height :DHEIGHT, :width :WIDTH,
      :selection {:brush {:type "interval", :encodings ["x"]}},
      :encoding :ENCODING}]})
 

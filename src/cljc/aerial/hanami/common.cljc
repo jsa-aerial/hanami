@@ -9,8 +9,8 @@
   {:vgl {:export {:png true, :svg true}
          :editor true
          :source false
-         :renderer "canvas" #_"svg"
-         :mode "vega-lite" #_vega}
+         :renderer :RENDERER ; either "canvas" or "svg" - see defaults
+         :mode :MODE}        ; either "vega-lite" or "vega" - see defaults
    :tab {:order :row
          :eltsper 2
          :size "auto"}})
@@ -112,8 +112,8 @@
   (atom {;; General
          :BACKGROUND "floralwhite"
          :TITLE RMV, :TOFFSET RMV
-         :HEIGHT 300, :WIDTH 400
-         :USERDATA RMV
+         :HEIGHT 300, :WIDTH 400, :DHEIGHT 60
+         :USERDATA RMV, :MODE "vega-lite", :RENDERER "canvas"
 
          ;; Data, transforms, and encodings
          :VALDATA get-data-vals
@@ -122,10 +122,10 @@
          :OPACITY RMV
          :AGG RMV, :XAGG RMV, :YAGG RMV
          :X "x", :XTYPE, "quantitative", :XUNIT RMV
-         :XSCALE RMV
+         :XSCALE RMV, :XAXIS {:title :XTITLE, :grid :XGRID, :format :XFORMAT}
          :XTITLE RMV, :XGRID RMV, :XFORMAT RMV
          :Y "y", :YTYPE, "quantitative", :YUNIT RMV
-         :YSCALE RMV
+         :YSCALE RMV, :YAXIS {:title :YTITLE, :grid :YGRID, :format :YFORMAT}
          :YTITLE RMV, :YGRID RMV, :YFORMAT RMV
          :ROWDEF ht/default-row :ROW RMV, :ROWTYPE RMV
          :COLDEF ht/default-col :COLUMN RMV, :COLTYPE RMV
@@ -156,7 +156,7 @@
          :CLEGEND {:type :LTYPE :offset :LOFFSET :title :LTITLE}
 
          ;; Vega layout transforms
-         :KEY :id, :PARENTKEY :parent, :NAME :name
+         :KEY "id", :PARENTKEY "parent", :NAME "name"
          :LAYOUT "tidy", :ORIENT "horizontal", :LINKSHAPE "diagonal"
          :TREESIZE [{:signal "height"} {:signal "width - 100"}]
          :TREEAS ["y" "x" "depth" "children"]

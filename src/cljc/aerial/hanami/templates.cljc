@@ -61,13 +61,13 @@
   {:x {:field :X
        :type :XTYPE
        :timeUnit :XUNIT
-       :axis {:title :XTITLE, :grid :XGRID, :format :XFORMAT}
+       :axis :XAXIS
        :scale :XSCALE
        :aggregate :XAGG}
    :y {:field :Y
        :type :YTYPE
        :timeUnit :YUNIT
-       :axis {:title :YTITLE, :grid :YGRID, :format :YFORMAT}
+       :axis :YAXIS
        :scale :YSCALE
        :aggregate :YAGG}
    :opacity :OPACITY
@@ -209,6 +209,18 @@
    :config {:bar {:binSpacing 1
                   :discreteBandSize 5
                   :continuousBandSize 5}}})
+
+(def overview-detail
+  {:usermeta :USERDATA
+   :data data-options
+   :vconcat
+   [{:mark :MARK,
+     :height HEIGHT, :width :WIDTH,
+     :encoding :ENCODING}
+    {:mark :MARK,
+     :height :DHEIGHT, :width WIDTH,
+     :selection {:brush {:type "interval", :encodings ["x"]}},
+     :encoding :ENCODING}]})
 
 
 (def grouped-bar-chart

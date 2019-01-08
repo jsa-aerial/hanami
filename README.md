@@ -132,7 +132,7 @@ Hanami template version:
   :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")
 ```
 
-Which transforms to this Vega-Lite JSON specification:
+Which, using the standard default [substitution keys](#example-predefined-substitution-keys) transforms to this Vega-Lite JSON specification:
 
 ```Clojure
 {:data {:url "data/cars.json"},
@@ -217,7 +217,7 @@ An example using a Vega template for contour plotting. An important point to rec
 ```Clojure
 (hc/xform
   ht/contour-plot
-  :OPTS (merge (hc/default-opts :vgl) {:mode "vega"})
+  :MODE "vega"
   :HEIGHT 400, :WIDTH 500
   :X "Horsepower", :XTITLE "Engine Horsepower"
   :Y "Miles_per_Gallon" :YTITLE "Miles/Gallon"
@@ -239,11 +239,11 @@ Another interesting Vega example uses the `tree-layout` template. Using this tem
 ```Clojure
 (hc/xform
  ht/tree-layout
- :OPTS (merge (hc/default-opts :vgl) {:mode "vega"})
- :WIDTH 650, :HEIGHT 1600
- :UDATA "data/flare.json"
- :LINKSHAPE "line" :LAYOUT "cluster"
- :CFIELD "depth")
+  :MODE "vega"
+  :WIDTH 650, :HEIGHT 1600
+  :UDATA "data/flare.json"
+  :LINKSHAPE "line" :LAYOUT "cluster"
+  :CFIELD "depth")
  ```
 
 ![Hanami pic 3.2](resources/public/images/tree-layout-1.png?raw=true)
@@ -336,8 +336,8 @@ Hanami understands the following 'special' fields:
     {:export {:png true, :svg true}
      :editor true
      :source false
-     :renderer "canvas" #_"svg"
-     :mode "vega-lite" #_vega}
+     :renderer :RENDERER ; either "canvas" or "svg" - see defaults
+     :mode :MODE}        ; either "vega-lite" or "vega" - see defaults
 ```
 
 * `:vid` - value is an application specific identifier of the associated visualization (if any)
@@ -359,8 +359,8 @@ As an example, [Saite](https://github.com/jsa-aerial/saite#user-tabs) has an ini
 
 :OPTS
 {:export {:png true, :svg false},
- :renderer "canvas",
- :mode "vega-lite"}
+ :renderer :RENDERER,
+ :mode :MODE}
 
 :SESSION-NAME "Exploring"
 :TID :expl1
@@ -483,7 +483,7 @@ And some charts.
 All of these are taken from `hc/_defaults` They are chosen so as to indicate how some aspects of the above template examples get transformed.
 
 ```Clojure
-         :USERDATA RMV
+         :USERDATA RMV, :MODE "vega-lite", :RENDERER "canvas"
          :BACKGROUND "floralwhite"
          :OPACITY RMV
 
@@ -801,6 +801,9 @@ This applies across both the server and client - the facilities are available in
 ### Message system
 
 This applies across both the server and client - the facilities are available in both server and client. They are in `aerial.hanami.core`, in this documentation aka `hc`. **NOTE** this namespace, exists on _both_ the client and server.
+
+* `(defn send-msg [ws app-msg]): Inherited from [Hanasu](https://github.com/jsa-aerial/hanasu). `ws` is the websocket/channel
+* `(defmulti user-msg :op)`: Multimethod for encoding application specific message envelopes (see [Hanasu](https://github.com/jsa-aerial/hanasu) for details). Specifically,
 
 
 

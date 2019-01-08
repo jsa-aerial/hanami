@@ -1,6 +1,16 @@
 # Change Log
 All notable changes to this project, starting from 0.5.0, will be documented in this file.
 
+## [0.5.1]
+### Added
+- Template for over plus detail charts `ht/overview-detail. And new substitution key :DHEIGHT for controlling height of overview area. Experimental - may not work for all chart types
+- :MODE "vega-lite" and :RENDERER "canvas" default substitution keys
+- :XAXIS and :YAXIS substitution keys
+
+### Changed
+- x & y encoding :axis are now :XAXIS and :YAXIS. This is more general
+- (default-opts :vgl) now uses :MODE and :RENDERER instead of hardcoded values
+
 ## [0.5.0]
 ### Added
 - Chartless Picture frames (frames are hiccup and re-com enabled top, bottom, left, right areas surrounding a vis) Provides simple and easy support for full text based areas in tabs (chapters)

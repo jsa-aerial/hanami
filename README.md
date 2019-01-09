@@ -113,7 +113,7 @@ In all of the documentation, these namespaces are referred to by the shorthand p
 
 ## Simple cars
 
-As a first example let's compare a Hanami template with corresponding Altair code. This is a the typical scatter plot example from the Vega-Lite developers used in many tutorials and by others in varios places. First, the Altair:
+As a first example let's compare a Hanami template with corresponding Altair code. This is a the typical scatter plot example from the Vega-Lite developers used in many tutorials and by others in various places. First, the Altair:
 
 ```Python
 cars = data.cars()
@@ -637,8 +637,7 @@ Hanami is an visualization application developement enabler. It is a library wit
 
 The library portion of Hanami centers on
 
-* [Templates, Substitution Keys and Transformations](#templates-substitution-keys-and-transformat
-ions)
+* [Templates, Substitution Keys and Transformations](#templates-substitution-keys-and-transformations)
 * Simple, potent, _clean_ [messaging](#messages) system
 * Clean single point [Reagent](http://reagent-project.github.io/) (React lifecycle) component for compiling, _both_ Vega and Vega-Lite and rendering the result.
 

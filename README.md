@@ -31,13 +31,13 @@ Table of Contents
    * [Application Construction](#application-construction)
       * [Header](#header)
       * [Tabs](#tabs)
+      * [Sessions](#sessions)
       * [Messages](#messages)
          * [Registration](#registration)
          * [Tab updates](#tab-updates)
          * [User messages](#user-messages)
       * [Picture Frames](#picture-frames)
          * [Empty Frames](#empty-frames)
-      * [Sessions](#sessions)
       * [Data Streaming](#data-streaming)
       * [API](#api)
          * [Templates and Substitution keys](#templates-and-substitution-keys)
@@ -534,11 +534,11 @@ These three are based directly on the underlying Vega and Vega-Lite options. The
 
 ### File data source
 
-:FDATA <filepath | [filepath, type-vector-or-map]]
+`:FDATA <filepath | [filepath, type-vector-or-map]]`
 
-The filepath is a full path for the OS and can denote a file with extensions 'clj', 'edn', 'json', or 'csv'. These extensions indicate the file types - no other checking is done. For the 'clj', 'edn', and 'json' the content must be a vector of maps, where each map is a record of data fields and their values. CSV files are converted to vectors of maps, each map built from the column names and a row's corresponding values.
+The `filepath` is a full path for the OS and can denote a file with extensions `clj`, `edn`, `json`, or `csv`. These extensions indicate the file types - no other checking is done. For the `clj`, `edn`, and `json` the content must be a vector of maps, where each map is a record of data fields and their values. CSV files are converted to vectors of maps, each map built from the column names and a row's corresponding values.
 
-For 'csv', a type-vec-or-map may be provided as the second value of a vector pair (tuple). This can be either a vector of type indicators in 1-1 correspondence with the column names of the csv file, or a map where each key is one of the column names and the value is a type indicator. Type indicators supported are: "string", "int", "float", and "double". In either case, the strings in a row associated with the type indicators are converted per the indicator. The default type indicator for the case of maps is "string", i.e., return the original string value.
+For `csv`, a `type-vec-or-map` may be provided as the second value of a vector pair (tuple). This can be either a vector of type indicators in 1-1 correspondence with the column names of the csv file, or a map where each key is one of the column names and the value is a type indicator. Type indicators supported are (the strings): "string", "int", "float", and "double". In either case, the strings in a row associated with the type indicators are converted per the indicator. The default type indicator for the case of maps is "string", i.e., return the original string value.
 
 Example:
 
@@ -642,12 +642,14 @@ The library portion of Hanami centers on
 * Clean single point [Reagent](http://reagent-project.github.io/) (React lifecycle) component for compiling, _both_ Vega and Vega-Lite and rendering the result.
 
 
-These bits are not opionated in how to go about developing a domain specific visualization application. There is no constraint on how page(s) are to be laid out, what sort of ancillary and support components should be used, what CSS is used, etc. You can use Hiccup or [Re-Com](https://github.com/Day8/re-com) or whatever to layout and structure your application. Nor is there any opinion about the structure of the server side. And while there are a set of defaults, there are no requirements or expectations about the form, makeup, or content of templates and substitution keys. You can replace, augment, or chaange any of all of the defaults.
+These bits are not opionated in how to go about developing a domain specific visualization application. There is no constraint on how page(s) are to be laid out, what sort of ancillary and support components should be used, what CSS is used, etc. You can use Hiccup or [Re-Com](https://github.com/Day8/re-com) or whatever to layout and structure your application. Nor is there any opinion about the structure of the server side. And while there are a set of defaults, there are no requirements or expectations about the form, makeup, or content of templates and substitution keys. You can replace, augment, or chaange any or all of the defaults.
 
 
 The framework portion of Hanami _is_ opinionated, though not too stringently. It consists of
 
-* Client side application [header](#header) as provided by a user supplied
+* Client side application [header](#header) as provided by a user supplied function of zero arguments, which is expected to return a hiccup/re-com value which lays out the page header of the application. This value can simply be empty if you don't want this.
+
+* Named [sessions](#sessions)
 
 
 ## Header
@@ -656,11 +658,17 @@ The framework portion of Hanami _is_ opinionated, though not too stringently. It
 ## Tabs
 
 
+## Sessions
+
+
 ## Messages
+
 
 ### Registration
 
+
 ### Tab updates
+
 
 ### User messages
 
@@ -853,9 +861,8 @@ This next eample shows a tab/page with two picture frames. The left being a fram
 ![Hanami picframe chart and empty](resources/public/images/picframe-chart-and-empty.png?raw=true)
 
 
-## Sessions
-
 ## Data Streaming
+
 
 ## API
 

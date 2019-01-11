@@ -36,8 +36,6 @@
 
 
 
-(defn uuid [] (str (java.util.UUID/randomUUID)))
-
 (defonce app-bpsize 100)
 (defonce app-db (atom {:rcvcnt 0 :sntcnt 0}))
 
@@ -74,6 +72,20 @@
     (apply printchan args)))
 
 
+
+
+(defn uuid []
+  (let [uuid (str (java.util.UUID/randomUUID))
+        cur-uuids (or (get-adb :cur-uuids) #{})]
+    (update-adb :cur-uuids (conj cur-uuids uuid))
+    uuid))
+
+(defn hmi-uuid? [x] ((get-adb :cur-uuids) x))
+
+(defn rm-uuid [uuid]
+  (let [cur-uuids (or (get-adb :cur-uuids) #{})]
+    (update-adb :cur-uuids (disj cur-uuids uuid))
+    (get-adb :cur-uuids)))
 
 
 (defmulti user-msg :op)
@@ -131,11 +143,12 @@
     :open (on-open ch op payload)
     :close (let [{:keys [ws status]} payload
                  uuid (get-adb [ws :uuid])
-                 uuid-name (get-adb [uuid :name])
-                 uuids (get-adb uuid-name)]
-             (printchan :SRV :close :uuid uuid uuid-name)
+                 session-name (get-adb [uuid :name])
+                 uuids (get-adb session-name)]
+             (printchan :SRV :close :uuid uuid session-name)
+             (rm-uuid uuid)
              (update-adb ws :rm, uuid :rm
-                         uuid-name (->> uuids (remove #(= uuid %)) vec)))
+                         session-name (->> uuids (remove #(= uuid %)) vec)))
 
     :bpwait (let [{:keys [ws msg encode]} payload
                   uuid (get-adb [ws :uuid])]
@@ -209,16 +222,31 @@
   (async/>!! (get-adb :chan) {:op :stop :payload {:cause :userstop}}))
 
 
+(defn send-msg [to msg]
+  (let [uuids (cond (and (string? to) (hmi-uuid? to))
+                    (-> [to :name] get-adb get-adb)
+                    (string? to) (get-adb to))]
+    (assert (and (map? msg) (= #{:op :data} (-> msg keys set)))
+            (format "hmi/send-msg: '%s' not map {:op ..., :data ...}" msg))
+    (if (seq uuids)
+      (doseq [id uuids]
+        (print-when [:send-msg] :ID id :MSG msg)
+        (srv/send-msg (get-adb [id :ws]) msg))
+      (do
+        (print-when [:send-msg] :ID to :MSG msg)
+        (srv/send-msg to msg)))))
+
+
 (defn s! [uuids op data]
   (doseq [id uuids]
     (srv/send-msg (get-adb [id :ws]) {:op op :data data})))
 
 
 (defn so!
-  ([uuid-name opts]
-   (s! (get-adb uuid-name) :opts {:main opts}))
-  ([uuid-name tid opts]
-   (s! (get-adb uuid-name) :opts {:tab tid :opts opts})))
+  ([session-name opts]
+   (s! (get-adb session-name) :opts {:main opts}))
+  ([session-name tid opts]
+   (s! (get-adb session-name) :opts {:tab tid :opts opts})))
 
 
 (defn get-msgop [spec]

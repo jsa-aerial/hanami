@@ -92,7 +92,7 @@
   (async/put! print-chan (clojure.string/join " " args)))
 
 
-(defonce app-db (rgt/atom {}))
+(defonce app-db (rgt/atom {:dbg {}}))
 
 (def default-opts
   {:vgl {:export true
@@ -102,20 +102,46 @@
          :eltsper 2
          :size "none"}})
 
+(declare print-when)
+
 (defn update-adb
   ([] (com/update-db app-db :default-opts default-opts))
-  ([keypath vorf] #_(printchan "UPDATE-ADB " keypath vorf)
+  ([keypath vorf] #_(printchan [:db :update] "UPDATE-ADB " keypath vorf)
    (com/update-db app-db keypath vorf))
   ([kp1 vof1 kp2 vof2 & kps-vs]
    (apply com/update-db app-db kp1 vof1 kp2 vof2 kps-vs)))
 
 (defn get-adb
   ([] (com/get-db app-db []))
-  ([key-path] #_(printchan "GET-ADB " key-path) (com/get-db app-db key-path)))
+  ([key-path] #_(printchan [:db :get]"GET-ADB " key-path)
+   (com/get-db app-db key-path)))
 
 (let [id (atom 0)]
   (defn next-key []
     (str "cnvs-" (swap! id inc))))
+
+
+(defn set-dbg [dbg-path on-off]
+  (let [dbg-path (com/ev dbg-path)
+        path (->> dbg-path (concat [:dbg]) vec)]
+    (update-adb path on-off)))
+
+(defn dbgon [dbg-path]
+  (set-dbg dbg-path true))
+
+(defn dbgoff [dbg-path]
+  (set-dbg dbg-path false))
+
+(defn dbg? [dbg-path]
+  (let [dbg-path (com/ev dbg-path)
+        path (->> dbg-path (concat [:dbg]) vec)]
+    (get-adb path)))
+
+(defn print-when [dbg-path & args]
+  (when (dbg? dbg-path)
+    (apply printchan args)))
+
+
 
 
 (defn get-vspec [vid]
@@ -174,7 +200,7 @@
 
 
 (defn visualize
-  [spec elem] #_(printchan :SPEC spec)
+  [spec elem] (print-when [:vis :vis] :SPEC spec)
   (when spec
     (let [vopts (-> spec :usermeta :opts)
           vmode (get vopts :mode)
@@ -219,7 +245,8 @@
       (let [new-useful-argv (rgt/children comp)
             new-argv-2nd-way (rgt/argv comp) ; first elt some fn?!?
             new-spec (-> new-argv-2nd-way rest first)]
-        #_(printchan :ARGV1 new-useful-argv :ARGV2 (rest new-argv-2nd-way))
+        (print-when [:vis :vgl :update]
+                    :ARGV1 new-useful-argv :ARGV2 (rest new-argv-2nd-way))
         (visualize new-spec (rgt/dom-node comp))))
 
     :reagent-render
@@ -242,7 +269,7 @@
        :children
        (for [[spec frame] sub-pairs]
          (do #_(js-delete spec "usermeta")
-             #_(printchan :NSPEC spec children)
+             (print-when [:vis :vis-list] :NSPEC spec frame)
              [v-box :gap "10px"
               :children
               [[h-box :gap "5px" :children (frame :top)]
@@ -317,7 +344,7 @@
 
 
 (defn get-ws []
-  (->> (get-adb []) keys (filter #(-> % keyword? not)) first))
+  (->> (get-adb []) keys (filter #(-> % type (= js/WebSocket))) first))
 
 (defn get-chan []
   (let [ws (get-ws)
@@ -326,7 +353,10 @@
 
 ;; Send server msg
 (defn app-send [msg]
-  #_(printchan "Sending msg " msg)
+  (printchan "app-send: DEPRECATED, use 'send-msg'")
+  (cli/send-msg (get-ws) msg))
+(defn send-msg [msg]
+  (print-when [:msg :send] "Sending msg " msg)
   (cli/send-msg (get-ws) msg))
 
 
@@ -358,7 +388,7 @@
               [:main :title] title
               [:main :logo] logo
               [:main :img] img
-              [:main :opts] opts
+              [:main :opts] (hc/xform opts)
               [:main :session-name] (rgt/atom "")
               [:vgl-as-vg] :rm
               [:vspecs] (rgt/atom {})
@@ -484,31 +514,31 @@
 (defn user-dispatch [ch op payload]
   (case op
     :open (let [ws payload]
-            #_(printchan :CLIENT :open :ws ws)
+            (print-when [:msg :open] :CLIENT :open :ws ws)
             (on-open ch ws))
     :close (let [{:keys [ws code reason]} payload]
-             (printchan :CLIENT :RMTclose :payload payload)
+             (print-when :CLIENT :RMTclose :payload payload)
              (go (async/put! ch {:op :stop
                                  :payload {:ws ws :cause :rmtclose}})))
 
     :msg (let [{:keys [ws data]} payload]
-           #_(printchan :CLIENT :msg :payload payload)
+           (print-when [:msg :msg] :CLIENT :msg :payload payload)
            (on-msg ch ws data))
 
     :bpwait (let [{:keys [ws msg encode]} payload]
-              (printchan :CLIENT "Waiting to send msg " msg)
+              (print-when [:msg :bpwait] :CLIENT "Waiting to send msg " msg)
               (go (async/<! (async/timeout 5000)))
-              (printchan :CLIENT "Trying resend...")
+              (print-when [:msg :bpwait] :CLIENT "Trying resend...")
               (cli/send-msg ws msg :encode encode))
-    :bpresume (printchan :CLIENT "BP Resume " payload)
+    :bpresume (print-when [:msg :bpresume] :CLIENT "BP Resume " payload)
 
     :sent (let [{:keys [ws msg]} payload]
-            (printchan :CLIENT "Sent msg " msg)
+            (print-when [:msg :sent] :CLIENT "Sent msg " msg)
             (update-adb [ws :line-info :lastsnt] msg,
                         [ws :line-info :sntcnt] inc))
 
     :stop (let [{:keys [ws cause]} payload]
-            (printchan :CLIENT "Stopping reads... Cause " cause)
+            (print-when [:msg :stop] :CLIENT "Stopping reads... Cause " cause)
             (cli/close-connection ws)
             (update-adb ws :rm))
 
@@ -537,7 +567,7 @@
     (sp/setval [sp/ATOM :main :session-name sp/ATOM] name app-db)
     (when (not= name (old-uid :name))
       (update-adb [:main :uid :name] name)
-      (app-send {:op :set-session-name
+      (send-msg {:op :set-session-name
                  :data {:uid old-uid
                         :new-name name}}))))
 
@@ -567,7 +597,7 @@
 
 (defn default-instrumentor-fn [{:keys [spec opts]}]
   (let [udata (spec :usermeta)]
-    (printchan :UDATA udata :OPTS opts)
+    (print-when [:instrumentor] chan :UDATA udata :OPTS opts)
     []))
 
 (defn start [& {:keys [elem port header-fn instrumentor-fn]

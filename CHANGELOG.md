@@ -8,6 +8,9 @@ All notable changes to this project, starting from 0.5.0, will be documented in 
 - Server: uuid DB
 - Server: new clean send-msg (mirrors client)
 
+### Changed
+- Moved to Reagent 0.8.1
+
 ### Fixed
 - Client: opts on registration was not xform'ed
 

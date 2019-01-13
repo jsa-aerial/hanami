@@ -22,7 +22,7 @@
 
    [re-com.core
     :as rcm
-    :refer [h-box v-box box gap line h-split v-split
+    :refer [h-box v-box box gap line h-split v-split scroller
             button row-button md-icon-button md-circle-icon-button info-button
             input-text input-password input-textarea
             label title hyperlink-href p
@@ -32,7 +32,7 @@
             modal-panel popover-content-wrapper popover-anchor-wrapper]
     :refer-macros [handler-fn]]
    [re-com.box
-    :refer [h-box v-box box gap line flex-child-style]]
+    :refer [flex-child-style]]
    [re-com.dropdown
     :refer [filter-choices-by-keyword single-dropdown-args-desc]]
 
@@ -48,7 +48,7 @@
 (def re-com-xref
   (into
    {} (mapv vector
-            '[h-box v-box box gap line flex-child-style
+            '[h-box v-box box gap line h-split v-split scroller flex-child-style
               button row-button md-icon-button md-circle-icon-button info-button
               input-text input-password input-textarea
               label title hyperlink-href p
@@ -57,7 +57,7 @@
               horizontal-bar-tabs vertical-bar-tabs
               modal-panel popover-content-wrapper popover-anchor-wrapper
               filter-choices-by-keyword single-dropdown-args-desc]
-            [h-box v-box box gap line flex-child-style
+            [h-box v-box box gap line h-split v-split scroller flex-child-style
              button row-button md-icon-button md-circle-icon-button info-button
              input-text input-password input-textarea
              label title hyperlink-href p

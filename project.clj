@@ -19,7 +19,6 @@
 
                  [com.andrewmcveigh/cljs-time "0.5.2"]
                  [re-com "2.1.0"]
-                 #_[reagent "0.7.0"]
                  [reagent "0.8.1"]
 
                  [cljsjs/vega "4.4.0-0"]

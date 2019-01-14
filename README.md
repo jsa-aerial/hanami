@@ -63,7 +63,7 @@ Hence, templates are a means to abstract all manner of visualization aspects and
 
 To install, add the following to your project `:dependencies`:
 
-    [aerial.hanami "0.5.1"]
+    [aerial.hanami "0.6.0"]
 
 
 
@@ -89,7 +89,7 @@ To install, add the following to your project `:dependencies`:
   * Application extensible messaging capability
   * Data streaming capable
     * Realtime chart/plot updates with data updates
-* Uses light weight websocket messaging system
+* Uses light weight websocket [messaging system](https://github.com/jsa-aerial/hanasu)
 
 
 
@@ -649,7 +649,7 @@ The framework portion of Hanami _is_ opinionated, though not too stringently. It
 
 * Client side application [header](#header) as provided by a user supplied function of zero arguments, which is expected to return a hiccup/re-com value which lays out the page header of the application. This value can simply be empty if you don't want this.
 
-* Named [sessions](#sessions)
+* Named [session](#sessions) groups. The default 
 
 
 ## Header

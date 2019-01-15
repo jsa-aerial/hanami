@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to this project, starting from 0.5.0, will be documented in this file.
 
-## [0.5.1]
+## [0.6.0]
 ### Added
 - Client: dbg system
 - Client: send-msg, replaces app-send
@@ -13,6 +13,7 @@ All notable changes to this project, starting from 0.5.0, will be documented in 
 
 ### Fixed
 - Client: opts on registration was not xform'ed
+- Client: remove bogus extra refs from re-com.box refer. Fixes shadow-cljs
 
 ### Deprecated
 - Client: app-send, use send-msg

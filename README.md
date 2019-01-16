@@ -41,7 +41,12 @@ Table of Contents
       * [Data Streaming](#data-streaming)
       * [API](#api)
          * [Templates and Substitution keys](#templates-and-substitution-keys)
+         * [Startup](#startup)
+            * [Server start](#server-start)
+            * [Client start](#client-start)
          * [Message system](#message-system)
+         * [Client core](#client-core)
+         * [Server core](#server-core)
    * [Example Transform 'Gallery'](#example-transform-gallery)
 
 [toc](https://github.com/ekalinin/github-markdown-toc)
@@ -649,7 +654,15 @@ The framework portion of Hanami _is_ opinionated, though not too stringently. It
 
 * Client side application [header](#header) as provided by a user supplied function of zero arguments, which is expected to return a hiccup/re-com value which lays out the page header of the application. This value can simply be empty if you don't want this.
 
-* Named [session](#sessions) groups. The default 
+* Named [session](#sessions) groups. The default (client) header function directly supports this by providing an input text box to specify which session group is desired. Any session in a session group of name _name_ will receive any messages sent to ghat group. This supports dynamic sharing.
+
+* A [tab system](#tabs) for automatically structuring both your application layout (each tab can be a page, chapter, subsection, etc) and the structure and content of each such component.
+
+These combine to form the basic page layout from this 'framework perspective' as shown here:
+
+![Hanami framework layout](resources/public/images/framework-page-structure.png?raw=true)
+
+The header area is constructed by the `:header-fn` argument of the [client start](#client-start) function. The tab bar is dynamically constructed via `:tabs` [messages](#messages) or by explict calls to the [hc/tabs](#client-core) client function. The _content_ of each tab's body is also constructed dynamically via these same means. If the tab doesn't exist, it will be created and added to the tab bar at the time it's body is also rendered. Updates to a tab will simply update the existing tab's body.
 
 
 ## Header
@@ -660,6 +673,7 @@ The framework portion of Hanami _is_ opinionated, though not too stringently. It
 
 ## Sessions
 
+The server side [start-server](#server-start) function has an `idfn` parameter which is a function which returns session names for client connections
 
 ## Messages
 
@@ -882,12 +896,43 @@ This applies across both the server and client - the facilities are available in
 * `(defn xform ([spec submap]) ([spec k v & kvs]) ([spec]))`: The template/specification transformation function. Generally, you will only call the second two arity signatures. The first is used for recursive transformation actions, so in the first signature, `spec` is generally the current value of a recursive transformation. In the second and third signatures, `spec` is a template. [Recall](#templates-substitution-keys-and-transformations) legal templates may be already complete fully realized Vega or Vega-Lite specifications - this latter case is for what the third signature is intended. The second signature is what you will use in nearly all cases. `k` is a substitution key and `v` is the value it will have in the transformation. Hence you can override defaults and add specific keys for just a given transformation. Returns the fully transformed final value.
 
 
+### Startup
+
+There are two main start functions. One each for the server and client.
+
+#### Server start
+```Clojure
+(defn start-server
+  [port & {:keys [route-handler idfn title logo img connfn]
+           :or {route-handler (hanami-handler (hanami-routes))
+                idfn (partial gensym "hanami-")
+                connfn identity
+                title "花見 Hanami"
+                logo "logo.png"
+                img "Himeji_sakura.jpg"}}]
+  ...)
+```
+
+#### Client start
+```Clojure
+(defn start [& {:keys [elem port header-fn instrumentor-fn]
+                :or {header-fn default-header-fn
+                     instrumentor-fn default-instrumentor-fn}}]
+  ...)
+```
+
 ### Message system
 
 This applies across both the server and client - the facilities are available in both server and client. They are in `aerial.hanami.core`, in this documentation aka `hc`. **NOTE** this namespace, exists on _both_ the client and server.
 
 * `(defn send-msg [ws app-msg]): Inherited from [Hanasu](https://github.com/jsa-aerial/hanasu). `ws` is the websocket/channel
 * `(defmulti user-msg :op)`: Multimethod for encoding application specific message envelopes (see [Hanasu](https://github.com/jsa-aerial/hanasu) for details). Specifically,
+
+
+### Client core
+
+
+### Server core
 
 
 

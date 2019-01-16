@@ -352,7 +352,7 @@ Hanami understands the following 'special' fields:
 
 * `:session-name` - the name of session(s) which will receive the complete specification (either via a `:tabs` message or some user message).
 
-As an example, [Saite](https://github.com/jsa-aerial/saite#user-tabs) has an init function as part of its start up which sets the values of `:USERDATA` and subsequent defining substitution keys as:
+As an example, [Saite](https://github.com/jsa-aerial/saite) has an init function as part of its start up which sets the values of `:USERDATA` and subsequent defining substitution keys as:
 
 
 ```Clojure
@@ -663,6 +663,10 @@ These combine to form the basic page layout from this 'framework perspective' as
 ![Hanami framework layout](resources/public/images/framework-page-structure.png?raw=true)
 
 The header area is constructed by the `:header-fn` argument of the [client start](#client-start) function. The tab bar is dynamically constructed via `:tabs` [messages](#messages) or by explict calls to the [hc/tabs](#client-core) client function. The _content_ of each tab's body is also constructed dynamically via these same means. If the tab doesn't exist, it will be created and added to the tab bar at the time it's body is also rendered. Updates to a tab will simply update the existing tab's body.
+
+As an example [Saite](https://github.com/jsa-aerial/saite) makes use of the framework aspects of Hanami and here is an example page layout from a session in it.
+
+![Hanami framework layout](resources/public/images/saite-framework-page.png?raw=true)
 
 
 ## Header

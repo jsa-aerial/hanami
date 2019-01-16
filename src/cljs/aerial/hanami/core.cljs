@@ -382,6 +382,17 @@
     (when ch
       (go (async/>! ch {:op :stop :payload {:ws ws :cause :userstop}})))))
 
+(defn init-tabs []
+  (update-adb
+   [:tabs] (let [cur-ratom (rgt/atom nil)
+                 tabs-ratom (rgt/atom [])]
+             {:current cur-ratom
+              :active tabs-ratom
+              :bars [horizontal-bar-tabs
+                     :model cur-ratom
+                     :tabs tabs-ratom
+                     :on-change #(reset! cur-ratom %)]})))
+
 (defn register [{:keys [uid title logo img opts]}]
   (printchan "Registering " uid)
   (update-adb [:main :uid] uid
@@ -391,15 +402,8 @@
               [:main :opts] (hc/xform opts)
               [:main :session-name] (rgt/atom "")
               [:vgl-as-vg] :rm
-              [:vspecs] (rgt/atom {})
-              [:tabs] (let [cur-ratom (rgt/atom nil)
-                            tabs-ratom (rgt/atom [])]
-                        {:current cur-ratom
-                         :active tabs-ratom
-                         :bars [horizontal-bar-tabs
-                                :model cur-ratom
-                                :tabs tabs-ratom
-                                :on-change #(reset! cur-ratom %)]}))
+              [:vspecs] (rgt/atom {}))
+  (init-tabs)
   (rgt/render [hanami-main]
               (js/document.querySelector "#app")))
 
@@ -610,6 +614,13 @@
               :header [header-fn])
   (connect port))
 
+
+(defn sv!
+  "Mirror of server side hmi/sv! Here no need for messages. Just need to
+  call `update-tabs` on the vector of vg/vgl-maps."
+  [vgl-maps]
+  (let [vgl-maps (com/ev vgl-maps)]
+    (update-tabs vgl-maps)))
 
 
 

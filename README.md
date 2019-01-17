@@ -29,24 +29,27 @@ Table of Contents
          * [File data source](#file-data-source)
       * [Walk through example of transformation](#walk-through-example-of-transformation)
    * [Application Construction](#application-construction)
+      * [Resource requirements](#resource-requirements)
       * [Header](#header)
       * [Tabs](#tabs)
       * [Sessions](#sessions)
       * [Messages](#messages)
          * [Connection](#connection)
-            * [Client](#client)
-            * [Server](#server)
+         * [Session group](#session-group)
          * [Tab updates](#tab-updates)
          * [User messages](#user-messages)
       * [Picture Frames](#picture-frames)
          * [Empty Frames](#empty-frames)
       * [Data Streaming](#data-streaming)
+      * [Client Only Apps](#client-only-apps)
       * [API](#api)
          * [Templates and Substitution keys](#templates-and-substitution-keys)
          * [Startup](#startup)
             * [Server start](#server-start)
             * [Client start](#client-start)
          * [Message system](#message-system)
+            * [send msg](#send-msg)
+            * [user msg](#user-msg)
          * [Client core](#client-core)
          * [Server core](#server-core)
    * [Example Transform 'Gallery'](#example-transform-gallery)
@@ -649,14 +652,14 @@ The library portion of Hanami centers on
 * Clean single point [Reagent](http://reagent-project.github.io/) (React lifecycle) component for compiling, _both_ Vega and Vega-Lite and rendering the result.
 
 
-These bits are not opionated in how to go about developing a domain specific visualization application. There is no constraint on how page(s) are to be laid out, what sort of ancillary and support components should be used, what CSS is used, etc. You can use Hiccup or [Re-Com](https://github.com/Day8/re-com) or whatever to layout and structure your application. Nor is there any opinion about the structure of the server side. And while there are a set of defaults, there are no requirements or expectations about the form, makeup, or content of templates and substitution keys. You can replace, augment, or chaange any or all of the defaults.
+These bits are not opionated in how to go about developing a domain specific visualization application. There is no constraint on how page(s) are to be laid out, what sort of ancillary and support components should be used, what CSS is used, etc. You can use Hiccup or [Re-Com](https://github.com/Day8/re-com) or whatever to layout and structure your application. Nor is there any opinion about the structure of the server side. And while there are a set of defaults, there are no requirements or expectations about the form, makeup, or content of templates and substitution keys. You can replace, augment, or change any or all of the defaults.
 
 
 The framework portion of Hanami _is_ opinionated, though not too stringently. It consists of
 
 * Client side application [header](#header) as provided by a user supplied function of zero arguments, which is expected to return a hiccup/re-com value which lays out the page header of the application. This value can simply be empty if you don't want this.
 
-* Named [session](#sessions) groups. The default (client) header function directly supports this by providing an input text box to specify which session group is desired. Any session in a session group of name _name_ will receive any messages sent to ghat group. This supports dynamic sharing.
+* Named [session](#sessions) groups. The default (client) header function directly supports this by providing an input text box to specify which session group is desired. Any session in a session group of name _name_ will receive any messages sent to that group. This supports dynamic sharing.
 
 * A [tab system](#tabs) for automatically structuring both your application layout (each tab can be a page, chapter, subsection, etc) and the structure and content of each such component.
 
@@ -671,6 +674,15 @@ As an example [Saite](https://github.com/jsa-aerial/saite) makes use of the fram
 ![Hanami framework layout](resources/public/images/saite-framework-page.png?raw=true)
 
 
+## Resource requirements
+
+The basic resource requirements are the various stylesheets, mostly in support of [re-com](https://github.com/Day8/re-com), that are shown in the development 'landing page' [index.html](https://github.com/jsa-aerial/hanami/blob/master/resources/public/index.html). When you create your own `index.html` landing page - or generate it dynamically - you will need to include these resources.
+
+Also, as indicated in the development `index.html`, you will need to indicate where your final compiled JavaScript implementing your application will be and what it is called.
+
+**NOTE**: If you will be running [serverless](#client-only-app), you will need to make sure that the resources and final javascript are located relative to where you load your landing page from or that all the links are absolute.
+
+
 ## Header
 
 
@@ -679,22 +691,23 @@ As an example [Saite](https://github.com/jsa-aerial/saite) makes use of the fram
 
 ## Sessions
 
-The server side [start-server](#server-start) function has an `idfn` parameter which is a function which returns session names for client connections
+The server side [start-server](#server-start) function has an `idfn` parameter which is a function which returns session names for client connections. Upon a client connetion (initial websocket connect), the server will send a [registration](#connection) message to the client. Among other fields in the data sent will be a `:session-name`.  This is the name of the session group the client has been placed in according to the `idfn` function.
+
+It is possible for the client to "opt out" of this session group in favor of another - including a totally new one of it's own making - by sending a [set session](#session-group) message to the server. This also implies that session groups need only contain one session.
+
+Any message sent from the server to a named session group, will result in all current session members getting the message. In particular, messages updating the visualizations and picture frame content of tab bodies, will be sent to all such session members. This is equally true for application specific messages sent via [hc/send-msg](message-system)
+
 
 ## Messages
+
+There are a few builtin messages which are sent between the server and client. These are generally in support of the framework aspects of Hanami. In general, domain specific applications will have a set of their own messages. These can be sent via [send-msg](#send-msg), available on both the client and server, and processed by [user-msg](#user-msg), also available on both the client and server
+
 
 ![message overivew](resources/public/images/messages-overview.png?raw=true)
 
 ### Connection
 
-
-#### Client
-
-* :register
-
-#### Server
-
-* 
+### Session group
 
 ### Tab updates
 
@@ -893,6 +906,19 @@ This next eample shows a tab/page with two picture frames. The left being a fram
 ## Data Streaming
 
 
+## Client Only Apps
+
+While the most typical use case scenario involves clients and server working together, Hanami also enables the development of client only applications. In this case, the Clojure (server) side of the library (and framework aspects) is not used and all development is done on the client (typically browser) side.
+
+In client only applications, there are no explicit messages, nor is the usual client side [start function](#client-start) used. Application initialization is no longer implicit (via the server to client [register](#connection) message); you will need to explicitly code your own specific initialization.
+
+As noted in [resource requirements](#resource-requirements), you still need to create a landing page (`index.html`) with all the required resources and to have your directory structure setup for relative loading or use absolute URLs in the links.
+
+When running client only applications, the full [template system](#templates-substitution-keys-and-transformations) is available on the client side. Both the `hc` and `ht` namespaces may be required and their resources used. So, you can make full use of templates, substitution keys, and transformations. Further, all the default templates are available for use.
+
+
+
+
 ## API
 
 As noted, with respect to abstracting visualizations (ala' something like [Altair](https://altair-viz.github.io/)) there isn't much of an API and no classes, objects, or methods are involved. Most of what API there is centers on application development and start up. This is split across the server and the client side.
@@ -940,8 +966,13 @@ There are two main start functions. One each for the server and client.
 
 This applies across both the server and client - the facilities are available in both server and client. They are in `aerial.hanami.core`, in this documentation aka `hc`. **NOTE** this namespace, exists on _both_ the client and server.
 
-* `(defn send-msg [ws app-msg]): Inherited from [Hanasu](https://github.com/jsa-aerial/hanasu). `ws` is the websocket/channel
-* `(defmulti user-msg :op)`: Multimethod for encoding application specific message envelopes (see [Hanasu](https://github.com/jsa-aerial/hanasu) for details). Specifically,
+#### send msg
+
+`(defn send-msg [ws app-msg]): Inherited from [Hanasu](https://github.com/jsa-aerial/hanasu). `ws` is the websocket/channel
+
+#### user msg
+
+`(defmulti user-msg :op)`: Multimethod for encoding application specific message envelopes (see [Hanasu](https://github.com/jsa-aerial/hanasu) for details). Specifically,
 
 
 ### Client core

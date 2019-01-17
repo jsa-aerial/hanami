@@ -33,7 +33,9 @@ Table of Contents
       * [Tabs](#tabs)
       * [Sessions](#sessions)
       * [Messages](#messages)
-         * [Registration](#registration)
+         * [Connection](#connection)
+            * [Client](#client)
+            * [Server](#server)
          * [Tab updates](#tab-updates)
          * [User messages](#user-messages)
       * [Picture Frames](#picture-frames)
@@ -681,9 +683,18 @@ The server side [start-server](#server-start) function has an `idfn` parameter w
 
 ## Messages
 
+![message overivew](resources/public/images/messages-overview.png?raw=true)
 
-### Registration
+### Connection
 
+
+#### Client
+
+* :register
+
+#### Server
+
+* 
 
 ### Tab updates
 

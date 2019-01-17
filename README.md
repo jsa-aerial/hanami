@@ -680,7 +680,7 @@ The basic resource requirements are the various stylesheets, mostly in support o
 
 Also, as indicated in the development `index.html`, you will need to indicate where your final compiled JavaScript implementing your application will be and what it is called.
 
-**NOTE**: If you will be running [serverless](#client-only-app), you will need to make sure that the resources and final javascript are located relative to where you load your landing page from or that all the links are absolute.
+**NOTE**: If you will be running [serverless](#client-only-apps), you will need to make sure that the resources and final javascript are located relative to where you load your landing page from or that all the links are absolute.
 
 
 ## Header

@@ -976,8 +976,8 @@ This applies across both the server and client - the facilities are available in
    `app-msg` is an application specific message with form `{:op <app specific key>, :data <arbitrary data - typically a map of fields>}
 
 
-* Client: `(defn send-msg [app-msg] ...)
-  `app-msg` is an application specific message with form `{:op <msg op key>, :data <arbitrary data - typically a map of fields>}`
+* Client: `(defn send-msg [app-msg] ...)`
+  - `app-msg` is an application specific message with form `{:op <msg op key>, :data <arbitrary data - typically a map of fields>}`
 
 In both cases, the _receiving_ party will have their [user-msg](#user-msg) multimethod dispatched on the `msg op key`.
 

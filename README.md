@@ -667,7 +667,7 @@ These combine to form the basic page layout from this 'framework perspective' as
 
 ![Hanami framework layout](resources/public/images/framework-page-structure.png?raw=true)
 
-The header area is constructed by the `:header-fn` argument of the [client start](#client-start) function. The tab bar is dynamically constructed via `:tabs` [messages](#messages) or by explict calls to the [hc/tabs](#client-core) client function. The _content_ of each tab's body is also constructed dynamically via these same means. If the tab doesn't exist, it will be created and added to the tab bar at the time it's body is also rendered. Updates to a tab will simply update the existing tab's body.
+The header area is constructed by the `:header-fn` argument of the [client start](#client-start) function. The tab bar is dynamically constructed via `:tabs` [messages](#messages) or by explict calls to the [hmi/tabs](#client-core) client function. The _content_ of each tab's body is also constructed dynamically via these same means. If the tab doesn't exist, it will be created and added to the tab bar at the time it's body is also rendered. Updates to a tab will simply update the existing tab's body.
 
 As an example [Saite](https://github.com/jsa-aerial/saite) makes use of the framework aspects of Hanami and here is an example page layout from a session in it.
 
@@ -695,7 +695,7 @@ The server side [start-server](#server-start) function has an `idfn` parameter w
 
 It is possible for the client to "opt out" of this session group in favor of another - including a totally new one of it's own making - by sending a [set session](#session-group) message to the server. This also implies that session groups need only contain one session.
 
-Any message sent from the server to a named session group, will result in all current session members getting the message. In particular, messages updating the visualizations and picture frame content of tab bodies, will be sent to all such session members. This is equally true for application specific messages sent via [hc/send-msg](message-system)
+Any message sent from the server to a named session group, will result in all current session members getting the message. In particular, messages updating the visualizations and picture frame content of tab bodies, will be sent to all such session members. This is equally true for application specific messages sent via [hmi/send-msg](#send-msg)
 
 
 ## Messages
@@ -735,13 +735,13 @@ Picture frames are simply a way to automatically encase your visualizations with
 
 All of the quadrants are optional and `:frame {}` is legal. The value of a quadrant can be any legal mix of strings, hiccup, and / or active components. Where 'legal' here means 'yields a legal DOM branch'. A great resource for active components, which Hanami provides as part of its package, is [Re-Com](https://github.com/Day8/re-com). This is especially true if you are not a CSS/flex and / or component savant.
 
-As of version 0.5.0, picture frames may be 'empty' in that they do not need to have an associated visualization. To make this a bit simpler, there is a new template for these cases `ht/empty-chart`.
+As of version 0.5.0, picture frames may be ['empty'](#empty-frames) in that they do not need to have an associated visualization. To make this a bit simpler, there is a new template for these cases `ht/empty-chart`.
 
 You can specifiy frames from either the server or client side of your application. Working on the client side from within ClojureScript can make this more 'natural', as you are in the actual environment (browser/DOM) where things are running and rendering. However, specifying from the server side is fully supported, as long as Re-Com use is quoted (or more typical and useful, backquoted).
 
-**NOTE**: if you are _instrumenting_ your visualization (using active components - input box, dropdowns, selection lists, etc.) the _functions_ updating the relevant model(s) of / for these components _must_ be written over on the ClojureScript side (client). This is because, Hanami does not use a self hosted ClojureScript, but rather the cross compiled (with Google Closure) variant. Hence, you cannot, for example, write function code on the server side and have it eval'd on the client!
+**NOTE**: if you are _instrumenting_ your visualization (using active components - input box, dropdowns, selection lists, etc.) the _functions_ updating the relevant model(s) of / for these components _must_ be written over on the ClojureScript side (client). This is because, Hanami does not use a self hosted ClojureScript, but rather the cross compiled (with Google Closure) variant. Hence, you cannot, for example, write function code on the server side and have it eval'd on the client! (_NOTE_: this restriction may be lifted!)
 
-Picture frames are fully automatic if you use the default tab system. If you use custom tabs or completely custom layout, and want to make use of frames, you should call `vis-list` on the client side (Cljs) for automatic rendering. As always, if you do not want to use any of this, you should use the `vgl` reagent vega/vega-lite component.
+Picture frames are fully automatic if you use the default tab system. If you use custom tabs and want to make use of frames, you should call [hmi/vis-list](#client-core) on the client side (Cljs) for automatic rendering. If you are doing completely custom layouts, you will want to call [hmi/make-frame](#client-core) client function. As always, if you do not want to use any of this, you should 'manually' use the [hmi/vgl](#client-core) reagent vega/vega-lite component.
 
 A couple of examples. These are actually taken from [Saite](https://github.com/jsa-aerial/saite), which is an interactive, exploratory and ad-hoc visualization application written with Hanami. Worth noting is that Saite assumes an interactive REPL model of exploration on the server side, pushing visualizations to the client. Hence, the only active components that can be used are those that are self contained, like information buttons or modal panels.
 
@@ -832,7 +832,7 @@ As of version 0.5.0, picture frames can now be 'empty', i.e., they do not need a
 
 ![Hanami empty frame](resources/public/images/empty-picframe-layout.png?raw=true)
 
-To make use of these simpler (and easier) there is a new standard template `ht/empty-chart` which can be used to create them. Empty frames enable a more general document structure supporting paragraphs of html/'text oriented' material along side or in place of standard visualizations with or without frames. Here are a couple of examples showing the basic capability:
+To make the use of these simpler (and easier) there is a new standard template `ht/empty-chart` which can be used to create them. Empty frames enable a more general document structure supporting paragraphs of html/'text oriented' material along side or in place of standard visualizations with or without frames. Here are a couple of examples showing the basic capability:
 
 This example shows an empty frame with all 4 picture frame elements (areas) with various html/text information
 
@@ -968,14 +968,29 @@ This applies across both the server and client - the facilities are available in
 
 #### send msg
 
-`(defn send-msg [ws app-msg]): Inherited from [Hanasu](https://github.com/jsa-aerial/hanasu). `ws` is the websocket/channel
+* Server: `(defn send-msg [to app-msg] ...)`
+  `to` is one of
+   - string naming an existing [session group](#sessons)
+   - string naming an active Hanami uuid, a [session uuid](#sessions)
+   - an active client websocket object
+   `app-msg` is an application specific message with form `{:op <app specific key>, :data <arbitrary data - typically a map of fields>}
+
+
+* Client: `(defn send-msg [app-msg] ...)
+  `app-msg` is an application specific message with form `{:op <msg op key>, :data <arbitrary data - typically a map of fields>}`
+
+In both cases, the _receiving_ party will have their [user-msg](#user-msg) multimethod dispatched on the `msg op key`.
+
 
 #### user msg
 
-`(defmulti user-msg :op)`: Multimethod for encoding application specific message envelopes (see [Hanasu](https://github.com/jsa-aerial/hanasu) for details). Specifically,
+* Client and Server `(defmulti user-msg :op)`
+  Multimethod for encoding application specific message envelopes (see [Hanasu](https://github.com/jsa-aerial/hanasu) for general details). Specifically, calls with appropriage message arguments to [send-msg](#send-msg) on either the client or server will produce a dispath in the corresponding party to this multimethod. Intent and purpose of these is to support domain semantics of specific applications. See for example, [Saite](https://github.com/jsa-aerial/saite).
 
 
 ### Client core
+
+* `(defn visualize [spec elem] ...): Function used by `vgl` reagent component to create Vega and Vega-Lite visualizations. `spec` is a Vega or Vega-Lite specification which must have a `:usermeta` field with at least the [opts](#meta-data-and-the-userdata-key) field whose value must include at least the `:mode`. `elem` is the DOM element into which the visualization will be inserted.
 
 
 ### Server core

@@ -964,16 +964,20 @@ There are two main start functions. One each for the server and client.
 
 ### Message system
 
-This applies across both the server and client - the facilities are available in both server and client. They are in `aerial.hanami.core`, in this documentation aka `hc`. **NOTE** this namespace, exists on _both_ the client and server.
+This applies across both the server and client - the facilities are available in both server and client. They are in `aerial.hanami.core`, in this documentation aka `hmi`. **NOTE** this namespace, exists on _both_ the client and server.
 
 #### send msg
 
 * Server: `(defn send-msg [to app-msg] ...)`
-  `to` is one of
-   - string naming an existing [session group](#sessons)
-   - string naming an active Hanami uuid, a [session uuid](#sessions)
-   - an active client websocket object
-   `app-msg` is an application specific message with form `{:op <app specific key>, :data <arbitrary data - typically a map of fields>}
+  - `to` is one of
+     - string naming an existing [session group](#sessons)
+     - string naming an active Hanami uuid, a [session uuid](#sessions)
+     - an active client websocket object
+
+  - `app-msg` is
+     - an application specific message with form `{:op opkey, :data data-value}`
+       - `opkey` is a msg specific operator
+       - `data-value` is some arbitrary data - typically a map of fields
 
 
 * Client: `(defn send-msg [app-msg] ...)` `app-msg` is

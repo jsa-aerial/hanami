@@ -976,8 +976,8 @@ This applies across both the server and client - the facilities are available in
    `app-msg` is an application specific message with form `{:op <app specific key>, :data <arbitrary data - typically a map of fields>}
 
 
-* Client: `(defn send-msg [app-msg] ...)`
-  - `app-msg` is an application specific message with form `{:op <msg op key>, :data <arbitrary data - typically a map of fields>}`
+* Client: `(defn send-msg [app-msg] ...)` `app-msg` is
+  - an application specific message with form `{:op <msg op key>, :data <arbitrary data - typically a map of fields>}`
 
 In both cases, the _receiving_ party will have their [user-msg](#user-msg) multimethod dispatched on the `msg op key`.
 
@@ -990,7 +990,7 @@ In both cases, the _receiving_ party will have their [user-msg](#user-msg) multi
 
 ### Client core
 
-* `(defn visualize [spec elem] ...): Function used by `vgl` reagent component to create Vega and Vega-Lite visualizations. `spec` is a Vega or Vega-Lite specification which must have a `:usermeta` field with at least the [opts](#meta-data-and-the-userdata-key) field whose value must include at least the `:mode`. `elem` is the DOM element into which the visualization will be inserted.
+* `(defn visualize [spec elem] ...)`: Function used by `vgl` reagent component to create Vega and Vega-Lite visualizations. `spec` is a Vega or Vega-Lite specification which must have a `:usermeta` field with at least the [opts](#meta-data-and-the-userdata-key) field whose value must include at least the `:mode`. `elem` is the DOM element into which the visualization will be inserted.
 
 
 ### Server core

@@ -1,4 +1,4 @@
-**hanami**
+# Hanami
 
 Interactive arts and charts visualizations with Clojure(Script), Vega-lite, and Vega. Flower viewing 花見 (hanami)
 
@@ -10,7 +10,7 @@ Interactive arts and charts visualizations with Clojure(Script), Vega-lite, and 
 Table of Contents
 =================
 
-   * [Hanami](#hanami)
+   * [Overview](#overview)
    * [Installation](#installation)
    * [Features](#features)
    * [Examples](#examples)
@@ -57,7 +57,7 @@ Table of Contents
 
 [toc](https://github.com/ekalinin/github-markdown-toc)
 
-# Hanami
+# Overview
 
 **Hanami** is a Clojure(Script) library and framework for creating interactive visualization applications based in [Vega-Lite](https://vega.github.io/vega-lite/) (VGL) and/or [Vega](https://vega.github.io/vega/) (VG) specifications. These specifications are declarative and completely specified by _data_ (JSON maps). VGL compiles into the lower level grammar of VG which in turn compiles to a runtime format utilizting lower level runtime environments such as [D3](https://d3js.org/), HTML5 Canvas, and [WebGL](https://github.com/vega/vega-webgl-renderer).
 

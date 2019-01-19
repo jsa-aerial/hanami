@@ -1,4 +1,4 @@
-# hanami
+**hanami**
 
 Interactive arts and charts visualizations with Clojure(Script), Vega-lite, and Vega. Flower viewing 花見 (hanami)
 
@@ -32,6 +32,7 @@ Table of Contents
       * [Resource requirements](#resource-requirements)
       * [Header](#header)
       * [Tabs](#tabs)
+         * [Extension tabs](#extension-tabs)
       * [Sessions](#sessions)
       * [Messages](#messages)
          * [Connection](#connection)
@@ -58,7 +59,7 @@ Table of Contents
 
 # Hanami
 
-**Hanami** is a Clojure(Script) library and framework for creating interactive visualization applications based in [Vega-Lite](https://vega.github.io/vega-lite/) (VGL) and/or [Vega](https://vega.github.io/vega/) (VG) specifications. These specifications are declarative and completely specified by _data_ (JSON maps). VGL compiles into the lower level grammar of VG which in turn compiles to a runtime format utilizting lower level runtime environments such as [D3](https://d3js.org/), HTML5 Canvas, and [WebGL](https://github.com/vega/vega-webgl-renderer). In addition to VGL and VG, Hanami is built on top of [Reagent](http://reagent-project.github.io/) and [Re-Com](https://github.com/Day8/re-com).
+**Hanami** is a Clojure(Script) library and framework for creating interactive visualization applications based in [Vega-Lite](https://vega.github.io/vega-lite/) (VGL) and/or [Vega](https://vega.github.io/vega/) (VG) specifications. These specifications are declarative and completely specified by _data_ (JSON maps). VGL compiles into the lower level grammar of VG which in turn compiles to a runtime format utilizting lower level runtime environments such as [D3](https://d3js.org/), HTML5 Canvas, and [WebGL](https://github.com/vega/vega-webgl-renderer).
 
 In keeping with the central data oriented tenet, Hanami eschews the typical API approach for generating specifications in favor of using recursive transforms of parameterized templates. This is also in keeping with the data transformation focus in functional programming, which is espcially nice in Clojure(Script).
 
@@ -688,6 +689,8 @@ Also, as indicated in the development `index.html`, you will need to indicate wh
 
 ## Tabs
 
+### Extension tabs
+
 
 ## Sessions
 
@@ -980,8 +983,11 @@ This applies across both the server and client - the facilities are available in
        - `data-value` is some arbitrary data - typically a map of fields
 
 
-* Client: `(defn send-msg [app-msg] ...)` `app-msg` is
-  - an application specific message with form `{:op <msg op key>, :data <arbitrary data - typically a map of fields>}`
+* Client: `(defn send-msg [app-msg] ...)`
+  - `app-msg` is
+     - an application specific message with form `{:op opkey, :data data-value}`
+       - `opkey` is a msg specific operator
+       - `data-value` is some arbitrary data - typically a map of fields
 
 In both cases, the _receiving_ party will have their [user-msg](#user-msg) multimethod dispatched on the `msg op key`.
 
@@ -994,7 +1000,14 @@ In both cases, the _receiving_ party will have their [user-msg](#user-msg) multi
 
 ### Client core
 
-* `(defn visualize [spec elem] ...)`: Function used by `vgl` reagent component to create Vega and Vega-Lite visualizations. `spec` is a Vega or Vega-Lite specification which must have a `:usermeta` field with at least the [opts](#meta-data-and-the-userdata-key) field whose value must include at least the `:mode`. `elem` is the DOM element into which the visualization will be inserted.
+* `(defn visualize [spec elem] ...)`: Function used by `vgl` reagent component to create Vega and Vega-Lite visualizations.
+  - `spec` is a Vega or Vega-Lite specification _as Clj/EDN_ which must have a `:usermeta` field with at least the [opts](#meta-data-and-the-userdata-key) field whose value must include at least the `:mode`.
+  - `elem` is the DOM element into which the visualization will be inserted.
+
+* `(defn vgl [spec] ...)`: Reagent [Form-3](https://github.com/reagent-project/reagent/blob/master/doc/CreatingReagentComponents.md) which has life cycle methods for mounting, updating, and rendering a visualization.
+  - `spec` is a Vega or Vega-Lite specification _as Clj/EDN_ which must have a `:usermeta` field with at least the [opts](#meta-data-and-the-userdata-key) field whose value must include at least the `:mode`.
+
+* `(defn vis-list [tabid spec-frame-pairs opts] ...)`: Function for laying out [tab](#tabs) bodies. Used for both standard and [extension tabs](#extension-tabs) Implicitly called by via reactive update events.
 
 
 ### Server core

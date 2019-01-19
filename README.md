@@ -698,6 +698,48 @@ The server side [start-server](#server-start) function has an `idfn` parameter w
 
 It is possible for the client to "opt out" of this session group in favor of another - including a totally new one of it's own making - by sending a [set session](#session-group) message to the server. This also implies that session groups need only contain one session.
 
+As a simple example of how this can be done, the client [start](#client-start) function's default `header-fn` function uses a two stage input area to support changing the server's default assigned session group to some other such group (including a new one if the input does not name an existing group):
+
+```Clojure
+(defn set-session-name [name]
+  (let [old-uid (get-adb [:main :uid])
+        name (if (= name "") (old-uid :name) name)]
+    (sp/setval [sp/ATOM :main :session-name sp/ATOM] name app-db)
+    (when (not= name (old-uid :name))
+      (update-adb [:main :uid :name] name)
+      (send-msg {:op :set-session-name
+                 :data {:uid old-uid
+                        :new-name name}}))))
+
+(defn session-input []
+  (if (not= "" (sp/select-one [sp/ATOM :main :session-name sp/ATOM] app-db))
+    [:p]
+    [input-text
+     :model (get-adb [:main :session-name])
+     :on-change set-session-name
+     :placeholder (get-adb [:main :uid :name])
+     :width "100px"]))
+
+(defn default-header-fn []
+  [h-box :gap "10px" :max-height "30px"
+   :children [[gap :size "5px"]
+              [:img {:src (get-adb [:main :logo])}]
+              [title
+               :level :level3
+               :label [:span.bold (get-adb [:main :title])]]
+              [session-input]
+              [gap :size "5px"]
+              [title
+               :level :level3
+               :label [:span.bold (get-adb [:main :uid :name])]]
+              [gap :size "30px"]]])
+```
+
+On connection the client's header contains a header with the default assigned session group name listed along side an input text box. The user can decide to change the assigned group, by typing in a new name. This will fire a [set-session-name](###session-group) message to the server to reassign this session to the desired group.
+
+![message overivew](resources/public/images/session-group-b4-aft.png?raw=true)
+
+
 Any message sent from the server to a named session group, will result in all current session members getting the message. In particular, messages updating the visualizations and picture frame content of tab bodies, will be sent to all such session members. This is equally true for application specific messages sent via [hmi/send-msg](#send-msg)
 
 
@@ -707,6 +749,8 @@ There are a few builtin messages which are sent between the server and client. T
 
 
 ![message overivew](resources/public/images/messages-overview.png?raw=true)
+
+Let's walk through the 
 
 ### Connection
 

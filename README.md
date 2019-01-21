@@ -686,6 +686,8 @@ Also, as indicated in the development `index.html`, you will need to indicate wh
 
 ## Header
 
+The client side [start](#client-start) function has a `:header-fn` parameter which is a function of a single parameter that should return the main application header area. The default function for this returns a header which supports multiple named [session groups](#sessions). This is one mechanism where by you can insert global controls, logos, application 'avatars', etc. Alternatively you may choose to have this return nothing and wait for the [application initialization](#user-messages) message, to perform the application setup. The latter may be more appealing if you compute a number of fields that support the contruction of a more sophisticated header.
+
 
 ## Tabs
 
@@ -694,7 +696,7 @@ Also, as indicated in the development `index.html`, you will need to indicate wh
 
 ## Sessions
 
-The server side [start-server](#server-start) function has an `idfn` parameter which is a function which returns session names for client connections. Upon a client connetion (initial websocket connect), the server will send a [registration](#connection) message to the client. Among other fields in the data sent will be a `:session-name`.  This is the name of the session group the client has been placed in according to the `idfn` function.
+The server side [start-server](#server-start) function has an `:idfn` parameter which is a parameterless function which returns session names for client connections. Upon a client connetion (initial websocket connect), the server will send a [registration](#connection) message to the client. Among other fields in the data sent will be a `:session-name`.  This is the name of the session group the client has been placed in according to the `idfn` function.
 
 It is possible for the client to "opt out" of this session group in favor of another - including a totally new one of it's own making - by sending a [set session](#session-group) message to the server. This also implies that session groups need only contain one session.
 
@@ -750,13 +752,48 @@ There are a few builtin messages which are sent between the server and client. T
 
 ![message overivew](resources/public/images/messages-overview.png?raw=true)
 
-Let's walk through the 
+The messages listed in that graphic overview are roughly in the order they occur from top to bottom.  Let's walk through them so that we know what happens as they occur.
 
 ### Connection
 
+Upon a client opening a connection, the server creates a session/app initialization data package, which is sent to the client via a `:register` message. This package is a map composed of two groups of data:
+
+* A standard set of fields and values:
+  - `:uid` a uid value `{:uuid (hmi/uuid), :name (idfn)}`
+    - `hmi/uuid` generates string names from uuids
+    - `idfn` is the [start-server](#server-start) function's `:idfn` argument, which is expected to return the applications [session group](#sessions) names.
+
+  - `:title`, the `start-server` function's `:title` argument
+  - `:logo`, the  `start-server` function's `:logo` argument
+  - `:img`, the  `start-server` function's `:img` argument
+  - `:opts`, the current `hc/default-opts` value
+
+* A, possibly empty, set of user/application specific fields. These are determined by the [start-server](#server-start) function's `:connfn` argument. This is a function of one parameter `(fn [x] ...)` where `x` is the map of standard fields and values. The expectation the function will compute new fields and values and add them to that set and return the total as a single initialization data map. The default function is `identity`.
+
+The client side dispatches two calls upon reception of this message. Both are passed this final initialization data map. The first is `hc/register` which takes the standard fields and sets up the initial client side database. The second is the multimethod [user-msg](#user-msg) where the msg given is `{:op :app-init :data init-data-map}`. If your application implements this method for `:app-init`, it will be called and any application specific work can be done at that point.
+
+
 ### Session group
 
+As described in the section on [sessions](#sessions) and session groups, the client may change the group its session belongs to (named by the `idefn` function of [start-server](#server-start)) as described in the section on [connections](#connection). This is achieved by sending the server a `:set-session-name` message, which has the form:
+
+```Clojure
+{:op :set-session-name
+ :data {:uid old-uid	
+        :new-name name}}
+```
+
+Where
+
+* `old-uid` is the uid the session currently has and wants shifted
+* `name` is the name of the session group the client wants to move to.
+
+Upon receipt of such a message, the server will update its database to reflect the change: the session's `uuid` will be moved to the requested group named by the `:new-name` field.
+
+
 ### Tab updates
+
+
 
 
 ### User messages

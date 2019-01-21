@@ -254,6 +254,14 @@
       [box :child [:div#app]])}))
 
 
+(defn frameit [spec frame]
+  (if spec
+    [[h-box :children (frame :left)]
+     [vgl spec]
+     [h-box :children (frame :right)]]
+    [[h-box :children (frame :left)]
+     [h-box :children (frame :right)]]))
+
 (defn vis-list [tabid spec-frame-pairs opts]
   (let [layout (if (= (get-in opts [:order]) :row) h-box v-box)
         eltnum (get-in opts [:eltsper] 3)
@@ -274,12 +282,7 @@
               :children
               [[h-box :gap "5px" :children (frame :top)]
                [h-box :gap "5px"
-                :children (if spec
-                            [[h-box :children (frame :left)]
-                             [vgl spec]
-                             [h-box :children (frame :right)]]
-                            [[h-box :children (frame :left)]
-                             [h-box :children (frame :right)]])]
+                :children (frameit spec frame)]
                [h-box :gap "5px" :children (frame :bottom)]]]))])))
 
 (defn hanami []

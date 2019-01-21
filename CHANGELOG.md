@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to this project, starting from 0.5.0, will be documented in this file.
 
+## [0.7.0]
+### Added
+- Client: `hmi/sv!` as mirror of server side `hmi/sv!`. Client only apps support
+- Client: `init-tabs` refactor `register`. Client only apps support
+- Client: `frameit` refactor `vis-list`. Client only apps support
+
+### Fixed
+
+### Deprecated
+
+
 ## [0.6.0]
 ### Added
 - Client: dbg system
@@ -38,6 +49,7 @@ All notable changes to this project, starting from 0.5.0, will be documented in 
 - Nifty debug print system
 
 
+[0.7.0]: https://github.com/your-name/hanami/compare/0.6.0...0.7.0
 [0.6.0]: https://github.com/your-name/hanami/compare/0.5.1...0.6.0
 [0.5.1]: https://github.com/your-name/hanami/compare/0.5.0...0.5.1
 [0.5.0]: https://github.com/your-name/hanami/compare/0.4.0...0.5.0

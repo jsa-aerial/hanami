@@ -171,16 +171,29 @@
   ([field]
    (get-tab-field (deref (get-adb [:tabs :current])) field)))
 
+(defn set-cur-tab [tid]
+  (sp/setval [sp/ATOM :tabs :current sp/ATOM] tid app-db))
+
 (defn update-cur-tab [field value]
   (update-tab-field (deref (get-adb [:tabs :current])) field value))
 
 (defn add-tab [tabval]
   (sp/setval [sp/ATOM :tabs :active sp/ATOM sp/AFTER-ELEM] tabval app-db)
-  (sp/setval [sp/ATOM :tabs :current sp/ATOM] (tabval :id) app-db))
+  (set-cur-tab (tabval :id))
+  #_(sp/setval [sp/ATOM :tabs :current sp/ATOM] (tabval :id) app-db))
 
 (defn replace-tab [tid newdef]
   (sp/setval [sp/ATOM :tabs :active sp/ATOM sp/ALL #(= (% :id) tid)]
              newdef app-db))
+
+(defn del-tab [tid]
+  (let [curid ((get-cur-tab) :id)
+        cnt (count (sp/select [sp/ATOM :tabs :active sp/ATOM sp/ALL] app-db))]
+    (sp/setval [sp/ATOM :tabs :active sp/ATOM sp/ALL #(= (% :id) tid)]
+               hc/RMV app-db)
+    (when (and (> cnt 0) (= tid curid))
+      (set-cur-tab (-> (sp/select [sp/ATOM :tabs :active sp/ATOM sp/ALL] app-db)
+                       first :id)))))
 
 (defn active-tabs []
   (printchan :ACTIVE-TABS " called")

@@ -29,9 +29,13 @@ Table of Contents
          * [File data source](#file-data-source)
       * [Walk through example of transformation](#walk-through-example-of-transformation)
    * [Application Construction](#application-construction)
+      * [Library overview](#library-overview)
+      * [Framework overview](#framework-overview)
+         * [framework topology graphic](#framework-topology-graphic)
       * [Resource requirements](#resource-requirements)
       * [Header](#header)
       * [Tabs](#tabs)
+         * [Basics](#basics)
          * [Extension tabs](#extension-tabs)
       * [Sessions](#sessions)
       * [Messages](#messages)
@@ -52,6 +56,9 @@ Table of Contents
             * [send msg](#send-msg)
             * [user msg](#user-msg)
          * [Client core](#client-core)
+            * [Visualization](#visualization)
+            * [Tab system](#tab-system)
+            * [Hanami main](#hanami-main)
          * [Server core](#server-core)
    * [Example Transform 'Gallery'](#example-transform-gallery)
 
@@ -646,6 +653,8 @@ The reason for caveat uses of 'conceptually' in the above description is the [fi
 
 Hanami is an visualization application developement enabler. It is a library with optional framework aspects provided for both server side (Clojure) and client side (ClojureScript) development. The client is most typically expected to be in the browser, but technically may not be.
 
+## Library overview
+
 The library portion of Hanami centers on
 
 * [Templates, Substitution Keys and Transformations](#templates-substitution-keys-and-transformations)
@@ -656,6 +665,8 @@ The library portion of Hanami centers on
 These bits are not opionated in how to go about developing a domain specific visualization application. There is no constraint on how page(s) are to be laid out, what sort of ancillary and support components should be used, what CSS is used, etc. You can use Hiccup or [Re-Com](https://github.com/Day8/re-com) or whatever to layout and structure your application. Nor is there any opinion about the structure of the server side. And while there are a set of defaults, there are no requirements or expectations about the form, makeup, or content of templates and substitution keys. You can replace, augment, or change any or all of the defaults.
 
 
+## Framework overview
+
 The framework portion of Hanami _is_ opinionated, though not too stringently. It consists of
 
 * Client side application [header](#header) as provided by a user supplied function of zero arguments, which is expected to return a hiccup/re-com value which lays out the page header of the application. This value can simply be empty if you don't want this.
@@ -665,6 +676,8 @@ The framework portion of Hanami _is_ opinionated, though not too stringently. It
 * A [tab system](#tabs) for automatically structuring both your application layout (each tab can be a page, chapter, subsection, etc) and the structure and content of each such component.
 
 These combine to form the basic page layout from this 'framework perspective' as shown here:
+
+### framework topology graphic
 
 ![Hanami framework layout](resources/public/images/framework-page-structure.png?raw=true)
 
@@ -686,12 +699,22 @@ Also, as indicated in the development `index.html`, you will need to indicate wh
 
 ## Header
 
-The client side [start](#client-start) function has a `:header-fn` parameter which is a function of a single parameter that should return the main application header area. The default function for this returns a header which supports multiple named [session groups](#sessions). This is one mechanism where by you can insert global controls, logos, application 'avatars', etc. Alternatively you may choose to have this return nothing and wait for the [application initialization](#user-messages) message, to perform the application setup. The latter may be more appealing if you compute a number of fields that support the contruction of a more sophisticated header.
+The client side [start](#client-start) function has a `:header-fn` parameter which is a function of a single parameter that should return the main application header area. The default function for this returns a header which supports multiple named [session groups](#sessions). This is one mechanism where by you can insert global controls, logos, application 'avatars', etc. Alternatively you may choose to have this return nothing and wait for the [application initialization](#connection) message, to perform the application setup. The latter may be more appealing if you compute a number of fields that support the contruction of a more sophisticated header.
 
 
 ## Tabs
 
+The tab system of Hanami is intended to be a fairly general purpose document / application structuring capability for a variety of visualization applications. But that very fact means it has some level of 'opinion' on such layouts and so you may not want to use it if you need total general / manual layouts. But for the very large subset of cases where it fits nicely can be very helpful. There is a  set of [functions and components](#tab-system) of the client API for dealing with the tab system. **If you use the standard framework main components, you will not have to use this API** - it is all handled for you. The API is given in case you need / want to set up your own components which make use of it.
+
+
+### Basics
+
+As depicted in the [framework topology graphic](#framework-topology-graphic), the tab system has a dedicated area for the tab bar. Tabs are dynamically added to the tab bar from left to right. They may also be deleted. If using Hanami's standard framework, the main components will drive all tab actions and updates.
+
+
 ### Extension tabs
+
+In addition to the standard tabs
 
 
 ## Sessions
@@ -779,7 +802,7 @@ As described in the section on [sessions](#sessions) and session groups, the cli
 
 ```Clojure
 {:op :set-session-name
- :data {:uid old-uid	
+ :data {:uid old-uid
         :new-name name}}
 ```
 
@@ -1081,6 +1104,8 @@ In both cases, the _receiving_ party will have their [user-msg](#user-msg) multi
 
 ### Client core
 
+#### Visualization
+
 * `(defn visualize [spec elem] ...)`: Function used by `vgl` reagent component to create Vega and Vega-Lite visualizations.
   - `spec` is a Vega or Vega-Lite specification _as Clj/EDN_ which must have a `:usermeta` field with at least the [opts](#meta-data-and-the-userdata-key) field whose value must include at least the `:mode`.
   - `elem` is the DOM element into which the visualization will be inserted.
@@ -1088,7 +1113,52 @@ In both cases, the _receiving_ party will have their [user-msg](#user-msg) multi
 * `(defn vgl [spec] ...)`: Reagent [Form-3](https://github.com/reagent-project/reagent/blob/master/doc/CreatingReagentComponents.md) which has life cycle methods for mounting, updating, and rendering a visualization.
   - `spec` is a Vega or Vega-Lite specification _as Clj/EDN_ which must have a `:usermeta` field with at least the [opts](#meta-data-and-the-userdata-key) field whose value must include at least the `:mode`.
 
-* `(defn vis-list [tabid spec-frame-pairs opts] ...)`: Function for laying out [tab](#tabs) bodies. Used for both standard and [extension tabs](#extension-tabs) Implicitly called by via reactive update events.
+* `(defn frameit [spec frame] ...)`: Embed visualization inside a [picture frame](#picture-frames).
+  - `spec` is a Vega or Vega-Lite specification _as Clj/EDN_ which must have a `:usermeta` field with at least the [opts](#meta-data-and-the-userdata-key) field whose value must include at least the `:mode`.
+  - `frame` is the complete prebuilt picture frame with all 4 components: `:top`, `:bottom`, `:left`, and `:right`. One or more of these may be visually empty (for example, `[]` for `:top` and `:bottom` and `[[box :size "0px" :child ""]]` for `:left` and `:right`.
+
+* `(defn vis-list [tabid spec-frame-pairs opts] ...)`: Function for laying out [tab](#tabs) bodies. Used for both standard and [extension tabs](#extension-tabs) Implicitly called by via reactive update events. May be manually called.
+
+
+#### Tab system
+
+* `(defn get-tab-field ([tid] ...) ([tid field] ...))`: For `[tid]` return entire tab value associated with tab id `tid`. For `[tid field`, return the field value associated with key `field` in tab value associated with tab id `tid`.
+
+* `(defn update-tab-field [tid field value] ...)`: Change (or add) the value of the key `field` in tab value associated with tab id `tid` to the value `value`.
+
+* `(defn get-cur-tab ([]...) ([field]...))`: For `[]` return the tab value of the current tab. For `[field]`, return the value of the key `field` in current tab.
+
+* `(defn set-cur-tab [tid] ...)`: Change the current tab to be that associated with tab id `tid`
+
+* `(defn update-cur-tab [field value] ...)`: Update the value of the key `field` to the value `value` in the current tab
+
+* `(defn add-tab [tabval] ...)`: Add a tab to the tab bar. `tabval` is a complete tab value:
+```Clojure
+{:label <tab label name>
+ :id <tab id>
+ :opts <full options - see hc/default-opts>
+ :specs <current set of specs for tab body>
+ :spec-frame-pairs <current set of (spec,frame) pairs rendered in body>
+ }
+```
+
+* `(defn replace-tab [tid newdef] ...)`: Like `add-tab`, but replaces the tab value associated with tab id `tid` with `newdef`.
+
+* `(defn del-tab [tid] ...)`: Delete the tab associated with tab id `tid`. If this is the current tab, set current tab to the first remaining tab. If this deletes the only tab, remove tab bar.
+
+* `(defn init-tabs [] ...)`: Initialize the tab system. This is called implcitly when using the client [start](#client-start), via the [:register](#connection) message. If you are building a client only application, and want to use the tab system, you need to call this as part of your initialization.
+
+* `(defn active-tabs [] ...)`: **Reagent component** that sets up the tab bar area.
+
+* `(defn tabs [] ...)`: **Reagent component** for driving the tab system. This is called impicitly when using [hanami main](#hanami-main) Reagent component. In particular, drives the update, rendering, and display of tab bodies. May be called manually or part of a different main component.
+
+#### Hanami main
+
+The main (top level) Reagent component for driving an application using the standard [framework aspects](#framework-overview)
+
+* `(defn hanami-main [] ...)`: Top level Reagent component. Renders via `reagent/render as part of standard [registration](#connections). This component is the main driver for stanard framework usage. It assumes the standard framework [structure](#framework-topology-graphic) and therefore also assumes that the `app-db` has been initialized according to the [register](#connection) function. Creates a Re-Com [v-box](https://re-com.day8.com.au/#/v-box) consisting of the framework `header` (using the value of calling the client start [header](#header) function), `tab bar` area (via the [active-tabs](#tab-system) component, and `tab body` area (via the [tabs](#tab-system) component). Each is separated by a [line](https://re-com.day8.com.au/#/line).
+
+If you are writing a [client only](#client-only-apps) application you could render this as part of your applications initialization if you want to use Hanami framework capabilities.
 
 
 ### Server core

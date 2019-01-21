@@ -1156,7 +1156,9 @@ In both cases, the _receiving_ party will have their [user-msg](#user-msg) multi
 
 The main (top level) Reagent component for driving an application using the standard [framework aspects](#framework-overview)
 
-* `(defn hanami-main [] ...)`: Top level Reagent component. Renders via `reagent/render as part of standard [registration](#connections). This component is the main driver for stanard framework usage. It assumes the standard framework [structure](#framework-topology-graphic) and therefore also assumes that the `app-db` has been initialized according to the [register](#connection) function. Creates a Re-Com [v-box](https://re-com.day8.com.au/#/v-box) consisting of the framework `header` (using the value of calling the client start [header](#header) function), `tab bar` area (via the [active-tabs](#tab-system) component, and `tab body` area (via the [tabs](#tab-system) component). Each is separated by a [line](https://re-com.day8.com.au/#/line).
+* `(defn hanami-main [] ...)`: Top level Reagent component. Renders via `reagent/render` as part of standard [registration](#connections). This component is the main driver for stanard framework usage. It assumes the standard framework [structure](#framework-topology-graphic) and therefore also assumes that the `app-db` has been initialized according to the [register](#connection) function.
+
+Creates a Re-Com [v-box](https://re-com.day8.com.au/#/v-box) consisting of the framework `header` (using the value of calling the client start [header](#header) function), `tab bar` area (via the [active-tabs](#tab-system) component, and `tab body` area (via the [tabs](#tab-system) component). Each is separated by a [line](https://re-com.day8.com.au/#/line).
 
 If you are writing a [client only](#client-only-apps) application you could render this as part of your applications initialization if you want to use Hanami framework capabilities.
 

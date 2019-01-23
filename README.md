@@ -1084,11 +1084,11 @@ There are two main start functions. One each for the server and client.
        "text/html")
 ```
 
-  - `(defn hanami-routes [& {:keys [landing-handler index-path]
-                             :or {landing-handler landing-page
-                                  index-path "public/index.html"}}] ...)` Creates a set of routes that uses `(landing-handler request index-path)` as the value of the `get /` route, and adds the necessary websocket routing to this and finally adds the default resources route `(compojure.route/resources "/")`. Returns the resulting function implementing the routes. Uses `compojure.core/routes to create the 'rounting function'.
+    - `(defn hanami-routes [& {:keys [landing-handler index-path]
+                               :or {landing-handler landing-page
+                                    index-path "public/index.html"}}] ...)` Creates a set of routes that uses `(landing-handler request index-path)` as the value of the `get /` route, and adds the necessary websocket routing to this and finally adds the default resources route `(compojure.route/resources "/")`. Returns the resulting function implementing the routes. Uses `compojure.core/routes to create the 'rounting function'.
 
-  - `(defn hanami-handler [hanami-routes & middle-ware-stack] ...)` Takes
+    - `(defn hanami-handler [hanami-routes & middle-ware-stack] ...)` Takes
 
 
 

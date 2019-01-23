@@ -1078,17 +1078,17 @@ There are two main start functions. One each for the server and client.
 
   - `(defn landing-page [request index-path]` ...)` `request` is an http request map, but is not used. `index-path` is the resource path to your `index.html` landing page. Returns a Ring response map:
 ``` Clojure
-    (content-type
-     {:status 200
-      :body (io/input-stream (io/resource index-path))}
-     "text/html")
+      (content-type
+       {:status 200
+        :body (io/input-stream (io/resource index-path))}
+       "text/html")
 ```
 
   - `(defn hanami-routes [& {:keys [landing-handler index-path]
                              :or {landing-handler landing-page
                                   index-path "public/index.html"}}] ...)` Creates a set of routes that uses `(landing-handler request index-path)` as the value of the `get /` route, and adds the necessary websocket routing to this and finally adds the default resources route `(compojure.route/resources "/")`. Returns the resulting function implementing the routes. Uses `compojure.core/routes to create the 'rounting function'.
 
-  - `(defn hanami-handler [hanami-routes & middle-ware-stack] ...)` Takes 
+  - `(defn hanami-handler [hanami-routes & middle-ware-stack] ...)` Takes
 
 
 

@@ -422,7 +422,8 @@
               [:vspecs] (rgt/atom {}))
   (init-tabs)
   (rgt/render [hanami-main]
-              (js/document.querySelector "#app")))
+              (get-adb :elem)
+              #_(js/document.querySelector "#app")))
 
 
 (defn update-opts [{:keys [main tab opts]}]
@@ -616,20 +617,44 @@
                :label [:span.bold (get-adb [:main :uid :name])]]
               [gap :size "30px"]]])
 
-(defn default-instrumentor-fn [{:keys [spec opts]}]
+
+(defn get-default-frame []
+  {:top [], :bottom [],
+   :left [[box :size "0px" :child ""]],
+   :right [[box :size "0px" :child ""]]})
+
+(defn make-frame [udata curframe]
+  (merge (if (udata :frame)
+           (let [default-frame (get-default-frame)
+                 frame-sides (udata :frame)]
+             (print-when [:frames :make] :Frame-Maker frame-sides curframe)
+             (update-adb [:dbg :frame]
+                         (->> (keys frame-sides)
+                              (reduce
+                               (fn[F k]
+                                 (assoc F k (xform-recom
+                                             (frame-sides k) re-com-xref)))
+                               default-frame)))
+             (get-adb [:dbg :frame]))
+           (get-default-frame))
+         curframe))
+
+(defn default-instrumentor-fn [{:keys [tabid spec opts]}]
   (let [udata (spec :usermeta)]
-    (print-when [:instrumentor] chan :UDATA udata :OPTS opts)
-    []))
+    (print-when [:instrumentor] chan :UDATA udata :OPTS opts))
+  {})
 
 (defn start [& {:keys [elem port header-fn instrumentor-fn]
                 :or {header-fn default-header-fn
                      instrumentor-fn default-instrumentor-fn}}]
-  (printchan "Element 'app' available, port " port)
-  (app-stop)
-  (update-adb :elem elem
-              :instrumentor [instrumentor-fn]
-              :header [header-fn])
-  (connect port))
+  (let [instfn (fn [{:keys [tabid spec opts] :as m}]
+                 (make-frame (spec :usermeta) (instrumentor-fn m)))]
+    (printchan "Element 'app' available, port " port)
+    (app-stop)
+    (update-adb :elem elem
+                :instrumentor [instfn]
+                :header [header-fn])
+    (connect port)))
 
 
 (defn sv!
@@ -663,55 +688,39 @@
       (printchan "Test Instrumentor called" :TID tabid #_:SPEC #_spec)
       (let [cljspec spec
             udata (cljspec :usermeta)
-            default-frame {:top [], :bottom [],
-                           :left [[box :size "0px" :child ""]],
-                           :right [[box :size "0px" :child ""]]}]
+            default-frame (get-default-frame)]
         (update-adb [:udata] udata)
         (cond
           (not (map? udata)) []
 
-          (udata :frame)
-          (let [frame-sides (udata :frame)]
-            (printchan :Frame-Instrumentor)
-            (update-adb [:dbg :frame]
-                        (->> (keys frame-sides)
-                             (reduce
-                              (fn[F k]
-                                (assoc F k (xform-recom
-                                            (frame-sides k) re-com-xref)))
-                              default-frame)))
-            (get-adb [:dbg :frame]))
-
           (udata :slider)
           (let [sval (rgt/atom "0.0")]
             (printchan :SLIDER-INSTRUMENTOR)
-            (merge default-frame
-                   {:top (xform-recom
-                          (udata :slider)
-                          :m1 sval
-                          :oc1 #(do (bar-slider-fn tabid %)
-                                    (reset! sval (str %)))
-                          :oc2 #(do (bar-slider-fn tabid (js/parseFloat %))
-                                    (reset! sval %)))}))
+            {:top (xform-recom
+                   (udata :slider)
+                   :m1 sval
+                   :oc1 #(do (bar-slider-fn tabid %)
+                             (reset! sval (str %)))
+                   :oc2 #(do (bar-slider-fn tabid (js/parseFloat %))
+                             (reset! sval %)))})
 
           (udata :test2)
-          (merge default-frame
-                 {:right [[gap :size "10px"]
-                          [v-box :children
-                           [[label :label "Select a demo"]
-                            [single-dropdown
-                             :choices (udata :test2)
-                             :on-change #(printchan "Dropdown: " %)
-                             :model nil
-                             :placeholder "Hi there"
-                             :width "100px"]]]]})
+          {:right [[gap :size "10px"]
+                   [v-box :children
+                    [[label :label "Select a demo"]
+                     [single-dropdown
+                      :choices (udata :test2)
+                      :on-change #(printchan "Dropdown: " %)
+                      :model nil
+                      :placeholder "Hi there"
+                      :width "100px"]]]]}
 
-          :else default-frame
+          :else {}
           )))
 
     (start :elem (js/document.querySelector "#app")
-           :port 3003
-           :instrumentor-fn test-instrumentor))
+           :instrumentor-fn test-instrumentor
+           :port 3003))
 
 
 

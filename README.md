@@ -36,6 +36,7 @@ Table of Contents
       * [Header](#header)
       * [Tabs](#tabs)
          * [Basics](#basics)
+         * [Configuration and Behavior](#configuration-and-behavior)
          * [Extension tabs](#extension-tabs)
       * [Sessions](#sessions)
       * [Messages](#messages)
@@ -348,11 +349,13 @@ Hanami understands the following 'special' fields:
     * `:size` - value is a flexbox size indicator. Best known values are "auto" for row based grids and "none" for column based grids
 
 * `:opts` - value is a map of fields controlling Vega/Vega-Lite options. This is **not** the `[:tab :opts]` path and value!
-  * `:export` - value is a map of boolean value fields (`:png`, `:svg`). Setting these true will provide implicit saving options in the popup Vega-Embed options button (typically upper left circle with "..." content).
+  * `:export` - value is a map of boolean value fields (`:png`, `:svg`). Setting these true will provide implicit saving options in the popup Vega-Embed options button (typically upper right circle with "..." content).
+  * `:scaleFactor` - value is a number indicating how much to scale image when exporting png or svg.
   * `:renderer` - value is either "canvas" or "svg"
   * `:mode` - value is either "vega-lite" or "vega". Indicates whether the specification is a Vega spec or a Vega-Lite spec (that will be compiled to Vega before rendering). Hanami default values are in (`hc/default-opts` :vgl) which defaults to
 ```Clojure
     {:export {:png true, :svg true}
+     :scaleFactor :SCALEFACTOR
      :editor true
      :source false
      :renderer :RENDERER ; either "canvas" or "svg" - see defaults
@@ -361,7 +364,7 @@ Hanami understands the following 'special' fields:
 
 * `:vid` - value is an application specific identifier of the associated visualization (if any)
 
-* `:msgop` - value is one of `:register`, `:tabs`, or some application specific operator. These messages are from the server to the client. `:register` is sent on client connection for [registration](#registration) purposes. `:tabs` is used to [update tabs](#tab-updates) and their content, if tabs are used. [User messages](#user-messages) have application specific operators and are sent when your application deems they should be sent.
+* `:msgop` - value is one of `:register`, `:tabs`, or some application specific operator. These messages are from the server to the client. `:register` is sent on client connection for [registration](#connection) purposes. `:tabs` is used to [update tabs](#tab-updates) and their content, if tabs are used. [User messages](#user-messages) have application specific operators and are sent when your application deems they should be sent.
 
 * `:session-name` - the name of session(s) which will receive the complete specification (either via a `:tabs` message or some user message).
 
@@ -377,7 +380,8 @@ As an example, [Saite](https://github.com/jsa-aerial/saite) has an init function
  :session-name :SESSION-NAME}
 
 :OPTS
-{:export {:png true, :svg false},
+{:export {:png true, :svg true},
+ :scaleFactor :SCALEFACTOR
  :renderer :RENDERER,
  :mode :MODE}
 
@@ -502,7 +506,7 @@ And some charts.
 All of these are taken from `hc/_defaults` They are chosen so as to indicate how some aspects of the above template examples get transformed.
 
 ```Clojure
-         :USERDATA RMV, :MODE "vega-lite", :RENDERER "canvas"
+         :USERDATA RMV, :MODE "vega-lite", :RENDERER "canvas", :SCALEFACTOR 1
          :BACKGROUND "floralwhite"
          :OPACITY RMV
 
@@ -681,7 +685,7 @@ These combine to form the basic page layout from this 'framework perspective' as
 
 ![Hanami framework layout](resources/public/images/framework-page-structure.png?raw=true)
 
-The header area is constructed by the `:header-fn` argument of the [client start](#client-start) function. The tab bar is dynamically constructed via `:tabs` [messages](#messages) or by explict calls to the [hmi/tabs](#client-core) client function. The _content_ of each tab's body is also constructed dynamically via these same means. If the tab doesn't exist, it will be created and added to the tab bar at the time it's body is also rendered. Updates to a tab will simply update the existing tab's body.
+The header area is constructed by the `:header-fn` argument of the [client start](#client-start) function. The tab bar is dynamically constructed via `:tabs` [messages](#tab-updates) or by explict calls to the [hmi/tabs](#tab-system) client function. The _content_ of each tab's body is also constructed dynamically via these same means. If the tab doesn't exist, it will be created and added to the tab bar at the time it's body is also rendered. Updates to a tab will simply update the existing tab's body.
 
 As an example [Saite](https://github.com/jsa-aerial/saite) makes use of the framework aspects of Hanami and here is an example page layout from a session in it.
 
@@ -704,17 +708,24 @@ The client side [start](#client-start) function has a `:header-fn` parameter whi
 
 ## Tabs
 
-The tab system of Hanami is intended to be a fairly general purpose document / application structuring capability for a variety of visualization applications. But that very fact means it has some level of 'opinion' on such layouts and so you may not want to use it if you need total general / manual layouts. But for the very large subset of cases where it fits nicely can be very helpful. There is a  set of [functions and components](#tab-system) of the client API for dealing with the tab system. **If you use the standard framework main components, you will not have to use this API** - it is all handled for you. The API is given in case you need / want to set up your own components which make use of it.
+The tab system of Hanami is intended to be a fairly general purpose document structuring and layout capability for a variety of visualization applications. But that very fact means it has some level of 'opinion' on such layouts and so you may not want to use it if you need total general / manual layouts. But for the very large subset of cases where it fits nicely it can be very helpful. There is a set of [functions and components](#tab-system) of the client API for dealing with the tab system. **If you use the standard framework main components, you will not have to use this API** - it is all handled for you. The API is given in case you need / want to set up your own components which make use of it.
 
 
 ### Basics
 
-As depicted in the [framework topology graphic](#framework-topology-graphic), the tab system has a dedicated area for the tab bar. Tabs are dynamically added to the tab bar from left to right. They may also be deleted. If using Hanami's standard framework, the main components will drive all tab actions and updates.
+As depicted in the [framework topology graphic](#framework-topology-graphic), the tab system has a dedicated area for the tab bar. Tabs are dynamically added to the tab bar from left to right. They may also be deleted. Any selected tab will have its body displayed in the dedicated content area. If you use Hanami's standard framework, the main components will drive all tab actions and updates.
 
+### Configuration and Behavior
+
+To use tabs, the `:usermeta` field of specifications must contain the `:tab` key whose value must be a map. The keys and values of this map are detailed in the tab section of the [USERDATA](#meta-data-and-the-userdata-key) section of this documentation. The `:id` field is the primary key for identifying and manipulating a tab and its body. The `:label` field is for human readable naming of the tab. The `:opts` field details the auto layout format for the tab's body. It is worth noting that if the `:eltsper` field has a value of 1, the effect is to have the body layed out linearly from top to bottom in the order the specifications were given to the tab.
+
+Tabs are added and updated via the [update-tabs](#tab-system) client core function. This function takes a vector of specifications and groups them by the tab id for each. Then for each such group,preprocesses the specifications (including instrumentation and frames) and places this information into the tab database. This database update triggers the Reagent components responsible for rendering any such changes.
 
 ### Extension tabs
 
-In addition to the standard tabs
+In addition to 'standard tabs', those described above, the tab system may be extended with 'extension tabs'. The defining characteristic of such tabs is that they have an extra field: `[:opts :extfn]`. The value of this field must be a [Reagen form](https://github.com/reagent-project/reagent/blob/master/doc/CreatingReagentComponents.md) function. Typically it will be a **form-2** and will implement the body of the tab. This functionality is seamlessly integrated with standard tabs and will be implicitly invoked when the tab is selected.
+
+Extension tabs are intended to be built and added on the client side. [add-tab](#tab-system) can be used to manually add such tabs, and the [:app-init user-msg](#connection) is a convenient place to perform this action (as part of any other application initialization). **NOTE** in [client only](#client-only-apps) you can explicitly fire this message as part of on page load code start.
 
 
 ## Sessions
@@ -1077,7 +1088,7 @@ This applies across both the server and client - the facilities are available in
 
 * Server: `(defn send-msg [to app-msg] ...)`
   - `to` is one of
-     - string naming an existing [session group](#sessons)
+     - string naming an existing [session group](#sessions)
      - string naming an active Hanami uuid, a [session uuid](#sessions)
      - an active client websocket object
 
@@ -1099,7 +1110,7 @@ In both cases, the _receiving_ party will have their [user-msg](#user-msg) multi
 #### user msg
 
 * Client and Server `(defmulti user-msg :op)`
-  Multimethod for encoding application specific message envelopes (see [Hanasu](https://github.com/jsa-aerial/hanasu) for general details). Specifically, calls with appropriage message arguments to [send-msg](#send-msg) on either the client or server will produce a dispath in the corresponding party to this multimethod. Intent and purpose of these is to support domain semantics of specific applications. See for example, [Saite](https://github.com/jsa-aerial/saite).
+  Multimethod for encoding application specific message envelopes (see [Hanasu](https://github.com/jsa-aerial/hanasu) for general details). Specifically, calls with appropriage message arguments to [send-msg](#send-msg) on either the client or server will produce a dispatch in the corresponding party to this multimethod. Intent and purpose of these is to support domain semantics of specific applications. See for example, [Saite](https://github.com/jsa-aerial/saite).
 
 
 ### Client core
@@ -1152,11 +1163,14 @@ In both cases, the _receiving_ party will have their [user-msg](#user-msg) multi
 
 * `(defn tabs [] ...)`: **Reagent component** for driving the tab system. This is called impicitly when using [hanami main](#hanami-main) Reagent component. In particular, drives the update, rendering, and display of tab bodies. May be called manually or part of a different main component.
 
+* `(defn update-tabs [specs] ...)`: Function to update the set of tabs. This includes adding new tabs to the set. `specs` is a vector of specifications, each of which must have a [:usermeta](#meta-data-and-the-userdata-key) field with associated `:tab` key and value, which must contain an `:id` field (see [USERDATA](#meta-data-and-the-userdata-key) for details). The specifications in `specs` do **not** need to have the same tab given - they may indicate a mix of tabs. As such, `update-tabs` first groups the specifications by tab id, preprocesses the specs in each set and updates the tab database to reflect the changes. This database update triggers he Reagent components `active-tabs` and `tabs` to fire and render the changes. Typically, in server based applications, this function is implicitly called due to the reception of [:tabs](#tab-updates) messages. For [client](#client-only-apps) only applications, this may be explicitly called, thus invoking the tab system machinery.
+
+
 #### Hanami main
 
 The main (top level) Reagent component for driving an application using the standard [framework aspects](#framework-overview)
 
-* `(defn hanami-main [] ...)`: Top level Reagent component. Renders via `reagent/render` as part of standard [registration](#connections). This component is the main driver for stanard framework usage. It assumes the standard framework [structure](#framework-topology-graphic) and therefore also assumes that the `app-db` has been initialized according to the [register](#connection) function.
+* `(defn hanami-main [] ...)`: Top level **Reagent component**. Renders via `reagent/render` as part of standard [registration](#connections). This component is the main driver for stanard framework usage. It assumes the standard framework [structure](#framework-topology-graphic) and therefore also assumes that the `app-db` has been initialized according to the [register](#connection) function.
 
 Creates a Re-Com [v-box](https://re-com.day8.com.au/#/v-box) consisting of the framework `header` (using the value of calling the client start [header](#header) function), `tab bar` area (via the [active-tabs](#tab-system) component, and `tab body` area (via the [tabs](#tab-system) component). Each is separated by a [line](https://re-com.day8.com.au/#/line).
 
@@ -1165,7 +1179,7 @@ If you are writing a [client only](#client-only-apps) application you could rend
 
 ### Server core
 
-
+* `(defn sv! [specs] ...)`: `specs` is a vector of specifications, each of which must include [:usermeta](#meta-data-and-the-userdata-key) data with full [tab data](#tabs), [msgop](#meta-data-and-the-userdata-key) must be `:tabs` and the [session-name](#sessions) must be appropriately set. Specifications must be fully transformed! Constructs a [:tabs](#tab-updates) message and sends to client, which will add (or update) the bodies of the tabs to reflect the specifications given to them.
 
 
 # Example Transform 'Gallery'

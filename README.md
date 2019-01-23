@@ -1103,13 +1103,13 @@ There are two main start functions. One each for the server and client.
   ...)
 ```
 
-* `:elem` the DOM element on which the main Reagent component will be rendered. For example `(js/document.querySelector "#app"). If using the framwork default, this will be the element on which [hanami-main](#hanami-main) is rendered.
+* `:elem` the DOM element on which the main Reagent component will be rendered. For example `(js/document.querySelector "#app")`. If using the framwork default, this will be the element on which [hanami-main](#hanami-main) is rendered.
 
 * `:port` the port to make websocket connection with. Generally as part of your page load start code, this port will be determined by `:port js/location.port`.
 
 * `:header-fn` a parameterless function which is intended to perform layout of an application's [header](#header) [area](#framework-overview)
 
-* `:instrumentor-fn` A function `(fn[{:keys [tabid spec opts]}] ...)` which is used to implement custom external instrumentation for visualizations. Instrumentation are active components and typically will be re-com components. See [barchart example](instrumented-barchart) for an example. Also, CLJS `aerial.hanami.core` has a 'rich comment' which gives a couple full examples. The `default-instrumentor-fn` is a no-op.
+* `:instrumentor-fn` A function `(fn[{:keys [tabid spec opts]}] ...)` which is used to implement custom external instrumentation for visualizations. Instrumentation are active components and typically will be re-com components. See [barchart example](#instrumented-barchart) for an example. Also, CLJS `aerial.hanami.core` has a 'rich comment' which gives a couple full examples. The `default-instrumentor-fn` is a no-op.
 
 ### Message system
 

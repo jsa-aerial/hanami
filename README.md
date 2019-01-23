@@ -1077,12 +1077,6 @@ There are two main start functions. One each for the server and client.
 * `route-handler` a function for handling http route requests. Hanami uses http-kit and this will be the function passed as the `app` argument to its `run-server`. Currently Hanami directly supports building routes via [compojure](https://github.com/weavejester/compojure), though supporting [bidi](https://github.com/juxt/bidi) is being considered. There are three ancillary functions to support users in creating their application routes.
 
   - `(defn landing-page [request index-path]` ...)` The `request` argument is an http request map, but is not used. `index-path` is the resource path to your `index.html` landing page. Returns a Ring response map:
-``` Clojure
-      (content-type
-       {:status 200
-        :body (io/input-stream (io/resource index-path))}
-       "text/html")
-```
 
   - `(defn hanami-routes [& {:keys [landing-handler index-path]
                              :or {landing-handler landing-page

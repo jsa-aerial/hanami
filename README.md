@@ -1078,10 +1078,10 @@ There are two main start functions. One each for the server and client.
 
   - `(defn landing-page [request index-path]` ...)` `request` is an http request map, but is not used. `index-path` is the resource path to your `index.html` landing page. Returns a Ring response map:
 ``` Clojure
-(content-type
- {:status 200
-  :body (io/input-stream (io/resource index-path))}
- "text/html")
+    (content-type
+     {:status 200
+      :body (io/input-stream (io/resource index-path))}
+     "text/html")
 ```
 
   - `(defn hanami-routes [& {:keys [landing-handler index-path]

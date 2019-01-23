@@ -10,6 +10,7 @@ All notable changes to this project, starting from 0.5.0, will be documented in 
 - Client: `make-frame` refactor instrumentor-fn handling.
 
 ### Fixed
+- main rgt/render [hanami-main] did not use passed in element!
 
 ### Deprecated
 

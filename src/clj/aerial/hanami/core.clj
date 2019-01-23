@@ -190,11 +190,14 @@
                (route/resources "/"))))
 
 (defn hanami-handler [hanami-routes & middle-ware-stack]
-  (reduce (fn[R mwfn] (mwfn R)) hanami-routes middle-ware-stack)
-  #_[(ring.middleware.defaults/wrap-defaults
-      ring.middleware.defaults/site-defaults)
-     (wrap-cljsjs)
-     (wrap-gzip)])
+  (reduce (fn[R mwfn] (mwfn R)) hanami-routes middle-ware-stack))
+
+#_(hanami-handler
+   (hanami-routes)
+   (fn[f] (ring.middleware.defaults/wrap-defaults
+          f ring.middleware.defaults/site-defaults))
+   wrap-cljsjs
+   wrap-gzip)
 
 
 (defn start-server

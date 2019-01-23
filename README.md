@@ -280,7 +280,7 @@ A number of other examples appear at the end of this README, along with their tr
 
 _Templates_ are simply maps parameterized by _substitution keys_. Generally, templates will typically correspond to a legal VG or VGL specification or a legal subcomponent thereof. For example, a complete VGL specification (rendered as Clojure) is a legal template - even though it has no substitution keys. At the other extreme, templates can correspond to pieces of specifications or subcomponents. These will always have substitution keys - if they didn't there would be no point to them.
 
-_Substitution Keys_ can be considered or thought of in two ways. They are the keys in the substitution map(s) of the recursive transformer `hc/xform`. There is a default map `hc/_defaults` (which is an atom containing the map) with various default substitution keys and their corresponding default values. This map can be updated and `xform` can also be supplied a variadic list of substitution keys and their values for a given invocation.
+_Substitution Keys_ can be considered or thought of in two ways. They are the keys in the substitution map(s) of the recursive transformer [hc/xform](#templates-and-substitution-keys). There is a default map `hc/_defaults` (which is an atom containing the map) with various default substitution keys and their corresponding default values. This map can be updated and `xform` can also be supplied a variadic list of substitution keys and their values for a given invocation.
 
 The second way of thinking about substitution keys is that they are the starting values of keys in templates. So, they represent parameterized values of keys in templates.
 
@@ -302,7 +302,7 @@ This takes the tab's id, which here is a keyword, converts to a string and retur
 
 ## Subtitution Key Functions
 
-A more general version of the function as value of a substitution key is provided by the `hc/subkeyfns` map and associated processing. The function `hc/update-subkeyfns` (see [API](#api)) can be used to register a function for a subtitution key. This is a 'global' function - separate from any value given for the key. These functions take three arguments: `(fn[submap, subkey, subval] ...)`.
+A more general version of the function as value of a substitution key is provided by the `hc/subkeyfns` map and associated processing. The function [hc/update-subkeyfns](#templates-and-substitution-keys) can be used to register a function for a subtitution key. This is a 'global' function - separate from any value given for the key. These functions take three arguments: `(fn[submap, subkey, subval] ...)`.
 
 Where the `submap` parameter is the current substitution map in the transformation; the `subkey` parameter is the substitution key for this function; and the `subval` parameter is the _value_ of the substitution key.
 
@@ -323,11 +323,11 @@ There is a default set of such keys provided with this particular case being one
 
 There are some important rules that guide certain aspects of the recursive transformation process. These aspects are really only important in advanced template contruction, but if you find yourself in such circumstances, they are quite useful and helpful.
 
-* Defaults for substitution keys are always overridden by values given for them in a call to `hc/xform`.
+* Defaults for substitution keys are always overridden by values given for them in a call to [hc/xform](#templates-and-substitution-keys).
 
 * Any field whose final value is the special `hc/RMV` value, will be removed from the corresponding specification or subcomponent thereof.
 
-* Any field whose final value is an empty collection, will have this value replaced by `hc/RMV` and thus removed from its containing collection and specification. This is a very important transformation rule as it enables highly general substitution values. See for example such values as `hc/data-options`.
+* Any field whose final value is an empty collection, will have this value replaced by `hc/RMV` and thus removed from its containing collection and specification. This is a very important transformation rule as it enables highly general substitution values. See for example such values as `ht/data-options`.
 
 * While the simplest way to look at the transformation process is as a continuous transform until the last output is the same as the input, the actual processing is a preorder depth first walk and replacement. Typically, this implementation detail should not factor in to any template authoring, as they should be declarative in nature. However, there may be cases where this ordering can help in constructing proper substitution keys and values.
 
@@ -336,7 +336,7 @@ There are some important rules that guide certain aspects of the recursive trans
 
 Vega and Vega-Lite support the inclusion of application specific meta data in specifications via the `:usermeta` top level key in a specification. To Vega and Vega-Lite, this key is completely transparent and is not used in any way by their processing. This affords applications using them to include application specific data, in particular, _control_ data.
 
-Hanami defaults the `:usermeta` field to the substitution key `:USERDATA`, which has a default value of `RMV`. So, by default, there is no application meta data. However, several aspects of Hanami's [messaging system](#api), [session management](#sessions), [picture frames](#picture-frames) and [tab](#tabs) system expect and make use of control data supplied via the `:usermeta` field and associated values for the `:USERDATA` substitution key. So, if you plan on using any of that, you will need to supply a value for this key - either as a default (via `hc/update-defaults`) or explicitly in a transform (`hc/xform`). Of course, if you have your own application specific meta/control data that needs to be supplied to clients, you can provide your own fields and values here.
+Hanami defaults the `:usermeta` field to the substitution key `:USERDATA`, which has a default value of `RMV`. So, by default, there is no application meta data. However, several aspects of Hanami's [messaging system](#messages), [session management](#sessions), [picture frames](#picture-frames) and [tab](#tabs) system expect and make use of control data supplied via the `:usermeta` field and associated values for the `:USERDATA` substitution key. So, if you plan on using any of that, you will need to supply a value for this key - either as a default (via `hc/update-defaults`) or explicitly in a transform (`hc/xform`). Of course, if you have your own application specific meta/control data that needs to be supplied to clients, you can provide your own fields and values here.
 
 Hanami understands the following 'special' fields:
 
@@ -723,7 +723,7 @@ Tabs are added and updated via the [update-tabs](#tab-system) client core functi
 
 ### Extension tabs
 
-In addition to 'standard tabs', those described above, the tab system may be extended with 'extension tabs'. The defining characteristic of such tabs is that they have an extra field: `[:opts :extfn]`. The value of this field must be a [Reagen form](https://github.com/reagent-project/reagent/blob/master/doc/CreatingReagentComponents.md) function. Typically it will be a **form-2** and will implement the body of the tab. This functionality is seamlessly integrated with standard tabs and will be implicitly invoked when the tab is selected.
+In addition to 'standard tabs', those described above, the tab system may be extended with 'extension tabs'. The defining characteristic of such tabs is that they have an extra field: `[:opts :extfn]`. The value of this field must be a [Reagent form](https://github.com/reagent-project/reagent/blob/master/doc/CreatingReagentComponents.md) function. Typically it will be a **form-2** and will implement the body of the tab. This functionality is seamlessly integrated with standard tabs and will be implicitly invoked when the tab is selected.
 
 Extension tabs are intended to be built and added on the client side. [add-tab](#tab-system) can be used to manually add such tabs, and the [:app-init user-msg](#connection) is a convenient place to perform this action (as part of any other application initialization). **NOTE** in [client only](#client-only-apps) you can explicitly fire this message as part of on page load code start.
 
@@ -771,7 +771,7 @@ As a simple example of how this can be done, the client [start](#client-start) f
               [gap :size "30px"]]])
 ```
 
-On connection the client's header contains a header with the default assigned session group name listed along side an input text box. The user can decide to change the assigned group, by typing in a new name. This will fire a [set-session-name](###session-group) message to the server to reassign this session to the desired group.
+On connection the client's header contains a header with the default assigned session group name listed along side an input text box. The user can decide to change the assigned group, by typing in a new name. This will fire a [set-session-name](#session-group) message to the server to reassign this session to the desired group.
 
 ![message overivew](resources/public/images/session-group-b4-aft.png?raw=true)
 
@@ -859,7 +859,7 @@ You can specifiy frames from either the server or client side of your applicatio
 
 **NOTE**: if you are _instrumenting_ your visualization (using active components - input box, dropdowns, selection lists, etc.) the _functions_ updating the relevant model(s) of / for these components _must_ be written over on the ClojureScript side (client). This is because, Hanami does not use a self hosted ClojureScript, but rather the cross compiled (with Google Closure) variant. Hence, you cannot, for example, write function code on the server side and have it eval'd on the client! (_NOTE_: this restriction may be lifted!)
 
-Picture frames are fully automatic if you use the default tab system. If you use custom tabs and want to make use of frames, you should call [hmi/vis-list](#client-core) on the client side (Cljs) for automatic rendering. If you are doing completely custom layouts, you will want to call [hmi/make-frame](#client-core) client function. As always, if you do not want to use any of this, you should 'manually' use the [hmi/vgl](#client-core) reagent vega/vega-lite component.
+Picture frames are fully automatic if you use the default tab system. If you use custom tabs and want to make use of frames, you should call [hmi/vis-list](#client-core) on the client side (Cljs) for automatic rendering. If you are doing completely custom layouts, you will want to call [hmi/frameit](#client-core) client function. As always, if you do not want to use any of this, you should 'manually' use the [hmi/vgl](#client-core) reagent vega/vega-lite component.
 
 A couple of examples. These are actually taken from [Saite](https://github.com/jsa-aerial/saite), which is an interactive, exploratory and ad-hoc visualization application written with Hanami. Worth noting is that Saite assumes an interactive REPL model of exploration on the server side, pushing visualizations to the client. Hence, the only active components that can be used are those that are self contained, like information buttons or modal panels.
 

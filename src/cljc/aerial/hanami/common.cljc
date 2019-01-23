@@ -7,6 +7,7 @@
 
 (def default-opts
   {:vgl {:export {:png true, :svg true}
+         :scaleFactor :SCALEFACTOR
          :editor true
          :source false
          :renderer :RENDERER ; either "canvas" or "svg" - see defaults
@@ -113,7 +114,7 @@
          :BACKGROUND "floralwhite"
          :TITLE RMV, :TOFFSET RMV
          :HEIGHT 300, :WIDTH 400, :DHEIGHT 60
-         :USERDATA RMV, :MODE "vega-lite", :RENDERER "canvas"
+         :USERDATA RMV, :MODE "vega-lite", :RENDERER "canvas" :SCALEFACTOR 1
 
          ;; Data, transforms, and encodings
          :VALDATA get-data-vals

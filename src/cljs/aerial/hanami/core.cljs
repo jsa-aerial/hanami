@@ -223,6 +223,7 @@
                 :mode     "vega"
                 :hover    (get vopts :hover default-hover)
                 :defaultStyle true
+                :scaleFactor (get vopts :scaleFactor 1)
                 :actions  {:export (get vopts :export false),
                            :source (get vopts :source false),
                            :editor (get vopts :editor false),

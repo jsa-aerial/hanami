@@ -1074,16 +1074,25 @@ There are two main start functions. One each for the server and client.
 
 * `port` the port on which to open the websocket messaging system
 
-* `route-handler` a function for handling http route requests. Hanami uses http-kit and this will be the function passed as the `app` argument to its `run-server`. Currently Hanami directly supports building routes via [compojure](https://github.com/weavejester/compojure), though supporting [bidi](https://github.com/juxt/bidi) is being considered. There are three ancillary functions to support users in creating their application routes.
+* `:route-handler` a function for handling http route requests. Hanami uses http-kit and this will be the function passed as the `app` argument to its `run-server`. Currently Hanami directly supports building routes via [compojure](https://github.com/weavejester/compojure), though supporting [bidi](https://github.com/juxt/bidi) is being considered. There are three ancillary functions to support users in creating their application routes.
 
-  - `(defn landing-page [request index-path]` ...)` The `request` argument is an http request map, but is not used. `index-path` is the resource path to your `index.html` landing page. Returns a Ring response map:
+  - `(defn landing-page [request index-path]` ...)` The `request` argument is an http request map, but is not used. `index-path` is the resource path to your `index.html` landing page. Returns a Ring response map: `(content-type {:status 200, :body (io/input-stream (io/resource index-path))}, "text/html")`
 
   - `(defn hanami-routes [& {:keys [landing-handler index-path]
                              :or {landing-handler landing-page
                                   index-path "public/index.html"}}] ...)` Creates a set of routes that uses `(landing-handler request index-path)` as the value of the `get /` route, and adds the necessary websocket routing to this and finally adds the default resources route `(compojure.route/resources "/")`. Returns the resulting function implementing the routes. Uses `compojure.core/routes to create the 'rounting function'.
 
-  - `(defn hanami-handler [hanami-routes & middle-ware-stack] ...)` Takes
+  - `(defn hanami-handler [routes-fn & middle-ware-stack] ...)` Takes a routing function `routes-fn` (as built by `hanami-routes`) and zero or more ring middle-ware wrapping functions. Returns the full wrapped site handler function.
 
+* `:idfn` Function of zero paramters. The [session group](#sessions) name generator for connections
+
+* `:connfn` Function of one parameter (fn [x] ...) where x is the map of standard fields and values of a [connection registration](#connection). Should compute any necessary application specific registration data. This data will be available to the `:app-init` method of [user-msg](#user-messages) multimethod.
+
+* `:title` A application appropriate title. Can be used by the [client start](#client-start) `header-fn`. The default header function of the client uses this to make a title in the [application header area](#framework-topology-graphic)
+
+* `:logo` A glyph/avatar for use in header function processing
+
+* `img` An image resource. Again for use in application initialization as background or other such use.
 
 
 #### Client start
@@ -1093,6 +1102,14 @@ There are two main start functions. One each for the server and client.
                      instrumentor-fn default-instrumentor-fn}}]
   ...)
 ```
+
+* `:elem` the DOM element on which the main Reagent component will be rendered. For example `(js/document.querySelector "#app"). If using the framwork default, this will be the element on which [hanami-main](#hanami-main) is rendered.
+
+* `:port` the port to make websocket connection with. Generally as part of your page load start code, this port will be determined by `:port js/location.port`.
+
+* `:header-fn` a parameterless function which is intended to perform layout of an application's [header](#header) [area](#framework-overview)
+
+* `:instrumentor-fn` A function `(fn[{:keys [tabid spec opts]}] ...)` which is used to implement custom external instrumentation for visualizations. Instrumentation are active components and typically will be re-com components. See [barchart example](instrumented-barchart) for an example. Also, CLJS `aerial.hanami.core` has a 'rich comment' which gives a couple full examples. The `default-instrumentor-fn` is a no-op.
 
 ### Message system
 

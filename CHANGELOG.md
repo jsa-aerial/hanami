@@ -6,6 +6,7 @@ All notable changes to this project, starting from 0.5.0, will be documented in 
 - Client: `hmi/sv!` as mirror of server side `hmi/sv!`. Client only apps support
 - Client: `init-tabs` refactor `register`. Client only apps support
 - Client: `frameit` refactor `vis-list`. Client only apps support
+- Common: `:scaleFactor` to `:vgl` value in `hc/default-opts`. Support Vega-Embed export scaling
 
 ### Fixed
 

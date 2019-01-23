@@ -1072,6 +1072,26 @@ There are two main start functions. One each for the server and client.
   ...)
 ```
 
+* `port` the port on which to open the websocket messaging system
+
+* `route-handler` a function for handling http route requests. Hanami uses http-kit and this will be the function passed as the `app` argument to its `run-server`. Currently Hanami directly supports building routes via [compojure](https://github.com/weavejester/compojure), though supporting [bidi](https://github.com/juxt/bidi) is being considered. There are three ancillary functions to support users in creating their application routes.
+
+  - `(defn landing-page [request index-path]` ...)` `request` is an http request map, but is not used. `index-path` is the resource path to your `index.html` landing page. Returns a Ring response map:
+``` Clojure
+(content-type
+ {:status 200
+  :body (io/input-stream (io/resource index-path))}
+ "text/html")
+```
+
+  - `(defn hanami-routes [& {:keys [landing-handler index-path]
+                             :or {landing-handler landing-page
+                                  index-path "public/index.html"}}] ...)` Creates a set of routes that uses `(landing-handler request index-path)` as the value of the `get /` route, and adds the necessary websocket routing to this and finally adds the default resources route `(compojure.route/resources "/")`. Returns the resulting function implementing the routes. Uses `compojure.core/routes to create the 'rounting function'.
+
+  - `(defn hanami-handler [hanami-routes & middle-ware-stack] ...)` Takes 
+
+
+
 #### Client start
 ```Clojure
 (defn start [& {:keys [elem port header-fn instrumentor-fn]
@@ -1110,7 +1130,7 @@ In both cases, the _receiving_ party will have their [user-msg](#user-msg) multi
 #### user msg
 
 * Client and Server `(defmulti user-msg :op)`
-  Multimethod for encoding application specific message envelopes (see [Hanasu](https://github.com/jsa-aerial/hanasu) for general details). Specifically, calls with appropriage message arguments to [send-msg](#send-msg) on either the client or server will produce a dispatch in the corresponding party to this multimethod. Intent and purpose of these is to support domain semantics of specific applications. See for example, [Saite](https://github.com/jsa-aerial/saite).
+  Multimethod for encoding application specific message envelopes (see [Hanasu](https://github.com/jsa-aerial/hanasu) for general details). Specifically, calls with appropriate message arguments to [send-msg](#send-msg) on either the client or server will produce a dispatch in the corresponding party to this multimethod. Intent and purpose of these is to support domain semantics of specific applications. See for example, [Saite](https://github.com/jsa-aerial/saite).
 
 
 ### Client core

@@ -133,6 +133,7 @@
              (merge
               (hc/get-default :USERDATA)
               {:vid :bc1
+               :frame {:bottom `[p "Move slider to change data stream"]}
                :slider `[[gap :size "10px"] [label :label "Add Bar"]
                          [label :label ~minstr]
                          [slider

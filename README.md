@@ -827,10 +827,84 @@ Upon receipt of such a message, the server will update its database to reflect t
 
 ### Tab updates
 
+The `:tabs` message is the main way to update one or more tabs in a current sesion if you are using the [tab system](#tabs) in a client / server setup. The simplest way to send these messages is via the server [sv!](#server-core) function. Typically this will be from within a server side editor / IDE.
 
+In [client only](#client-only-apps) applications, you can achieve the exact same effect by calling the client side 'mirror' function [sv!](#tab-system).
+
+ As an example, the [simple cars](#simple-cars) case listed in the opening [examples](#examples) was dispatched as:
+
+```Clojure
+(-> (hc/xform ht/point-chart
+      :UDATA "data/cars.json"
+      :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")
+    hmi/sv!)
+```
 
 
 ### User messages
+
+User, also know here as "application specific", messages are sent via the [send-msg](#send-msg) function. This function exists in both the client and server `hmi` name space. The entire point of these messages is to support extension messages that are specific to the needs of an application. All such messgaes will be caught by the receiving party and dispatched to the multimethod [user-msg](#user-msg). There is one such message which is dispatched on the client side implicitly - the [:app-init](#connection) msg on client connection. This supports the any application specific client initialization processing.
+
+Two examples of from [Saite](https://github.com/jsa-aerial/saite)
+
+The [first](https://github.com/jsa-aerial/saite/blob/9aaacc3463604cfd03d239600dc859c48d6c27c7/src/cljs/aerial/saite/core.cljs#L258) is for the `:app-init` message.
+
+```Clojure
+(defmethod user-msg :app-init [msg]
+  (update-adb [:main :convert-chan] (async/chan))
+  (add-tab {:id :xvgl
+            :label "<->"
+            :opts {:extfn (tab<-> :NA)}}))
+```
+
+So, we add a Saite specific async channel to the database in support of conversions and popup renderings. Then we add the [extension tab](#extension-tabs) for the conversion / popup renderer capability.
+
+The [second](https://github.com/jsa-aerial/saite/blob/9aaacc3463604cfd03d239600dc859c48d6c27c7/src/cljs/aerial/saite/core.cljs#L245) is for a message specifically required by Saite to perform data conversion and transformation operations for the client.
+
+```Clojure
+;;; Client sends two versions of :read-clj msg to server.
+;;;  One for conversion and one for popup rendering
+;;; The popup case
+(let [...
+      msg {:op :read-clj
+           :data {:session-name nm
+                  :render? true
+                  :cljstg inspec}}
+      _ (send-msg msg)
+      ...]
+      ...
+      )
+
+;;; Server user-msg method for this:
+(defmethod hmi/user-msg :read-clj [msg]
+  (let [{:keys [session-name cljstg render?]} (msg :data)
+        uuids (hmi/get-adb session-name)
+        clj (try
+              (let [clj (->> cljstg clojure.core/read-string)]
+                (swap! dbg (fn[m] (assoc m :clj clj)))
+                (->> clj xform-cljform eval final-xform))
+              (catch Exception e
+                {:error (format "Error %s" (or (.getMessage e) e))})
+              (catch Error e
+                {:error (format "Error %s" (or (.getMessage e) e))}))]
+    (swap! dbg (fn[m] (assoc m :xform-clj clj)))
+    (hmi/print-when [:pchan :umsg] :CLJ clj)
+    (hmi/send-msg session-name :clj-read (assoc clj :render? render?))))
+
+;;; NOTE the send-msg to client with :cli-read
+
+;;; Client user-msg method for this:
+(defmethod user-msg :clj-read [msg]
+  (let [data (msg :data)
+        render? (data :render?)
+        clj (dissoc data :render?)
+        result (if render?
+                 clj
+                 (try (-> clj clj->js (js/JSON.stringify nil, 2))
+                      (catch js/Error e (str e))))
+        ch (get-adb [:main :convert-chan])]
+    (go (async/>! ch result))))
+```
 
 
 ## Picture Frames
@@ -1117,7 +1191,7 @@ This applies across both the server and client - the facilities are available in
 
 #### send msg
 
-* Server: `(defn send-msg [to app-msg] ...)`
+* Server: `(defn send-msg ([to app-msg] ...) ([to op data] ...))`
   - `to` is one of
      - string naming an existing [session group](#sessions)
      - string naming an active Hanami uuid, a [session uuid](#sessions)
@@ -1128,12 +1202,16 @@ This applies across both the server and client - the facilities are available in
        - `opkey` is a msg specific operator
        - `data-value` is some arbitrary data - typically a map of fields
 
+  - `op` is an `opkey` and `data` a `data-value`. This form is converted to a call `(send-msg to {:op op, :data data})`
 
-* Client: `(defn send-msg [app-msg] ...)`
+
+* Client: `(defn send-msg ([app-msg] ...) ([op data] ...))`
   - `app-msg` is
      - an application specific message with form `{:op opkey, :data data-value}`
        - `opkey` is a msg specific operator
        - `data-value` is some arbitrary data - typically a map of fields
+
+  - `op` is an `opkey` and `data` a `data-value`. This form is converted to a call `(send-msg to {:op op, :data data})`
 
 In both cases, the _receiving_ party will have their [user-msg](#user-msg) multimethod dispatched on the `msg op key`.
 
@@ -1194,7 +1272,9 @@ In both cases, the _receiving_ party will have their [user-msg](#user-msg) multi
 
 * `(defn tabs [] ...)`: **Reagent component** for driving the tab system. This is called impicitly when using [hanami main](#hanami-main) Reagent component. In particular, drives the update, rendering, and display of tab bodies. May be called manually or part of a different main component.
 
-* `(defn update-tabs [specs] ...)`: Function to update the set of tabs. This includes adding new tabs to the set. `specs` is a vector of specifications, each of which must have a [:usermeta](#meta-data-and-the-userdata-key) field with associated `:tab` key and value, which must contain an `:id` field (see [USERDATA](#meta-data-and-the-userdata-key) for details). The specifications in `specs` do **not** need to have the same tab given - they may indicate a mix of tabs. As such, `update-tabs` first groups the specifications by tab id, preprocesses the specs in each set and updates the tab database to reflect the changes. This database update triggers he Reagent components `active-tabs` and `tabs` to fire and render the changes. Typically, in server based applications, this function is implicitly called due to the reception of [:tabs](#tab-updates) messages. For [client](#client-only-apps) only applications, this may be explicitly called, thus invoking the tab system machinery.
+* `(defn update-tabs [specs] ...)`: Function to update the set of tabs. This includes adding new tabs to the set. `specs` is a vector of specifications, each of which must have a [:usermeta](#meta-data-and-the-userdata-key) field with associated `:tab` key and value, which must contain an `:id` field (see [USERDATA](#meta-data-and-the-userdata-key) for details). The specifications in `specs` do **not** need to have the same tab given - they may indicate a mix of tabs. As such, `update-tabs` first groups the specifications by tab id, preprocesses the specs in each set and updates the tab database to reflect the changes. This database update triggers he Reagent components `active-tabs` and `tabs` to fire and render the changes. Typically, in server based applications, this function is implicitly called due to the reception of [:tabs](#tab-updates) messages. For [client](#client-only-apps) only applications, this may be explicitly called, thus invoking the tab system machinery or more cleanly invoked by using the client side `sv!` which mirrors the server [sv!](#server-core).
+
+* `(defn sv! [specs] ...)`: Invokes `update-tabs` after ensuring `specs` is a vector of specifications (`spec` can be a single specification and it will be wrapped in a vector). Provided in order to keep client and server side tab updating the same in look and feel.
 
 
 #### Hanami main
@@ -1210,7 +1290,7 @@ If you are writing a [client only](#client-only-apps) application you could rend
 
 ### Server core
 
-* `(defn sv! [specs] ...)`: `specs` is a vector of specifications, each of which must include [:usermeta](#meta-data-and-the-userdata-key) data with full [tab data](#tabs), [msgop](#meta-data-and-the-userdata-key) must be `:tabs` and the [session-name](#sessions) must be appropriately set. Specifications must be fully transformed! Constructs a [:tabs](#tab-updates) message and sends to client, which will add (or update) the bodies of the tabs to reflect the specifications given to them.
+* `(defn sv! [specs] ...)`: `specs` is a single specification (which will be wrapped in a vector before processing) or a vector of specifications, each of which must include [:usermeta](#meta-data-and-the-userdata-key) data with full [tab data](#tabs), where the [msgop](#meta-data-and-the-userdata-key) must be `:tabs` and the [session-name](#sessions) must be appropriately set. Specifications must be fully transformed! Constructs a [:tabs](#tab-updates) message and sends to client, which will add (or update) the bodies of the tabs to reflect the specifications given to them.
 
 
 # Example Transform 'Gallery'

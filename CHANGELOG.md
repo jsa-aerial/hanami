@@ -12,6 +12,10 @@ All notable changes to this project, starting from 0.5.0, will be documented in 
 ### Fixed
 - main rgt/render [hanami-main] did not use passed in element!
 
+### Changed
+- Client: internal name change user-dispatch to message-dispatch
+- Server: internal name change server-dispatch to message-dispatch
+
 ### Deprecated
 
 

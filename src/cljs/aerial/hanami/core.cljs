@@ -372,9 +372,12 @@
 (defn app-send [msg]
   (printchan "app-send: DEPRECATED, use 'send-msg'")
   (cli/send-msg (get-ws) msg))
-(defn send-msg [msg]
-  (print-when [:msg :send] "Sending msg " msg)
-  (cli/send-msg (get-ws) msg))
+(defn send-msg
+  ([msg]
+   (print-when [:msg :send] "Sending msg " msg)
+   (cli/send-msg (get-ws) msg))
+  ([op data]
+   (send-msg {:op op :data data})))
 
 
 
@@ -533,7 +536,7 @@
    ws {:chan ch, :line-info {:rcvcnt 0, :sntcnt 0, :errcnt 0}}))
 
 
-(defn user-dispatch [ch op payload]
+(defn message-dispatch [ch op payload]
   (case op
     :open (let [ws payload]
             (print-when [:msg :open] :CLIENT :open :ws ws)
@@ -578,7 +581,7 @@
       (printchan "Opening client, reading msgs from " ch)
       (loop [msg (<! ch)]
         (let [{:keys [op payload]} msg]
-          (user-dispatch ch op payload)
+          (message-dispatch ch op payload)
           (when (not= op :stop)
             (recur (<! ch))))))))
 

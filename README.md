@@ -859,7 +859,7 @@ The [first](https://github.com/jsa-aerial/saite/blob/9aaacc3463604cfd03d239600dc
 
 So, we add a Saite specific async channel to the database in support of conversions and popup renderings. Then we add the [extension tab](#extension-tabs) for the conversion / popup renderer capability.
 
-The [second](https://github.com/jsa-aerial/saite/blob/9aaacc3463604cfd03d239600dc859c48d6c27c7/src/cljs/aerial/saite/core.cljs#L245) is for a message specifically required by Saite to perform data conversion and transformation operations for the client.
+The second ([client](https://github.com/jsa-aerial/saite/blob/9aaacc3463604cfd03d239600dc859c48d6c27c7/src/cljs/aerial/saite/core.cljs#L245) / [server](https://github.com/jsa-aerial/saite/blob/9aaacc3463604cfd03d239600dc859c48d6c27c7/src/clj/aerial/saite/core.clj#L81) is for messages specifically required by Saite to perform data conversion and transformation operations for the client.
 
 ```Clojure
 ;;; Client sends two versions of :read-clj msg to server.
@@ -878,7 +878,6 @@ The [second](https://github.com/jsa-aerial/saite/blob/9aaacc3463604cfd03d239600d
 ;;; Server user-msg method for this:
 (defmethod hmi/user-msg :read-clj [msg]
   (let [{:keys [session-name cljstg render?]} (msg :data)
-        uuids (hmi/get-adb session-name)
         clj (try
               (let [clj (->> cljstg clojure.core/read-string)]
                 (swap! dbg (fn[m] (assoc m :clj clj)))

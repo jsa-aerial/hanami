@@ -134,7 +134,7 @@
     (srv/send-msg ws {:op :register :data data})))
 
 
-(defn server-dispatch [ch op payload]
+(defn message-dispatch [ch op payload]
   (case op
     :msg (let [{:keys [ws]} payload]
            (msg-handler payload)
@@ -217,7 +217,7 @@
                 [:header :img] img)
     (go-loop [msg (<! ch)]
       (let [{:keys [op payload]} msg]
-        (future (server-dispatch ch op payload))
+        (future (message-dispatch ch op payload))
         (when (not= op :stop)
           (recur (<! ch)))))))
 

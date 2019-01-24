@@ -1,0 +1,22 @@
+Compiling build :dev to "resources/public/js/compiled/clientex.js" from ["src/cljs"]...
+[32mSuccessfully compiled build :dev to "resources/public/js/compiled/clientex.js" in 0.929 seconds.[0m
+notifying browser that file changed:  resources/public/js/compiled/out/goog/deps.js
+notifying browser that file changed:  resources/public/js/compiled/out/cljs_deps.js
+notifying browser that file changed:  resources/public/js/compiled/out/aerial/saite/core.js
+Compiling build :dev to "resources/public/js/compiled/clientex.js" from ["src/cljs"]...
+[32mSuccessfully compiled build :dev to "resources/public/js/compiled/clientex.js" in 0.883 seconds.[0m
+notifying browser that file changed:  resources/public/js/compiled/out/aerial/saite/core.js
+Compiling build :dev to "resources/public/js/compiled/clientex.js" from ["src/cljs"]...
+[32mSuccessfully compiled build :dev to "resources/public/js/compiled/clientex.js" in 0.85 seconds.[0m
+notifying browser that file changed:  resources/public/js/compiled/out/goog/deps.js
+notifying browser that file changed:  resources/public/js/compiled/out/cljs_deps.js
+notifying browser that file changed:  resources/public/js/compiled/out/clientex/core.js
+Compiling build :dev to "resources/public/js/compiled/clientex.js" from ["src/cljs"]...
+[32mSuccessfully compiled build :dev to "resources/public/js/compiled/clientex.js" in 0.858 seconds.[0m
+notifying browser that file changed:  resources/public/js/compiled/out/clientex/core.js
+Compiling build :dev to "resources/public/js/compiled/clientex.js" from ["src/cljs"]...
+[32mSuccessfully compiled build :dev to "resources/public/js/compiled/clientex.js" in 0.849 seconds.[0m
+notifying browser that file changed:  resources/public/js/compiled/out/clientex/core.js
+Compiling build :dev to "resources/public/js/compiled/clientex.js" from ["src/cljs"]...
+[32mSuccessfully compiled build :dev to "resources/public/js/compiled/clientex.js" in 0.863 seconds.[0m
+notifying browser that file changed:  resources/public/js/compiled/out/clientex/core.js

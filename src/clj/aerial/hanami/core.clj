@@ -225,19 +225,22 @@
   (async/>!! (get-adb :chan) {:op :stop :payload {:cause :userstop}}))
 
 
-(defn send-msg [to msg]
-  (let [uuids (cond (and (string? to) (hmi-uuid? to))
-                    (-> [to :name] get-adb get-adb)
-                    (string? to) (get-adb to))]
-    (assert (and (map? msg) (= #{:op :data} (-> msg keys set)))
-            (format "hmi/send-msg: '%s' not map {:op ..., :data ...}" msg))
-    (if (seq uuids)
-      (doseq [id uuids]
-        (print-when [:send-msg] :ID id :MSG msg)
-        (srv/send-msg (get-adb [id :ws]) msg))
-      (do
-        (print-when [:send-msg] :ID to :MSG msg)
-        (srv/send-msg to msg)))))
+(defn send-msg
+  ([to msg]
+   (let [uuids (cond (and (string? to) (hmi-uuid? to))
+                     (-> [to :name] get-adb get-adb)
+                     (string? to) (get-adb to))]
+     (assert (and (map? msg) (= #{:op :data} (-> msg keys set)))
+             (format "hmi/send-msg: '%s' not map {:op ..., :data ...}" msg))
+     (if (seq uuids)
+       (doseq [id uuids]
+         (print-when [:send-msg] :ID id :MSG msg)
+         (srv/send-msg (get-adb [id :ws]) msg))
+       (do
+         (print-when [:send-msg] :ID to :MSG msg)
+         (srv/send-msg to msg)))))
+  ([to op data]
+   (send-msg to {:op op :data data})))
 
 
 (defn s! [uuids op data]

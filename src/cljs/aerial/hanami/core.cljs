@@ -647,11 +647,15 @@
     (print-when [:instrumentor] chan :UDATA udata :OPTS opts))
   {})
 
+(defn make-instrumentor [userfn]
+  (fn [{:keys [tabid spec opts] :as m}]
+    (make-frame (spec :usermeta) (userfn m))))
+
+
 (defn start [& {:keys [elem port header-fn instrumentor-fn]
                 :or {header-fn default-header-fn
                      instrumentor-fn default-instrumentor-fn}}]
-  (let [instfn (fn [{:keys [tabid spec opts] :as m}]
-                 (make-frame (spec :usermeta) (instrumentor-fn m)))]
+  (let [instfn (make-instrumentor instrumentor-fn)]
     (printchan "Element 'app' available, port " port)
     (app-stop)
     (update-adb :elem elem

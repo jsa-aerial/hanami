@@ -48,11 +48,11 @@ Table of Contents
          * [Empty Frames](#empty-frames)
       * [Data Streaming](#data-streaming)
       * [Client Only Apps](#client-only-apps)
-      * [Basic client app requirements](#basic-client-app-requirements)
-         * [Require resources](#require-resources)
-         * [Application initialization](#application-initialization)
-         * [Landing page - index.html](#landing-page---indexhtml)
-         * [Application start](#application-start)
+         * [Basic client app requirements](#basic-client-app-requirements)
+            * [Require resources](#require-resources)
+            * [Application initialization](#application-initialization)
+            * [Landing page - index.html](#landing-page---indexhtml)
+            * [Application start](#application-start)
          * [Example Client Only Application](#example-client-only-application)
       * [API](#api)
          * [Templates and Substitution keys](#templates-and-substitution-keys)
@@ -1114,9 +1114,9 @@ As noted in [resource requirements](#resource-requirements), you still need to c
 When running client only applications, the full [template system](#templates-substitution-keys-and-transformations) is available on the client side. Both the `hc` and `ht` namespaces may be required and their resources used. So, you can make full use of templates, substitution keys, and transformations. Further, all the default templates are available for use.
 
 
-## Basic client app requirements
+### Basic client app requirements
 
-### Require resources
+#### Require resources
 
 You need to require the basic Hanami resources in your name space definition
 
@@ -1154,17 +1154,17 @@ The exact resources you refer will be up to how you typically do such referals. 
 
 But again, what you require and refer will be up to what you need for your application and how you want to structure it.
 
-### Application initialization
+#### Application initialization
 
 You will need to code your application setup and initialization functions. If you use the tab system you will need to call [init-tabs](#tab-system) as part of this. If you want to use [hanami-main](#hanami-main) you will also need to setup the database to have the expected fields. The [example client only app](https://github.com/jsa-aerial/hanami/tree/master/examples/ClientOnly) does this [here](https://github.com/jsa-aerial/hanami/blob/3a0e58d4342b499143ac6685b2bd29ca43750157/examples/ClientOnly/src/cljs/clientex/core.cljs#L44)
 
-### Landing page - index.html
+#### Landing page - index.html
 
 The most typical way of getting the application loaded is via an explict `index.html` file which is correctly located in the directory `resources/public` of your application. The example application uses this [index.html](https://github.com/jsa-aerial/hanami/blob/master/examples/ClientOnly/resources/public/index.html)
 
 Once you have your code compiled and located per the `<script ...>` tag in your `index.html`, you can simply use a browser to navigate to this file and your application will be active. If you want to have an interactive session(s) with the application you will need to run [figwheel](https://github.com/bhauman/lein-figwheel) or an equivalent type of capability. The client only [example app](https://github.com/jsa-aerial/hanami/tree/master/examples/ClientOnly) is set up to use figwheel (plus cljs-repl and piggyback)
 
-### Application start
+#### Application start
 
 Your code should have a final block which will start the application upon page load. Generally this will test for a specific DOM element upon which to render (via reagent) your main component. An example of this from the client only example is [here](https://github.com/jsa-aerial/hanami/blob/3a0e58d4342b499143ac6685b2bd29ca43750157/examples/ClientOnly/src/cljs/clientex/core.cljs#L76). In this case the startup first sets several default [substitution keys](#example-predefined-substitution-keys), then calls [app-init](https://github.com/jsa-aerial/hanami/blob/3a0e58d4342b499143ac6685b2bd29ca43750157/examples/ClientOnly/src/cljs/clientex/core.cljs#L62) which sets up the application. At this point you will be able to render visualizations just like from the server, using the same [hc/xform](#templates-and-substitution-keys) transformer of templates, and [hmi/sv!](#tab-system)
 

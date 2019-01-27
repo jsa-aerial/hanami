@@ -63,12 +63,14 @@
        :timeUnit :XUNIT
        :axis :XAXIS
        :scale :XSCALE
+       :sort :XSORT
        :aggregate :XAGG}
    :y {:field :Y
        :type :YTYPE
        :timeUnit :YUNIT
        :axis :YAXIS
        :scale :YSCALE
+       :sort :YSORT
        :aggregate :YAGG}
    :opacity :OPACITY
    :row :ROWDEF

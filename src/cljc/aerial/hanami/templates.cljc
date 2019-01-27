@@ -6,8 +6,8 @@
 
 
 (def default-tooltip
-  [{:field :X :type :XTYPE}
-   {:field :Y :type :YTYPE}])
+  [{:field :X, :type :XTYPE, :title :XTTITLE, :format :XTFMT}
+   {:field :Y, :type :YTYPE, :title :YTTITLE, :format :YTFMT}])
 
 (def default-mark-props
   {:field :MPFIELD :type :MPTYPE})

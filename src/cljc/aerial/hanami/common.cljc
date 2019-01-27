@@ -124,10 +124,10 @@
          :AGG RMV, :XAGG RMV, :YAGG RMV
          :X "x", :XTYPE, "quantitative", :XUNIT RMV, :XSORT RMV
          :XSCALE RMV, :XAXIS {:title :XTITLE, :grid :XGRID, :format :XFORMAT}
-         :XTITLE RMV, :XGRID RMV, :XFORMAT RMV
+         :XTITLE RMV, :XGRID RMV, :XFORMAT RMV, :XTTITLE RMV, :XTFMT RMV
          :Y "y", :YTYPE, "quantitative", :YUNIT RMV, :YSORT RMV
          :YSCALE RMV, :YAXIS {:title :YTITLE, :grid :YGRID, :format :YFORMAT}
-         :YTITLE RMV, :YGRID RMV, :YFORMAT RMV
+         :YTITLE RMV, :YGRID RMV, :YFORMAT RMV, :YTTITLE RMV, :YTFMT RMV
          :ROWDEF ht/default-row :ROW RMV, :ROWTYPE RMV
          :COLDEF ht/default-col :COLUMN RMV, :COLTYPE RMV
          :POINT RMV, :MSIZE RMV, :MCOLOR RMV, :MFILLED RMV

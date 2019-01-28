@@ -11,6 +11,7 @@ All notable changes to this project, starting from 0.5.0, will be documented in 
 - Client: `make-instrumentor` refactor making instrumentor - client only apps support
 - Common: Add `:sort` support for default xy-encoding
 - Common: Add tooltip title and format support for default-tooltip
+- Common: Add generalized substitution keys for :XTTIP and :YTTIP
 
 ### Fixed
 - main rgt/render [hanami-main] did not use passed in element!

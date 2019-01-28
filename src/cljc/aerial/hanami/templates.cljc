@@ -5,6 +5,8 @@
 
 
 
+(def ttdef {:field :TTFIELD, :type :TTTYPE, :title :TTTITLE, :format :TTFMT})
+
 (def default-tooltip
   [{:field :X, :type :XTYPE, :title :XTTITLE, :format :XTFMT}
    {:field :Y, :type :YTYPE, :title :YTTITLE, :format :YTFMT}])

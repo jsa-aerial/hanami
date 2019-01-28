@@ -116,12 +116,14 @@
          :HEIGHT 300, :WIDTH 400, :DHEIGHT 60
          :USERDATA RMV, :MODE "vega-lite", :RENDERER "canvas" :SCALEFACTOR 1
 
-         ;; Data, transforms, and encodings
+         ;; Data and transforms
          :VALDATA get-data-vals
          :DATA RMV, :FDATA RMV, :SDATA RMV, :UDATA RMV, :NDATA RMV
          :TRANSFORM RMV
          :OPACITY RMV
          :AGG RMV, :XAGG RMV, :YAGG RMV
+
+         ;; encodings
          :X "x", :XTYPE, "quantitative", :XUNIT RMV, :XSORT RMV
          :XSCALE RMV, :XAXIS {:title :XTITLE, :grid :XGRID, :format :XFORMAT}
          :XTITLE RMV, :XGRID RMV, :XFORMAT RMV, :XTTITLE RMV, :XTFMT RMV
@@ -131,11 +133,19 @@
          :ROWDEF ht/default-row :ROW RMV, :ROWTYPE RMV
          :COLDEF ht/default-col :COLUMN RMV, :COLTYPE RMV
          :POINT RMV, :MSIZE RMV, :MCOLOR RMV, :MFILLED RMV
-         :TOOLTIP ht/default-tooltip
          :ENCODING ht/xy-encoding
          :RESOLVE RMV
          :XRL-COLOR "red", :YRL-COLOR "green"
          :RTYPE "quantitative"
+
+         ;; tooltips
+         :TOOLTIP ht/default-tooltip
+         :XTTIP #(xform ht/ttdef
+                        :TTFIELD (% :X) :TTTYPE (% :XTYPE)
+                        :TTTITLE (% :XTTITLE) :TTFMT (% :XTFMT))
+         :YTTIP #(xform ht/ttdef
+                        :TTFIELD (% :Y) :TTTYPE (% :YTYPE)
+                        :TTTITLE (% :YTTITLE) :TTFMT (% :YTFMT))
 
          ;; Selections
          :MDWN-MARK {:fill "#333",

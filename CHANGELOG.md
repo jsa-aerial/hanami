@@ -12,6 +12,7 @@ All notable changes to this project, starting from 0.5.0, will be documented in 
 - Common: Add `:sort` support for default xy-encoding
 - Common: Add tooltip title and format support for default-tooltip
 - Common: Add generalized substitution keys for :XTTIP and :YTTIP
+- Client: All frames now have an HTML id "<TID>-frame" (for getElementById)
 
 ### Fixed
 - main rgt/render [hanami-main] did not use passed in element!

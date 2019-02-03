@@ -269,12 +269,19 @@
 
 
 (defn frameit [spec frame]
-  (if spec
-    [[h-box :children (frame :left)]
-     [vgl spec]
-     [h-box :children (frame :right)]]
-    [[h-box :children (frame :left)]
-     [h-box :children (frame :right)]]))
+  [v-box
+   :attr {:id (frame :frameid)}
+   :gap "10px"
+   :children
+   [[h-box :gap "5px" :children (frame :top)]
+    [h-box :gap "5px"
+     :children (if spec
+                 [[h-box :children (frame :left)]
+                  [vgl spec]
+                  [h-box :children (frame :right)]]
+                 [[h-box :children (frame :left)]
+                  [h-box :children (frame :right)]])]
+     [h-box :gap "5px" :children (frame :bottom)]]]
 
 (defn vis-list [tabid spec-frame-pairs opts]
   (let [layout (if (= (get-in opts [:order]) :row) h-box v-box)
@@ -292,12 +299,7 @@
        (for [[spec frame] sub-pairs]
          (do #_(js-delete spec "usermeta")
              (print-when [:vis :vis-list] :NSPEC spec frame)
-             [v-box :gap "10px"
-              :children
-              [[h-box :gap "5px" :children (frame :top)]
-               [h-box :gap "5px"
-                :children (frameit spec frame)]
-               [h-box :gap "5px" :children (frame :bottom)]]]))])))
+             (frameit spec frame)))])))
 
 (defn hanami []
   (if-let [tabval (get-cur-tab)]
@@ -626,7 +628,7 @@
    :left [[box :size "0px" :child ""]],
    :right [[box :size "0px" :child ""]]})
 
-(defn make-frame [udata curframe]
+(defn make-frame [tid udata curframe]
   (merge (if (udata :frame)
            (let [default-frame (get-default-frame)
                  frame-sides (udata :frame)]
@@ -640,7 +642,7 @@
                                default-frame)))
              (get-adb [:dbg :frame]))
            (get-default-frame))
-         curframe))
+         (assoc curframe :frameid (str (nameid "-frame")))))
 
 (defn default-instrumentor-fn [{:keys [tabid spec opts]}]
   (let [udata (spec :usermeta)]

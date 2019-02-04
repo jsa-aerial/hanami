@@ -88,7 +88,7 @@ Hence, templates are a means to abstract all manner of visualization aspects and
 
 To install, add the following to your project `:dependencies`:
 
-    [aerial.hanami "0.6.0"]
+    [aerial.hanami "0.8.0"]
 
 
 
@@ -1223,7 +1223,7 @@ There are two main start functions. One each for the server and client.
 
   - `(defn hanami-routes [& {:keys [landing-handler index-path]
                              :or {landing-handler landing-page
-                                  index-path "public/index.html"}}] ...)` Creates a set of routes that uses `(landing-handler request index-path)` as the value of the `get /` route, and adds the necessary websocket routing to this and finally adds the default resources route `(compojure.route/resources "/")`. Returns the resulting function implementing the routes. Uses `compojure.core/routes to create the 'rounting function'.
+                                  index-path "public/index.html"}}] ...)` Creates a set of routes that uses `(landing-handler request index-path)` as the value of the `get /` route, and adds the necessary websocket routing to this and finally adds the default resources route `(compojure.route/resources "/")`. Returns the resulting function implementing the routes. Uses `compojure.core/routes` to create the 'rounting function'.
 
   - `(defn hanami-handler [routes-fn & middle-ware-stack] ...)` Takes a routing function `routes-fn` (as built by `hanami-routes`) and zero or more ring middle-ware wrapping functions. Returns the full wrapped site handler function.
 
@@ -1240,9 +1240,10 @@ There are two main start functions. One each for the server and client.
 
 #### Client start
 ```Clojure
-(defn start [& {:keys [elem port header-fn instrumentor-fn]
+(defn start [& {:keys [elem port header-fn instrumentor-fn frame-cb]
                 :or {header-fn default-header-fn
-                     instrumentor-fn default-instrumentor-fn}}]
+                     instrumentor-fn default-instrumentor-fn
+                     frame-cb default-frame-cb}}]
   ...)
 ```
 
@@ -1252,7 +1253,9 @@ There are two main start functions. One each for the server and client.
 
 * `:header-fn` a parameterless function which is intended to perform layout of an application's [header](#header) [area](#framework-overview)
 
-* `:instrumentor-fn` A function `(fn[{:keys [tabid spec opts]}] ...)` which is used to implement custom external instrumentation for visualizations. Instrumentation are active components and typically will be re-com components. See [barchart example](#instrumented-barchart) for an example. Also, CLJS `aerial.hanami.core` has a 'rich comment' which gives a couple full examples. The `default-instrumentor-fn` is a no-op.
+* `:instrumentor-fn` A function `(fn[{:keys [tabid spec opts]}] ...)` which is used to implement custom external instrumentation for visualizations. Instrumentation are active components and typically will be re-com components. See [barchart example](#instrumented-barchart) for an example. Also, CLJS `aerial.hanami.core` has a 'rich' [comment](https://github.com/jsa-aerial/hanami/blob/ee5556d41033a956ef07d3971f9a506e1465fef9/src/cljs/aerial/hanami/core.cljs#L694) which gives a couple full examples. The `default-instrumentor-fn` is a no-op.
+
+* `:frame-cb` A function `(fn ([]...) ([spec frame] ...))` which used to implement post processing of frames. The `[]` case is called on component update. The two arity case is called by [frameit](#visualization) and passed the `spec` and `frame map` containing the frame elements that will be built into a single frame and `:frameid` whose value is the HTML id for the frame. It must passback a `frame map`, which can be the input or a new one with some adjustments. Generally this is used to set up post _mounting_ processing (DOM mutation...) and the input is simply returned. The zero arity case is strictly intended for post mount processing. As an example, [Saite](https://github.com/jsa-aerial/saite#user-tabs) uses this to render LaTex via MathJax.
 
 ### Message system
 

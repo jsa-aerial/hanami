@@ -269,19 +269,21 @@
 
 
 (defn frameit [spec frame]
-  [v-box
-   :attr {:id (frame :frameid)}
-   :gap "10px"
-   :children
-   [[h-box :gap "5px" :children (frame :top)]
-    [h-box :gap "5px"
-     :children (if spec
-                 [[h-box :children (frame :left)]
-                  [vgl spec]
-                  [h-box :children (frame :right)]]
-                 [[h-box :children (frame :left)]
-                  [h-box :children (frame :right)]])]
-     [h-box :gap "5px" :children (frame :bottom)]]]
+  (let [frame-cb (-> :frame-cb get-adb first)
+        frame (frame-cb spec frame)]
+    [v-box
+     :attr {:id (frame :frameid)}
+     :gap "10px"
+     :children
+     [[h-box :gap "5px" :children (frame :top)]
+      [h-box :gap "5px"
+       :children (if spec
+                   [[h-box :children (frame :left)]
+                    [vgl spec]
+                    [h-box :children (frame :right)]]
+                   [[h-box :children (frame :left)]
+                    [h-box :children (frame :right)]])]
+      [h-box :gap "5px" :children (frame :bottom)]]]))
 
 (defn vis-list [tabid spec-frame-pairs opts]
   (let [layout (if (= (get-in opts [:order]) :row) h-box v-box)
@@ -306,10 +308,12 @@
     (let [tabid (tabval :id)
           specs (tabval :specs)
           compvis (tabval :compvis)
-          opts (tabval :opts (get-adb [:main :opts :tab]))]
+          opts (tabval :opts (get-adb [:main :opts :tab]))
+          frame-cb (-> :frame-cb get-adb first)]
       (cond
         compvis
         (do (printchan "hanami called - has compvis")
+            (frame-cb)
             compvis)
 
         specs
@@ -623,12 +627,16 @@
               [gap :size "30px"]]])
 
 
+(defn default-frame-cb
+  ([])
+  ([spec frame] frame))
+
 (defn get-default-frame []
   {:top [], :bottom [],
    :left [[box :size "0px" :child ""]],
    :right [[box :size "0px" :child ""]]})
 
-(defn make-frame [tid udata curframe]
+(defn make-frame [udata curframe]
   (merge (if (udata :frame)
            (let [default-frame (get-default-frame)
                  frame-sides (udata :frame)]
@@ -642,7 +650,7 @@
                                default-frame)))
              (get-adb [:dbg :frame]))
            (get-default-frame))
-         (assoc curframe :frameid (str (nameid "-frame")))))
+         (assoc curframe :frameid (-> "frame-" gensym name))))
 
 (defn default-instrumentor-fn [{:keys [tabid spec opts]}]
   (let [udata (spec :usermeta)]
@@ -654,13 +662,15 @@
     (make-frame (spec :usermeta) (userfn m))))
 
 
-(defn start [& {:keys [elem port header-fn instrumentor-fn]
+(defn start [& {:keys [elem port header-fn instrumentor-fn frame-cb]
                 :or {header-fn default-header-fn
-                     instrumentor-fn default-instrumentor-fn}}]
+                     instrumentor-fn default-instrumentor-fn
+                     frame-cb default-frame-cb}}]
   (let [instfn (make-instrumentor instrumentor-fn)]
     (printchan "Element 'app' available, port " port)
     (app-stop)
     (update-adb :elem elem
+                :frame-cb [frame-cb]
                 :instrumentor [instfn]
                 :header [header-fn])
     (connect port)))

@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to this project, starting from 0.5.0, will be documented in this file.
 
-## [0.7.0]
+## [0.8.0]
 ### Added
 - Client: `hmi/sv!` as mirror of server side `hmi/sv!`. Client only apps support
 - Client: `init-tabs` refactor `register`. Client only apps support
@@ -12,7 +12,8 @@ All notable changes to this project, starting from 0.5.0, will be documented in 
 - Common: Add `:sort` support for default xy-encoding
 - Common: Add tooltip title and format support for default-tooltip
 - Common: Add generalized substitution keys for :XTTIP and :YTTIP
-- Client: All frames now have an HTML id "<TID>-frame" (for getElementById)
+- Client: All frames now have an HTML id" (for getElementById)
+- Client: Support for frame callbacks
 
 ### Fixed
 - main rgt/render [hanami-main] did not use passed in element!
@@ -61,7 +62,7 @@ All notable changes to this project, starting from 0.5.0, will be documented in 
 - Nifty debug print system
 
 
-[0.7.0]: https://github.com/your-name/hanami/compare/0.6.0...0.7.0
+[0.8.0]: https://github.com/your-name/hanami/compare/0.6.0...0.8.0
 [0.6.0]: https://github.com/your-name/hanami/compare/0.5.1...0.6.0
 [0.5.1]: https://github.com/your-name/hanami/compare/0.5.0...0.5.1
 [0.5.0]: https://github.com/your-name/hanami/compare/0.4.0...0.5.0

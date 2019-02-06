@@ -10,7 +10,7 @@
 
                  [com.rpl/specter "1.1.1"]
 
-                 [aerial.hanami "0.7.0"]
+                 [aerial.hanami "0.8.0"]
                  ]
 
   :plugins [[lein-figwheel "0.5.16"]

@@ -72,14 +72,15 @@
    (let [kvs (->> kvs (partition-all 2) (map vec))]
      (xform-recom x (into re-com-xref (cons [k v] kvs)))))
   ([x kvs]
-   (sp/transform
-    sp/ALL
-    (fn[v] (cond
-             (coll? v) (xform-recom v kvs)
-             (symbol? v) (let [v (-> v name symbol)]
-                           (get kvs v v))
-             :else (get kvs v v)))
-    x)))
+   (let [xlate-cb (-> :symxlate-cb get-abd first)]
+     (sp/transform
+      sp/ALL
+      (fn[v] (cond
+               (coll? v) (xform-recom v kvs)
+               (symbol? v) (let [v (-> v name symbol)]
+                             (get kvs v (xlate-cb v)))
+               :else (get kvs v v)))
+      x))))
 
 
 (def print-chan (async/chan 10))
@@ -662,14 +663,18 @@
     (make-frame (spec :usermeta) (userfn m))))
 
 
-(defn start [& {:keys [elem port header-fn instrumentor-fn frame-cb]
+(defn start [& {:keys [elem port
+                       header-fn instrumentor-fn
+                       frame-cb symxlate-cb]
                 :or {header-fn default-header-fn
                      instrumentor-fn default-instrumentor-fn
-                     frame-cb default-frame-cb}}]
+                     frame-cb default-frame-cb
+                     symxlate-cb identity}}]
   (let [instfn (make-instrumentor instrumentor-fn)]
     (printchan "Element 'app' available, port " port)
     (app-stop)
     (update-adb :elem elem
+                :symxlate-cb [symxlate-cb]
                 :frame-cb [frame-cb]
                 :instrumentor [instfn]
                 :header [header-fn])

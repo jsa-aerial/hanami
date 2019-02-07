@@ -1,9 +1,24 @@
 
-Hey guys, I'm pleased to announce a couple slightly late holiday gifts. But, they both have several very cool new capabilities and features.
+Hey All, I'm pleased to announce Hanami 0.8.0 https://github.com/jsa-aerial/hanami, the go to lib/(optional) framework for developing your Vega/Vega-Lite powered domain specific visualization applications. This version involves some significant refactoring to make development of _client only_ applications both simpler and easier. Client and server side support and APIs are now even more consistent and symmetric in capabilities and resources. Some new template and substitution key capabilities are also included. In addition there is also now callback support for picture frames.
 
-The first is version 0.5.1 of Hanami https://github.com/jsa-aerial/hanami, the go to lib/(optional) framework for developing your Vega/Vega-Lite powered domain specific visualization applications. This version provides support for chartless/empty picture frames enabling full hiccup/re-com enabled text based areas. These can be used in tab layouts just like frameless charts/plots/layouts and those with standard picture frames. All can be mixed together in a given tab 'page'. New file based data sources covering `clj`, `edn`, `json`, and `csv`. This supplements the previous `values`, `url`, and `named channel` data sources. Stronger and more general support for application specific routes and landing pages. New template support for tree layouts - the first of several new network/graph layouts to come. New (experimental) template for overview+detail.
+There is loads and loads of new documentation which now covers most aspects of developing and using server and client applications and also client only applications. There is also a new example client only application https://github.com/jsa-aerial/hanami/tree/master/examples/ClientOnly
 
-Also, very important, there is a _major_ documentation upgrade! With more coming as I force some of my cycles to complete at least a first draft for all sections.
+Basic feature list
 
-The second is version 0.3.2 of Saite https://github.com/jsa-aerial/saite. Saite started out as a fairly simple exploratory graphics and visualization application (built on Hanami) but now is evolving toward a new highly capable notebook. This version provides several cool new capabilities, including CodeMirror editors for JS/JSON and Clj, bidirectional conversions, quick modal panel popup renderings, and all the new stuff from Hanami. Also, there are a number of issues concerning this evolution towards being a full notebook, that I'd appreciate feedback on. Or feel free to open new issues if you have other thoughts or 'want to haves' you would like to record.
-
+* Application construction
+  - Page headers with instrumentation
+  - External instrumentation of visualizations (dropdowns, sliders, etc)
+  - Full hiccup/re-com "picture framing" capability for visualizations
+  - Shared session groups (named sessions)
+  - Multiple sessions per application
+  - Data streaming
+* Visualization abstraction
+  - Parameterized templates with recursive transformations
+  - Purely data driven - no objects, classes, methods, etc
+  - Completely open ended - define your own
+  - More general than an API while capable of arbitrary specific detail
+* Document structuring
+  - Tabbing system for named visulization groupings
+  - Multiple visulizations per tab body / grouping
+  - Automatic grid layout
+  - Custom bodies

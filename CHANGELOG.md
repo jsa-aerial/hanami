@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to this project, starting from 0.5.0, will be documented in this file.
 
+## [0.8.1]
+### Added
+- Client: Support for user/app specific symbol translate on hiccup vecs
+
+
 ## [0.8.0]
 ### Added
 - Client: `hmi/sv!` as mirror of server side `hmi/sv!`. Client only apps support
@@ -62,6 +67,7 @@ All notable changes to this project, starting from 0.5.0, will be documented in 
 - Nifty debug print system
 
 
+[0.8.1]: https://github.com/your-name/hanami/compare/0.8.0...0.8.1
 [0.8.0]: https://github.com/your-name/hanami/compare/0.6.0...0.8.0
 [0.6.0]: https://github.com/your-name/hanami/compare/0.5.1...0.6.0
 [0.5.1]: https://github.com/your-name/hanami/compare/0.5.0...0.5.1

@@ -1243,7 +1243,8 @@ There are two main start functions. One each for the server and client.
 (defn start [& {:keys [elem port header-fn instrumentor-fn frame-cb]
                 :or {header-fn default-header-fn
                      instrumentor-fn default-instrumentor-fn
-                     frame-cb default-frame-cb}}]
+                     frame-cb default-frame-cb
+		     symxlate-cb identity}}]
   ...)
 ```
 
@@ -1256,6 +1257,9 @@ There are two main start functions. One each for the server and client.
 * `:instrumentor-fn` A function `(fn[{:keys [tabid spec opts]}] ...)` which is used to implement custom external instrumentation for visualizations. Instrumentation are active components and typically will be re-com components. See [barchart example](#instrumented-barchart) for an example. Also, CLJS `aerial.hanami.core` has a 'rich' [comment](https://github.com/jsa-aerial/hanami/blob/ee5556d41033a956ef07d3971f9a506e1465fef9/src/cljs/aerial/hanami/core.cljs#L694) which gives a couple full examples. The `default-instrumentor-fn` is a no-op.
 
 * `:frame-cb` A function `(fn ([]...) ([spec frame] ...))` which used to implement post processing of frames. The `[]` case is called on component update. The two arity case is called by [frameit](#visualization) and passed the `spec` and `frame map` containing the frame elements that will be built into a single frame and `:frameid` whose value is the HTML id for the frame. It must passback a `frame map`, which can be the input or a new one with some adjustments. Generally this is used to set up post _mounting_ processing (DOM mutation...) and the input is simply returned. The zero arity case is strictly intended for post mount processing. As an example, [Saite](https://github.com/jsa-aerial/saite#user-tabs) uses this to render LaTex via MathJax.
+
+* `:symxlate-cb` A function `(fn ([sym] ...)` which will be called during translation of symbols in hiccup/re-com vectors (typically from server, but could be client only as well). `sym` is a symbol in such a vector which does _not_ exist in the default translation table. The return should be an application specific value (normally a function defined in the application) or `sym` if no such value exists for the application. The idea here is that users may add extra Reagent _components_ which can then be used in picture frame construction. So, you can use the symbol as denoting a legal component and it will be replaced by the value returned by your `symxlate-cb` function. This will then be used during overall rendering.
+
 
 ### Message system
 

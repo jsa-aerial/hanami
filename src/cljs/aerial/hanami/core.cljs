@@ -42,47 +42,6 @@
 
 
 
-;;; Fix this. First 'refer :all' from re-com.core. Then use ns-publics
-;;; and deref vars in the resulting map (to get the function objects)
-;;; to make re-com-xref.
-(def re-com-xref
-  (into
-   {} (mapv vector
-            '[h-box v-box box gap line h-split v-split scroller flex-child-style
-              button row-button md-icon-button md-circle-icon-button info-button
-              input-text input-password input-textarea
-              label title hyperlink-href p
-              single-dropdown
-              checkbox radio-button slider progress-bar throbber
-              horizontal-bar-tabs vertical-bar-tabs
-              modal-panel popover-content-wrapper popover-anchor-wrapper
-              filter-choices-by-keyword single-dropdown-args-desc]
-            [h-box v-box box gap line h-split v-split scroller flex-child-style
-             button row-button md-icon-button md-circle-icon-button info-button
-             input-text input-password input-textarea
-             label title hyperlink-href p
-             single-dropdown
-             checkbox radio-button slider progress-bar throbber
-             horizontal-bar-tabs vertical-bar-tabs
-             modal-panel popover-content-wrapper popover-anchor-wrapper
-             filter-choices-by-keyword single-dropdown-args-desc])))
-
-(defn xform-recom
-  ([x k v & kvs]
-   (let [kvs (->> kvs (partition-all 2) (map vec))]
-     (xform-recom x (into re-com-xref (cons [k v] kvs)))))
-  ([x kvs]
-   (let [xlate-cb (-> :symxlate-cb get-abd first)]
-     (sp/transform
-      sp/ALL
-      (fn[v] (cond
-               (coll? v) (xform-recom v kvs)
-               (symbol? v) (let [v (-> v name symbol)]
-                             (get kvs v (xlate-cb v)))
-               :else (get kvs v v)))
-      x))))
-
-
 (def print-chan (async/chan 10))
 
 (go-loop [msg (async/<! print-chan)]
@@ -91,6 +50,8 @@
 
 (defn printchan [& args]
   (async/put! print-chan (clojure.string/join " " args)))
+
+
 
 
 (defonce app-db (rgt/atom {:dbg {}}))
@@ -141,6 +102,49 @@
 (defn print-when [dbg-path & args]
   (when (dbg? dbg-path)
     (apply printchan args)))
+
+
+
+
+;;; Fix this. First 'refer :all' from re-com.core. Then use ns-publics
+;;; and deref vars in the resulting map (to get the function objects)
+;;; to make re-com-xref.
+(def re-com-xref
+  (into
+   {} (mapv vector
+            '[h-box v-box box gap line h-split v-split scroller flex-child-style
+              button row-button md-icon-button md-circle-icon-button info-button
+              input-text input-password input-textarea
+              label title hyperlink-href p
+              single-dropdown
+              checkbox radio-button slider progress-bar throbber
+              horizontal-bar-tabs vertical-bar-tabs
+              modal-panel popover-content-wrapper popover-anchor-wrapper
+              filter-choices-by-keyword single-dropdown-args-desc]
+            [h-box v-box box gap line h-split v-split scroller flex-child-style
+             button row-button md-icon-button md-circle-icon-button info-button
+             input-text input-password input-textarea
+             label title hyperlink-href p
+             single-dropdown
+             checkbox radio-button slider progress-bar throbber
+             horizontal-bar-tabs vertical-bar-tabs
+             modal-panel popover-content-wrapper popover-anchor-wrapper
+             filter-choices-by-keyword single-dropdown-args-desc])))
+
+(defn xform-recom
+  ([x k v & kvs]
+   (let [kvs (->> kvs (partition-all 2) (map vec))]
+     (xform-recom x (into re-com-xref (cons [k v] kvs)))))
+  ([x kvs]
+   (let [xlate-cb (-> :symxlate-cb get-adb first)]
+     (sp/transform
+      sp/ALL
+      (fn[v] (cond
+               (coll? v) (xform-recom v kvs)
+               (symbol? v) (let [v (-> v name symbol)]
+                             (get kvs v (xlate-cb v)))
+               :else (get kvs v v)))
+      x))))
 
 
 

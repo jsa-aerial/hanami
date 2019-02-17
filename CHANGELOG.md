@@ -4,6 +4,7 @@ All notable changes to this project, starting from 0.5.0, will be documented in 
 ## [0.8.1]
 ### Added
 - Client: Support for user/app specific symbol translate on hiccup vecs
+- Client: Visualization divs now use [:usermeta :vid] for id or gensym one.
 
 
 ## [0.8.0]

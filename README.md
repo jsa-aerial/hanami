@@ -372,7 +372,7 @@ Hanami understands the following 'special' fields:
      :mode :MODE}        ; either "vega-lite" or "vega" - see defaults
 ```
 
-* `:vid` - value is an application specific identifier of the associated visualization (if any)
+* `:vid` - value is an application specific identifier of the associated visualization (if any). This is used as the HTML `id` tag for the element directly containing the visualization. Useful when needing to dynamically manipulate the container and/or the visualization.
 
 * `:msgop` - value is one of `:register`, `:tabs`, or some application specific operator. These messages are from the server to the client. `:register` is sent on client connection for [registration](#connection) purposes. `:tabs` is used to [update tabs](#tab-updates) and their content, if tabs are used. [User messages](#user-messages) have application specific operators and are sent when your application deems they should be sent.
 

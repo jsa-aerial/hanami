@@ -270,12 +270,16 @@
 
     :reagent-render
     (fn [spec]
-      [box :child [:div#app]])}))
+      (let [id (or (-> spec :usermeta :vid) (gensym "vid-"))
+            elt (js/document.getElementById id)]
+        (if elt
+          elt
+          [box :attr {:id id} :child [:div]])))}))
 
 
 (defn frameit [spec frame]
   (let [frame-cb (-> :frame-cb get-adb first)
-        frame (frame-cb spec frame)]
+        [spec frame] (frame-cb spec frame)]
     [v-box
      :attr {:id (frame :frameid)}
      :gap "10px"
@@ -634,7 +638,7 @@
 
 (defn default-frame-cb
   ([])
-  ([spec frame] frame))
+  ([spec frame] [spec frame]))
 
 (defn get-default-frame []
   {:top [], :bottom [],

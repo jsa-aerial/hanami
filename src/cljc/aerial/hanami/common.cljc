@@ -115,6 +115,7 @@
          :TITLE RMV, :TOFFSET RMV
          :HEIGHT 300, :WIDTH 400, :DHEIGHT 60
          :USERDATA RMV, :MODE "vega-lite", :RENDERER "canvas" :SCALEFACTOR 1
+         :TOP RMV, :BOTTOM RMV, :LEFT RMV, :RIGHT RMV
 
          ;; Data and transforms
          :VALDATA get-data-vals

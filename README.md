@@ -68,6 +68,10 @@ Table of Contents
             * [Hanami main](#hanami-main)
          * [Server core](#server-core)
    * [Example Transform 'Gallery'](#example-transform-gallery)
+      * [Observed vs Binomial Model](#observed-vs-binomial-model)
+      * [Lowess smoothing of Tn-Seq fitness data](#lowess-smoothing-of-tn-seq-fitness-data)
+         * [With Overview   Detail](#with-overview--detail)
+      * [Interactive Cross plot Differential Gene Expression](#interactive-cross-plot-differential-gene-expression)
 
 [toc](https://github.com/ekalinin/github-markdown-toc)
 
@@ -1371,6 +1375,12 @@ If you are writing a [client only](#client-only-apps) application you could rend
 
 # Example Transform 'Gallery'
 
+A gallery of visualization examples exploiting the abstraction power of Hanami's templates and recursive transformations. This will likely keep growing as neat new things are built.
+
+** If anyone has their own nice examples that they would like to pass along, please don't hesitate to submit a PR!!**  Thanks!
+
+## Observed vs Binomial Model
+
 Here is the same data (observed distribution vs binomial models) as row and column grouped (faceted) charts.
 
 ```Clojure
@@ -1429,7 +1439,9 @@ And the rendered visualizations are:
 This is a nice example of how one visualization (the row grouping) can bring out the salient information so much better than another (the col grouping)
 
 
-The next is a visualization for an investigation into using lowess smoothing of TNSeq fitness data.
+## Lowess smoothing of Tn-Seq fitness data
+
+The next is a visualization for an investigation into using lowess smoothing of Tn-Seq fitness data.
 
 ```Clojure
 (hc/xform ht/layer-chart
@@ -1506,6 +1518,8 @@ This one is interesting in that it combines some nice straight ahead Clojure dat
 ![Hanami pic 5](resources/public/images/lowess-tnseq-smoothing.png?raw=true)
 
 
+### With Overview + Detail
+
 We can do something more interesting here in this case, as we may want to get close ups of various sections of such a plot. Instead of looking at the entire genome, we can focus on chunks of it with selection brushes using an overlay+detail display:
 
 ```Clojure
@@ -1535,6 +1549,7 @@ Here are two snapshots of the resulting interactive visualization:
 ![Hanami pic 5.2](resources/public/images/lowess-overlay-detail-2.png?raw=true)
 
 
+## Interactive Cross plot Differential Gene Expression
 
 And lastly a quite involved example from a real application for RNASeq Differential Gene Expression:
 

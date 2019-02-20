@@ -68,49 +68,67 @@
  hmi/sv!)
 
 
-;;; with framing
+;;; With picture framing
 (let [text "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quod si ita est, sequitur id ipsum, quod te velle video, omnes semper beatos esse sapientes. Tamen a proposito, inquam, aberramus."
-      frame {:frame
-             {:top `[[gap :size "150px"]
-                     [p "An example showing a "
-                      [:span.bold "picture "] [:span.italic.bold "frame"]
-                      ". This is the top 'board'"
-                      [:br] ~text]]
-              :left `[[gap :size "10px"]
-                      [p {:style {:width "100px" :min-width "50px"}}
-                       "Some text on the " [:span.bold "left:"] [:br] ~text]]
-              :right `[[gap :size "2px"]
-                       [p {:style {:width "200px" :min-width "50px"
-                                   :font-size "20px" :color "red"}}
-                        "Some large text on the " [:span.bold "right:"] [:br]
-                        ~(.substring text 0 180)]]
-              :bottom `[[gap :size "200px"]
-                        [title :level :level3
-                         :label [p {:style {:font-size "large"}}
-                                 "Some text on the "
-                                 [:span.bold "bottom"] [:br]
-                                 "With a cool info button "
-                                 [info-button
-                                  :info
-                                  [:p "Check out Saite Visualizer!" [:br]
-                                   "Built with Hanami!" [:br]
-                                   [hyperlink-href
-                                    :label "Saite "
-                                    :href  "https://github.com/jsa-aerial/saite"
-                                    :target "_blank"]]]]]]}}]
+      top `[[gap :size "150px"]
+            [p "An example showing a "
+             [:span.bold "picture "] [:span.italic.bold "frame"]
+             ". This is the top 'board'"
+             [:br] ~text]]
+      left `[[gap :size "10px"]
+             [p {:style {:width "100px" :min-width "50px"}}
+              "Some text on the " [:span.bold "left:"] [:br] ~text]]
+      right `[[gap :size "2px"]
+              [p {:style {:width "200px" :min-width "50px"
+                          :font-size "20px" :color "red"}}
+               "Some large text on the " [:span.bold "right:"] [:br]
+               ~(.substring text 0 180)]]
+      bottom `[[gap :size "200px"]
+               [title :level :level3
+                :label [p {:style {:font-size "large"}}
+                        "Some text on the "
+                        [:span.bold "bottom"] [:br]
+                        "With a cool info button "
+                        [info-button
+                         :position :right-center
+                         :info
+                         [:p "Check out Saite Visualizer!" [:br]
+                          "Built with Hanami!" [:br]
+                          [hyperlink-href
+                           :label "Saite "
+                           :href  "https://github.com/jsa-aerial/saite"
+                           :target "_blank"]]]]]]]
   (->> [(hc/xform ht/point-chart
-          :USERDATA
-          (merge
-           (hc/get-default :USERDATA) frame)
-          :UDATA "data/cars.json"
-          :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")
-        #_(hc/xform ht/point-chart
-          :USERDATA
-          (merge
-           (hc/get-default :USERDATA) frame)
+          :TID :picframes
+          :TOP top :BOTTOM bottom :LEFT left :RIGHT right
           :UDATA "data/cars.json"
           :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")]
        hmi/sv!))
+
+;;; With and without chart
+(let [text "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quod si ita est, sequitur id ipsum, quod te velle video, omnes semper beatos esse sapientes. Tamen a proposito, inquam, aberramus."
+      top `[[gap :size "50px"]
+            [p "Here's a 'typical' chart/plot filled picture frame."
+             "It only has the top area"
+             [:br] ~text]]
+      left `[[gap :size "20px"]
+             [p {:style {:width "200px" :min-width "50px"}}
+              "This is an empty frame with a " [:span.bold "left "]
+              "column of text" [:br] ~text ~text ~text ~text]]
+      right `[[gap :size "30px"]
+              [p {:style {:width "200px" :min-width "50px"}}
+               "And a " [:span.bold "right "]
+               "column of text"
+               [:br] ~text ~text ~text ~text]]]
+  (->> [(hc/xform ht/point-chart
+          :TID :picframes :UDATA "data/cars.json"
+          :TOP top
+          :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")
+        (hc/xform ht/empty-chart
+          :TID :picframes
+          :LEFT left :RIGHT right)]
+       hmi/sv!))
+
 
 
 ;;; Simple Barchart with instrumented template

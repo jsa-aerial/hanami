@@ -9,6 +9,8 @@
 
    [aerial.hanasu.client :as cli]
    [aerial.hanasu.common :as com]
+
+   [aerial.hanami.md2hiccup :as m2h]
    [aerial.hanami.common :as hc]
    [aerial.hanami.templates :as ht]
 
@@ -106,6 +108,22 @@
 
 
 
+(defn md
+  "Markdown to Hiccup with implicit support for handling LaTex via
+  MathJax. Note: MathJax is _not_ supported in Hanami as it "
+  [ & stg]
+  (let [base-style {:flex "none", :width "450px", :min-width "450px"}
+        x (first stg)
+        stg (cljstr/join "\n" (if (map? x) (rest stg) stg))
+        stg (cljstr/replace stg "\\(" "\\\\(")
+        stg (cljstr/replace stg "\\)" "\\\\)")
+        style (->> (if (map? x) (x :style) {}) (merge base-style))
+        attr (if (map? x) (assoc x :style style) {:style style})
+        hiccup (vec (concat [:div.md attr] (rest (m2h/parse stg))))]
+    (hmi/print-when [:md] :MD hiccup)
+    hiccup))
+
+
 ;;; Fix this. First 'refer :all' from re-com.core. Then use ns-publics
 ;;; and deref vars in the resulting map (to get the function objects)
 ;;; to make re-com-xref.
@@ -120,7 +138,8 @@
               checkbox radio-button slider progress-bar throbber
               horizontal-bar-tabs vertical-bar-tabs
               modal-panel popover-content-wrapper popover-anchor-wrapper
-              filter-choices-by-keyword single-dropdown-args-desc]
+              filter-choices-by-keyword single-dropdown-args-desc
+              md]
             [h-box v-box box gap line h-split v-split scroller flex-child-style
              button row-button md-icon-button md-circle-icon-button info-button
              input-text input-password input-textarea
@@ -129,7 +148,8 @@
              checkbox radio-button slider progress-bar throbber
              horizontal-bar-tabs vertical-bar-tabs
              modal-panel popover-content-wrapper popover-anchor-wrapper
-             filter-choices-by-keyword single-dropdown-args-desc])))
+             filter-choices-by-keyword single-dropdown-args-desc
+             md])))
 
 (defn xform-recom
   ([x k v & kvs]

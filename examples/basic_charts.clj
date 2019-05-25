@@ -39,13 +39,17 @@
 
 (hc/update-defaults
  :USERDATA {:tab {:id :TID, :label :TLBL, :opts :TOPTS}
+            :frame {:top :TOP, :bottom :BOTTOM, :left :LEFT, :right :RIGHT}
             :opts :OPTS
-            :vid :VID, :msgop :MSGOP, :session-name :SESSION-NAME}
+            :vid :VID,
+            :msgop :MSGOP,
+            :session-name :SESSION-NAME}
  :VID hc/RMV, :MSGOP :tabs, :SESSION-NAME "Exploring"
  :TID :expl1, :TLBL #(-> :TID % name str/capitalize)
  :OPTS (hc/default-opts :vgl), :TOPTS (hc/default-opts :tab))
 
-(hc/xform (hc/get-default :USERDATA) :TID :geo :VID :v1)
+(hc/xform (hc/get-default :USERDATA)
+          :LEFT `[[gap "10px"]]:TID :geo :VID :v1)
 
 
 

@@ -109,6 +109,43 @@
           :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")]
        hmi/sv!))
 
+
+(let [text "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quod si ita est, sequitur id ipsu
+m, quod te velle video, omnes semper beatos esse sapientes. Tamen a proposito, inquam, aberramus."
+      top `[[gap :size "50px"]
+            [p {:style {:width "600px" :min-width "50px"}}
+             "An example empty picture frame showing all four areas."
+             " This is the " [:span.bold "top"] " area. "
+             ~text ~text ~text]]
+      left `[[gap :size "50px"]
+             [p {:style {:width "300px" :min-width "50px"}}
+              "The " [:span.bold "left "] "area as a column of text. "
+              ~text ~text ~text ~text]]
+      right `[[gap :size "70px"]
+              [p {:style {:width "300px" :min-width "50px"}}
+               "The " [:span.bold "right "] "area as a column of text. "
+               ~text ~text ~text ~text]]
+      bottom `[[gap :size "50px"]
+               [v-box
+                :children
+                [[p {:style {:width "600px" :min-width "50px"}}
+                  "The " [:span.bold "bottom "]
+                  "area showing a variety of text. "
+                  [:span.italic ~text] [:span.bold ~text]]
+                 [md {:style {:font-size "16px" :color "blue"}}
+                  "#### Some Markup
+* **Item 1** Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+* **Item 2** Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quod si ita est, sequitur id ips
+um, quod te velle video, omnes semper beatos esse sapientes. Tamen a proposito, inquam, aberramus."]
+                 [p {:style {:width "600px" :min-width "50px"
+                             :color "red"}}
+                  ~text]]]]]
+  (->> (hc/xform ht/empty-chart
+        :TID :picframes :TOP top :BOTTOM bottom :LEFT left :RIGHT right)
+       hmi/sv!))
+
+
+
 ;;; With and without chart
 (let [text "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quod si ita est, sequitur id ipsum, quod te velle video, omnes semper beatos esse sapientes. Tamen a proposito, inquam, aberramus."
       top `[[gap :size "50px"]

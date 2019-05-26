@@ -1,4 +1,4 @@
-(defproject aerial.hanami "0.8.1"
+(defproject aerial.hanami "0.9.0"
   :description "Clojure(Script) client/server vega-lite-2 based dynamic interactive plots and charts"
   :url "https://github.com/jsa-aerial/hanami"
   :license {:name "The MIT License (MIT)"

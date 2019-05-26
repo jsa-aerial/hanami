@@ -5,6 +5,8 @@
     :refer (<! >! put! chan)
     :refer-macros [go go-loop]]
 
+   [clojure.string :as cljstr]
+
    [com.rpl.specter :as sp]
 
    [aerial.hanasu.client :as cli]
@@ -120,7 +122,7 @@
         style (->> (if (map? x) (x :style) {}) (merge base-style))
         attr (if (map? x) (assoc x :style style) {:style style})
         hiccup (vec (concat [:div.md attr] (rest (m2h/parse stg))))]
-    (hmi/print-when [:md] :MD hiccup)
+    (print-when [:md] :MD hiccup)
     hiccup))
 
 

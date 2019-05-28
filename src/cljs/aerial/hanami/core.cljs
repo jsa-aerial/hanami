@@ -668,20 +668,22 @@
    :right [[box :size "0px" :child ""]]})
 
 (defn make-frame [udata curframe]
-  (merge (if (udata :frame)
-           (let [default-frame (get-default-frame)
-                 frame-sides (udata :frame)]
-             (print-when [:frames :make] :Frame-Maker frame-sides curframe)
-             (update-adb [:dbg :frame]
-                         (->> (keys frame-sides)
-                              (reduce
-                               (fn[F k]
-                                 (assoc F k (xform-recom
-                                             (frame-sides k) re-com-xref)))
-                               default-frame)))
-             (get-adb [:dbg :frame]))
-           (get-default-frame))
-         (assoc curframe :frameid (-> "frame-" gensym name))))
+  (let [frameid (get-in udata [:frame :fid] (gensym "frame-"))]
+    (merge (if (udata :frame)
+             (let [default-frame (get-default-frame)
+                   framedef (udata :frame)
+                   frame-sides (dissoc framedef :fid)]
+               (print-when [:frames :make] :Frame-Maker frame-sides curframe)
+               (update-adb [:dbg :frame]
+                           (->> (keys frame-sides)
+                                (reduce
+                                 (fn[F k]
+                                   (assoc F k (xform-recom
+                                               (frame-sides k) re-com-xref)))
+                                 default-frame)))
+               (get-adb [:dbg :frame]))
+             (get-default-frame))
+           (assoc curframe :frameid frameid))))
 
 (defn default-instrumentor-fn [{:keys [tabid spec opts]}]
   (let [udata (spec :usermeta)]

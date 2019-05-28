@@ -39,7 +39,9 @@
 
 (hc/update-defaults
  :USERDATA {:tab {:id :TID, :label :TLBL, :opts :TOPTS}
-            :frame {:top :TOP, :bottom :BOTTOM, :left :LEFT, :right :RIGHT}
+            :frame {:top :TOP, :bottom :BOTTOM,
+                    :left :LEFT, :right :RIGHT
+                    :fid :FID}
             :opts :OPTS
             :vid :VID,
             :msgop :MSGOP,
@@ -49,7 +51,8 @@
  :OPTS (hc/default-opts :vgl), :TOPTS (hc/default-opts :tab))
 
 (hc/xform (hc/get-default :USERDATA)
-          :LEFT `[[gap "10px"]]:TID :geo :VID :v1)
+          :LEFT `[[gap "10px"]] :FID "frame-test"
+          :TID :geo :VID :v1)
 
 
 

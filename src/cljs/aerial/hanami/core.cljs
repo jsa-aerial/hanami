@@ -316,6 +316,22 @@
                     [h-box :children (frame :right)]])]
       [h-box :gap "5px" :children (frame :bottom)]]]))
 
+(defn get-frame-elements [fid]
+  (let [frame (js/document.getElementById fid)
+        top (aget frame.childNodes 0)
+        bottom (aget frame.childNodes 4)
+        middle (aget frame.childNodes 2)
+        left (aget middle.childNodes 0)
+        vis (aget middle.childNodes 2)
+        right (aget middle.childNodes 4)]
+    {:top top, :bottom bottom, :left left, :right right, :vis vis}))
+
+(defn update-frame-element [fid element content]
+    (let [frame-element ((get-frame-elements fid) element)
+          component content]
+      (rgt/render component frame-element)))
+
+
 (defn vis-list [tabid spec-frame-pairs opts]
   (let [layout (if (= (get-in opts [:order]) :row) h-box v-box)
         eltnum (get-in opts [:eltsper] 3)
@@ -684,6 +700,7 @@
                (get-adb [:dbg :frame]))
              (get-default-frame))
            (assoc curframe :frameid frameid))))
+
 
 (defn default-instrumentor-fn [{:keys [tabid spec opts]}]
   (let [udata (spec :usermeta)]

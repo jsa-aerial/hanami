@@ -46,13 +46,13 @@
             :vid :VID,
             :msgop :MSGOP,
             :session-name :SESSION-NAME}
- :VID hc/RMV, :MSGOP :tabs, :SESSION-NAME "Exploring"
+ :MSGOP :tabs, :SESSION-NAME "Exploring"
  :TID :expl1, :TLBL #(-> :TID % name str/capitalize)
  :OPTS (hc/default-opts :vgl), :TOPTS (hc/default-opts :tab))
 
-(hc/xform (hc/get-default :USERDATA)
-          :LEFT `[[gap "10px"]] :FID "frame-test"
-          :TID :geo :VID :v1)
+((hc/xform (hc/get-default :USERDATA)
+           :LEFT `[[gap "10px"]] :FID "frame-test"
+           :TID :geo :VID :v1) :vid)
 
 
 
@@ -60,6 +60,7 @@
 (->> (hc/xform ht/point-chart
        ;;:DATA (->> "http://localhost:3003/data/cars.json" slurp json/read-str)
        :UDATA "data/cars.json"
+       :VID :vscat1 :FID :fscat1
        :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")
      hmi/sv!)
 
@@ -166,11 +167,11 @@ um, quod te velle video, omnes semper beatos esse sapientes. Tamen a proposito, 
                [:br] ~text ~text ~text ~text]]]
   (->> [(hc/xform ht/point-chart
           :TID :picframes :UDATA "data/cars.json"
-          :TOP top
+          :TOP top :FID :f1
           :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")
         (hc/xform ht/empty-chart
           :TID :picframes
-          :LEFT left :RIGHT right)]
+          :LEFT left :RIGHT right :FID :f2)]
        hmi/sv!))
 
 

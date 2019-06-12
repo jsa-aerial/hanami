@@ -180,6 +180,15 @@
              vspec app-db))
 
 
+(defn get-vgview [vid]
+  (sp/select-one [sp/ATOM :vgviews sp/ATOM vid]
+                 app-db))
+
+(defn update-vgviews [vid vgview]
+  (sp/setval [sp/ATOM :vgviews sp/ATOM vid]
+             vgview app-db))
+
+
 (defn get-tab-field
   ([tid]
    (sp/select-one [sp/ATOM :tabs :active sp/ATOM sp/ALL #(= (% :id) tid)]
@@ -242,7 +251,8 @@
 (defn visualize
   [spec elem] (print-when [:vis :vis] :SPEC spec)
   (when spec
-    (let [vopts (-> spec :usermeta :opts)
+    (let [vid (-> spec :usermeta :vid) _ (printchan :VID vid)
+          vopts (-> spec :usermeta :opts)
           vmode (get vopts :mode)
           default-hover (if (= vmode "vega-lite") false js/undefined)
           spec (clj->js spec)
@@ -258,6 +268,7 @@
           vega (if (= vmode "vega-lite") (->> spec js/vl.compile .-spec) spec)]
       (-> (js/vegaEmbed elem vega (clj->js opts))
           (.then (fn [res]
+                   (when vid (update-vgviews vid res.view))
                    #_(js/vegaTooltip.vega res.view spec)
                    #_(js/vegaTooltip.vegaLite res.view spec)))
           (.catch (fn [err]
@@ -317,7 +328,8 @@
       [h-box :gap "5px" :children (frame :bottom)]]]))
 
 (defn get-frame-elements [fid]
-  (let [frame (js/document.getElementById fid)
+  (let [fid (name fid)
+        frame (js/document.getElementById fid)
         top (aget frame.childNodes 0)
         bottom (aget frame.childNodes 4)
         middle (aget frame.childNodes 2)
@@ -327,9 +339,10 @@
     {:top top, :bottom bottom, :left left, :right right, :vis vis}))
 
 (defn update-frame-element [fid element content]
-    (let [frame-element ((get-frame-elements fid) element)
-          component content]
-      (rgt/render component frame-element)))
+  (let [fid (name fid)
+        frame-element ((get-frame-elements fid) element)
+        component content]
+    (rgt/render component frame-element)))
 
 
 (defn vis-list [tabid spec-frame-pairs opts]
@@ -475,6 +488,7 @@
               [:main :opts] (hc/xform opts)
               [:main :session-name] (rgt/atom "")
               [:vgl-as-vg] :rm
+              [:vgviews] (atom {}) ; This should not have any reactive update
               [:vspecs] (rgt/atom {}))
   (init-tabs)
   (rgt/render [hanami-main]
@@ -502,6 +516,17 @@
               (assoc tab :specs (mapv (fn[spec] (dissoc spec :tab)) specs))))
           grps)))
 
+(defn make-spec-frame-pairs [tid opts specs]
+  (let [instrumentor (-> :instrumentor get-adb first)]
+    (mapv #(do (when-let [vid (get-in % [:usermeta :vid])]
+                 (update-vspecs vid %))
+               (vector (if (empty-chart? %) nil %)
+                       (instrumentor
+                        {:tabid tid
+                         :spec %
+                         :opts opts})))
+          specs)))
+
 (defn update-tabs [specs]
   (let [tabdefs (make-tabdefs specs)]
     (mapv (fn [{:keys [id label opts specs] :as newdef}]
@@ -512,15 +537,7 @@
                   main-opts (get-adb [:main :opts :tab])
                   instrumentor (-> :instrumentor get-adb first)
 
-                  spec-frame-pairs
-                  (mapv #(do (when-let [vid (get-in % [:usermeta :vid])]
-                               (update-vspecs vid %))
-                             (vector (if (empty-chart? %) nil %)
-                                     (instrumentor
-                                        {:tabid tid
-                                         :spec %
-                                         :opts opts})))
-                        specs)]
+                  spec-frame-pairs (make-spec-frame-pairs tid opts specs)]
 
               (if (not oldef)
                 (add-tab (assoc newdef
@@ -794,6 +811,16 @@
     (start :elem (js/document.querySelector "#app")
            :instrumentor-fn test-instrumentor
            :port 3003))
+
+
+
+  (defn foo []
+    (sp/select [sp/ATOM :tabs :active sp/ATOM sp/ALL]
+               app-db))
+  (->> (foo)
+       (mapv (fn[tab] (select-keys tab [:id :label :opts :specs])))
+       first)
+
 
 
 

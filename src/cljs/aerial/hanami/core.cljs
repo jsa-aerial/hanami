@@ -392,13 +392,14 @@
   (printchan "TABS called ...")
   (let [tabval (get-cur-tab)
         opts   (or (and tabval (tabval :opts)) (get-adb [:main :opts :tab]))
+        id     (or (and tabval (str (name (tabval :id)) "-body")) "xHx")
         extfn  (get-in opts [:extfn])
         size   (get-in opts [:size] "auto")
         order  (get-in opts [:order] :col)
         layout (if (= order :row) v-box h-box)]
     (if extfn
       (extfn tabval)
-      [layout
+      [layout :attr {:id id}
        :size size
        :gap "10px"
        :children (hanami)])))

@@ -52,7 +52,7 @@
 
 ((hc/xform (hc/get-default :USERDATA)
            :LEFT `[[gap "10px"]] :FID "frame-test"
-           :TID :geo :VID :v1) :vid)
+           :TID :geo :VID :v1) :tab)
 
 
 
@@ -382,7 +382,7 @@ hc/subkeyfns
 ;;(p/mean obsdist) => 5.7
 (->>
  [(hc/xform ht/layer-chart
-            :TID :dists :TOPTS {:order :row, :size "auto"}
+            :TID :dists :FID :dex1
             :TITLE "A Real (obvserved) distribution with incorrect simple mean"
             :HEIGHT 400 :WIDTH 450
             :LAYER
@@ -391,7 +391,7 @@ hc/subkeyfns
             :DATA (mapv (fn[[x y]] {:x x :y y :m 5.7}) obsdist))
 
   (hc/xform ht/layer-chart
-            :TID :dists
+            :TID :dists :FID :dex2
             :TITLE "The same distribution with correct weighted mean"
             :HEIGHT 400 :WIDTH 450
             :LAYER

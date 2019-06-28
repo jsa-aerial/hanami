@@ -201,6 +201,12 @@
   (sp/setval [sp/ATOM :tabs :active sp/ATOM sp/ALL #(= (% :id) tid) field]
              value app-db))
 
+(defn get-tab-body [id]
+  (select-keys
+   (sp/select-one [sp/ATOM :tabs :active sp/ATOM sp/ALL #(= (% :id) id)] app-db)
+   [:id :opts :specs]))
+
+
 (defn get-cur-tab
   ([]
    (get-tab-field (deref (get-adb [:tabs :current]))))
@@ -212,6 +218,7 @@
 
 (defn update-cur-tab [field value]
   (update-tab-field (deref (get-adb [:tabs :current])) field value))
+
 
 (defn add-tab [tabval]
   (sp/setval [sp/ATOM :tabs :active sp/ATOM sp/AFTER-ELEM] tabval app-db)
@@ -363,6 +370,43 @@
              (print-when [:vis :vis-list] :NSPEC spec frame)
              (frameit spec frame)))])))
 
+
+(declare make-spec-frame-pairs)
+
+(defn add-to-tab-body
+  [id picframe & {:keys [at position opts]
+                  :or {at :end position :after opts {}}}]
+  (let [tbdy (get-tab-body id)
+        opts (merge (tbdy :opts) opts)
+        specs (tbdy :specs)
+        pos (if (= at :end)
+              (dec (count specs))
+              (->> specs
+                   (keep-indexed
+                    (fn[idx item]
+                      (when (-> item :usermeta :frame :fid (= at))
+                        idx)))
+                   first))
+        pos (if (= position :after) (inc pos) pos)
+        newspecs (concat (take pos specs) [picframe] (drop pos specs))
+        s-f-pairs (make-spec-frame-pairs id opts newspecs)]
+    (update-tab-field id :opts opts)
+    (update-tab-field id :specs newspecs)
+    (update-tab-field id :compvis (vis-list id s-f-pairs opts))
+    id))
+
+(defn remove-from-tab-body
+  [id fid]
+  (let [tbdy (get-tab-body id)
+        opts (tbdy :opts)
+        specs (tbdy :specs)
+        specs (remove #(-> % :usermeta :frame :fid (= fid)) specs)
+        s-f-pairs (make-spec-frame-pairs id opts specs)]
+    (update-tab-field id :specs specs)
+    (update-tab-field id :compvis (vis-list id s-f-pairs opts))
+    id))
+
+
 (defn hanami []
   (if-let [tabval (get-cur-tab)]
     (let [tabid (tabval :id)
@@ -393,16 +437,18 @@
   (let [tabval (get-cur-tab)
         opts   (or (and tabval (tabval :opts)) (get-adb [:main :opts :tab]))
         id     (or (and tabval (str (name (tabval :id)) "-body")) "xHx")
+        wrapfn (or (opts :wrapfn) identity)
         extfn  (get-in opts [:extfn])
         size   (get-in opts [:size] "auto")
         order  (get-in opts [:order] :col)
-        layout (if (= order :row) v-box h-box)]
+        layout (if (= order :row) v-box h-box)] (printchan :OPTS opts)
     (if extfn
       (extfn tabval)
-      [layout :attr {:id id}
-       :size size
-       :gap "10px"
-       :children (hanami)])))
+      (wrapfn
+       [layout :attr {:id id}
+        :size size
+        :gap "10px"
+        :children (hanami)]))))
 
 (defn hanami-main []
   (printchan "Hanami-main called ...")
@@ -757,9 +803,30 @@
 
 
 
+
+
+
+
+
 (comment
 
+  ;; Rich Comment!!
+
+  ;; Always run this setup init for any testing
   (do
+    (hc/update-defaults
+     :USERDATA {:tab {:id :TID, :label :TLBL, :opts :TOPTS}
+                :frame {:top :TOP, :bottom :BOTTOM,
+                        :left :LEFT, :right :RIGHT
+                        :fid :FID}
+            :opts :OPTS
+                :vid :VID,
+                :msgop :MSGOP,
+                :session-name :SESSION-NAME}
+     :MSGOP :tabs, :SESSION-NAME "Exploring"
+     :TID :expl1, :TLBL #(-> :TID % name cljstr/capitalize)
+     :OPTS (hc/default-opts :vgl), :TOPTS (hc/default-opts :tab))
+
     (defn bar-slider-fn [tid val]
       (let [tabval (get-tab-field tid)
             spec-frame-pairs (tabval :spec-frame-pairs)]
@@ -815,34 +882,180 @@
 
 
 
-  (defn foo []
-    (sp/select [sp/ATOM :tabs :active sp/ATOM sp/ALL]
-               app-db))
-  (->> (foo)
-       (mapv (fn[tab] (select-keys tab [:id :label :opts :specs])))
-       first)
+
+  ;; =======================================================================
+  ;; Testing new incremental tab bodies and user wrapping function support
+
+
+  ;; Create a tab that includes a user defined WRAPFN
+  (add-tab
+   {:id :dists
+    :label "Dists"
+    :specs []
+    :opts {:order :row, :eltsper 1, :size "auto"
+           :wrapfn (fn[hcomp] [h-split
+                               :panel-1 [box
+                                         :child [input-textarea
+                                                 :model "
+1234567890123456789012345678901234567890123456789012345678901234567890123456789"
+                                                 :width "650px" :rows 40
+                                                 :on-change identity]]
+                               :panel-2 [scroller
+                                         :max-height "800px"
+                                         :max-width "1200px"
+                                         :align :start
+                                         :child hcomp]
+                               :initial-split "33%"
+                               :width "2048px"])}})
+
+  ;; Add some page/section title text
+  (do (add-to-tab-body
+       :dists
+       (hc/xform
+        ht/empty-chart :FID :dtitle
+        :TOP '[[gap :size "50px"]
+               [md "# Example Interactive Document Creation"]]))
+      :done)
+
+
+  ;; Render a graphic in it
+  (add-to-tab-body
+   :dists
+   (hc/xform
+    ht/bar-chart
+    :TITLE "Top headline phrases"
+    :TID :dists :FID :dhline :ELTSPER 1
+    :X :x-value :Y :y-value :YTYPE "nominal"
+    :DATA
+    [{:x-value 8961 :y-value "will make you"}
+     {:x-value 4099 :y-value "this is why"}
+     { :x-value 3199 :y-value "can we guess"}
+     {:x-value 2398 :y-value "only X in"}
+     {:x-value 1610 :y-value "the reason is"}
+     {:x-value 1560 :y-value "are freaking out"}
+     {:x-value 1425 :y-value "X stunning photos"}
+     {:x-value 1388 :y-value "tears of joy"}
+     {:x-value 1337 :y-value "is what happens"}
+     {:x-value 1287 :y-value "make you cry"}]))
+
+
+  ;; Add empty picture frame with all elements as MD
+  (do (add-to-tab-body
+       :dists
+       (hc/xform
+        ht/empty-chart :FID :dwrup1
+        :TOP '[[gap :size "200px"][md "# Header top"]]
+        :BOTTOM '[[gap :size "200px"] [md "# Header bottom"]]
+        :LEFT '[[gap :size "50px"] [md "### Header left"]]
+        :RIGHT '[[md "### Header right"]]))
+      :done)
+
+  ;; Make some distribution data
+  (def obsdist
+    (let [obs [[0 9] [1 78] [2 305] [3 752] [4 1150] [5 1166]
+               [6 899] [7 460] [8 644] [9 533] [10 504]]
+          totcnt (->> obs (mapv second) (apply +))
+          pdist (map (fn[[k cnt]] [k (double (/ cnt totcnt))]) obs)]
+      pdist))
+
+  ;; Add a picture to the tab
+  (do (add-to-tab-body
+       :dists
+       (hc/xform
+        ht/layer-chart
+        :TID :dists :FID :dex1
+        :TITLE "A Real (obvserved) distribution with incorrect simple mean"
+        :HEIGHT 400 :WIDTH 450
+        :LAYER
+        [(hc/xform ht/bar-layer :XTITLE "Count" :YTITLE "Probability")
+         (hc/xform ht/xrule-layer :AGG "mean")]
+        :DATA (mapv (fn[[x y]] {:x x :y y :m 5.7}) obsdist)))
+      :done)
+
+  ;; Add some more 'writeup'
+  (do (add-to-tab-body
+       :dists
+       (hc/xform
+        ht/empty-chart :FID :dwrup2
+        :BOTTOM '[[gap :size "50px"]
+                  [md "# Fixed distribution
+Here we have corrected the mean by properly including item weights"]]))
+      :done)
+
+  (do (add-to-tab-body
+       :dists
+       (hc/xform
+        ht/layer-chart
+        :TID :dists :FID :dex2
+        :TITLE "The same distribution with correct weighted mean"
+        :HEIGHT 400 :WIDTH 450
+        :LAYER
+        [(hc/xform ht/bar-layer :XTITLE "Count" :YTITLE "Probability")
+         (hc/xform ht/xrule-layer :X "m")]
+        :DATA (mapv (fn[[x y]] {:x x :y y :m 5.7}) obsdist)))
+      :done)
 
 
 
 
 
-  (let [tid :tab2
-        field :specs
-        value [{:spec2 :aspec}]]
-    (sp/setval [sp/ATOM :tabs :active sp/ALL sp/ATOM #(= (% :id) tid) field]
-               value test-db))
+  ;; =======================================================================
+  ;; Direct noodling on the DOM - not recommended as subverts data flow of
+  ;; Reagent/React
+
+  (let [body (js/document.getElementById "expl1-body")
+        lastchild body.lastChild
+        div (js/document.createElement "div")
+        _ (set! (.-id div) "mymd")
+        component [h-box
+                   :children
+                   [[gap :size "20px" :width "20px"]
+                    [md
+                     "
+# Header 1
+## Header 2
+### Header 3, following is list
+* One
+* Two
+* Three"]]]]
+    (.appendChild lastchild div)
+    (rgt/render component lastchild.lastChild)
+    (js/console.log lastchild)
+    (js/console.log lastchild.lastChild))
 
 
-  ;;; cljs.user=> (defn foo [x] (inc x))
-  ;;; #'cljs.user/foo
-  ;;; cljs.user=> (#'cljs.user/foo 3)
-  ;;; 4
-  ;;; cljs.user=> (def bar 10)
-  ;;; #'cljs.user/bar
-  ;;; cljs.user=> @#'cljs.user/bar
-  ;;; 10
-  ;;; 5:24 PM
+  (let [body (js/document.getElementById "expl1-body")
+        lastchild body.lastChild]
+    (js/console.log body)
+    (js/console.log lastchild))
 
+  (let [body (js/document.getElementById "expl1-body")
+        lastchild body.lastChild]
+    (.appendChild lastchild (js/document.createElement "div"))
+    (js/console.log lastchild)
+    (js/console.log lastchild.lastChild))
+
+  (let [body (js/document.getElementById "expl1-body")
+        lastchild body.lastChild
+        component ""]
+    (.remove lastchild.lastChild)
+    (js/console.log lastchild)
+    (js/console.log lastchild.lastChild))
+
+  (let [mymd (js/document.getElementById "mymd")]
+    #_(.removeChild mymd.parentNode mymd)
+    (.remove mymd))
+
+  (let [body (js/document.getElementById "expl1-body")
+        lastchild body.lastChild
+        mymd (js/document.getElementById "mymd")]
+    (.insertBefore mymd lastchild))
+
+
+
+
+  ;; =======================================================================
+  ;; Old original db messing and testing of adding / updating tabs
 
   (get-adb [:test1 :sval])
   (update-adb [:main :uid :name] "Hello")

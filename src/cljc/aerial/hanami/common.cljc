@@ -12,8 +12,8 @@
          :source false
          :renderer :RENDERER ; either "canvas" or "svg" - see defaults
          :mode :MODE}        ; either "vega-lite" or "vega" - see defaults
-   :tab {:order :row
-         :eltsper 2
+   :tab {:order :ORDER       ; either :row or :col - see defaults
+         :eltsper :ELTSPER   ; count of elements per row/col - see defaults
          :size "auto"}})
 
 
@@ -115,6 +115,7 @@
          :TITLE RMV, :TOFFSET RMV
          :HEIGHT 300, :WIDTH 400, :DHEIGHT 60
          :USERDATA RMV, :MODE "vega-lite", :RENDERER "canvas" :SCALEFACTOR 1
+         :ORDER :row, :ELTSPER 2
          :TOP RMV, :BOTTOM RMV, :LEFT RMV, :RIGHT RMV :VID RMV :FID RMV
 
          ;; Data and transforms

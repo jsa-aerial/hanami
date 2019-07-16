@@ -26,7 +26,7 @@
 
    [re-com.core
     :as rcm
-    :refer [h-box v-box box gap line h-split v-split scroller
+    :refer [h-box v-box box border gap line h-split v-split scroller
             button row-button md-icon-button md-circle-icon-button info-button
             input-text input-password input-textarea
             label title hyperlink-href p
@@ -132,7 +132,8 @@
 (def re-com-xref
   (into
    {} (mapv vector
-            '[h-box v-box box gap line h-split v-split scroller flex-child-style
+            '[h-box v-box box border gap line h-split v-split scroller
+              flex-child-style
               button row-button md-icon-button md-circle-icon-button info-button
               input-text input-password input-textarea
               label title hyperlink-href p
@@ -142,7 +143,8 @@
               modal-panel popover-content-wrapper popover-anchor-wrapper
               filter-choices-by-keyword single-dropdown-args-desc
               md]
-            [h-box v-box box gap line h-split v-split scroller flex-child-style
+            [h-box v-box box border gap line h-split v-split scroller
+             flex-child-style
              button row-button md-icon-button md-circle-icon-button info-button
              input-text input-password input-textarea
              label title hyperlink-href p
@@ -334,24 +336,6 @@
                     [h-box :children (frame :right)]])]
       [h-box :gap "5px" :children (frame :bottom)]]]))
 
-(defn get-frame-elements [fid]
-  (let [fid (name fid)
-        frame (js/document.getElementById fid)
-        top (aget frame.childNodes 0)
-        bottom (aget frame.childNodes 4)
-        middle (aget frame.childNodes 2)
-        left (aget middle.childNodes 0)
-        vis (aget middle.childNodes 2)
-        right (aget middle.childNodes 4)]
-    {:top top, :bottom bottom, :left left, :right right, :vis vis}))
-
-(defn update-frame-element [fid element content]
-  (let [fid (name fid)
-        frame-element ((get-frame-elements fid) element)
-        component content]
-    (rgt/render component frame-element)))
-
-
 (defn vis-list [tabid spec-frame-pairs opts]
   (let [layout (if (= (get-in opts [:order]) :row) h-box v-box)
         eltnum (get-in opts [:eltsper] 3)
@@ -405,6 +389,48 @@
     (update-tab-field id :specs specs)
     (update-tab-field id :compvis (vis-list id s-f-pairs opts))
     id))
+
+(defn update-frame [tid fid element content]
+  (let [tbdy (get-tab-body tid)
+        opts (tbdy :opts)
+        specs (tbdy :specs)
+        pos (->> specs
+                 (keep-indexed
+                  (fn[idx item]
+                    (when (-> item :usermeta :frame :fid (= fid))
+                      idx)))
+                 first)
+        newspec (assoc-in (nth specs pos) [:usermeta :frame element] content)
+        newspecs (concat (take pos specs)
+                         [newspec] ; splice in the updated spec
+                         (drop (inc pos) specs))
+        s-f-pairs (make-spec-frame-pairs tid opts newspecs)]
+    (update-tab-field tid :specs newspecs)
+    (update-tab-field tid :compvis (vis-list tid s-f-pairs opts))
+    tid))
+
+
+;;; The following two muck with the DOM directly and are not
+;;; recommended. Probably should remove altogether, but leaving for
+;;; right now.
+(defn get-frame-elements [fid]
+  (let [fid (name fid)
+        frame (js/document.getElementById fid)
+        top (aget frame.childNodes 0)
+        bottom (aget frame.childNodes 4)
+        middle (aget frame.childNodes 2)
+        left (aget middle.childNodes 0)
+        vis (aget middle.childNodes 2)
+        right (aget middle.childNodes 4)]
+    {:top top, :bottom bottom, :left left, :right right, :vis vis}))
+
+(defn update-frame-element [fid element content]
+  (let [fid (name fid)
+        frame-element ((get-frame-elements fid) element)
+        component content]
+    (rgt/render component frame-element)))
+
+
 
 
 (defn hanami []

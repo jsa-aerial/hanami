@@ -363,8 +363,10 @@
   (let [tbdy (get-tab-body id)
         opts (merge (tbdy :opts) opts)
         specs (tbdy :specs)
-        pos (if (= at :end)
-              (dec (count specs))
+        pos (cond
+              (= at :beg) 0
+              (= at :end) (dec (count specs))
+              :else
               (->> specs
                    (keep-indexed
                     (fn[idx item]

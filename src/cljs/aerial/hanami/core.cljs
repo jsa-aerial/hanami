@@ -137,7 +137,7 @@
               button row-button md-icon-button md-circle-icon-button info-button
               input-text input-password input-textarea
               label title hyperlink-href p
-              single-dropdown
+              single-dropdown selection-list
               checkbox radio-button slider progress-bar throbber
               horizontal-bar-tabs vertical-bar-tabs
               modal-panel popover-content-wrapper popover-anchor-wrapper
@@ -148,7 +148,7 @@
              button row-button md-icon-button md-circle-icon-button info-button
              input-text input-password input-textarea
              label title hyperlink-href p
-             single-dropdown
+             single-dropdown selection-list
              checkbox radio-button slider progress-bar throbber
              horizontal-bar-tabs vertical-bar-tabs
              modal-panel popover-content-wrapper popover-anchor-wrapper
@@ -780,7 +780,7 @@
     (merge (if (udata :frame)
              (let [default-frame (get-default-frame)
                    framedef (udata :frame)
-                   frame-sides (dissoc framedef :fid)]
+                   frame-sides (dissoc framedef :fid :at :pos)]
                (print-when [:frames :make] :Frame-Maker frame-sides curframe)
                (update-adb [:dbg :frame]
                            (->> (keys frame-sides)

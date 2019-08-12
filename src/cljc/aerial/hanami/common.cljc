@@ -116,7 +116,9 @@
          :HEIGHT 300, :WIDTH 400, :DHEIGHT 60
          :USERDATA RMV, :MODE "vega-lite", :RENDERER "canvas" :SCALEFACTOR 1
          :ORDER :row, :ELTSPER 2
-         :TOP RMV, :BOTTOM RMV, :LEFT RMV, :RIGHT RMV :VID RMV :FID RMV
+         
+         :TOP RMV, :BOTTOM RMV, :LEFT RMV, :RIGHT RMV
+         :VID RMV :FID RMV :AT RMV :POS RMV
 
          ;; Data and transforms
          :VALDATA get-data-vals

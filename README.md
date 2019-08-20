@@ -36,8 +36,10 @@ Table of Contents
       * [Header](#header)
       * [Tabs](#tabs)
          * [Basics](#basics)
-         * [Configuration and Behavior](#configuration-and-behavior)
+         * [Configuration and behavior](#configuration-and-behavior)
          * [Extension tabs](#extension-tabs)
+         * [Incremental bodies](#incremental-bodies)
+         * [Wrapping functions](#wrapping-functions)
       * [Sessions](#sessions)
       * [Messages](#messages)
          * [Connection](#connection)
@@ -92,7 +94,7 @@ Hence, templates are a means to abstract all manner of visualization aspects and
 
 To install, add the following to your project `:dependencies`:
 
-    [aerial.hanami "0.8.0"]
+    [aerial.hanami "0.10.0"]
 
 
 
@@ -353,10 +355,11 @@ Hanami understands the following 'special' fields:
 * `:tab` - value is a map of fields (`:id`, `:label`, `:opts`) identifying and controlling tabs.
   * `:id` - value is an id for the tab. Typically a keyword
   * `:label` - value is the display name for the tab
-  * `:opts` - value is a map of fields (`:order`, `:eltsper`, and `:size`)
+  * `:opts` - value is a map of fields (`:order`, `:eltsper`, `:size`, and :wrapfn)
     * `:order` - value is either `:row` or `:col` for either row based grid layouts or column based grid layouts
     * `:eltsper` - value is an integer for the maximum number of row or col entries. For example a value of 2 would mean 2XN grids for rows and Nx2 grids for columns
     * `:size` - value is a flexbox size indicator. Best known values are "auto" for row based grids and "none" for column based grids
+    * `:wrapfn` - value is a function which takes the hiccup element for the tab's body (fully structured grid layout) and must return a hiccup/re-com element. The intent is a user may wish to encase the grid body in extra ancillary support layout / active elements. See [wrapping functions](#wrapping-functions)
 
 * `:opts` - value is a map of fields controlling Vega/Vega-Lite options. This is **not** the `[:tab :opts]` path and value!
   * `:export` - value is a map of boolean value fields (`:png`, `:svg`). Setting these true will provide implicit saving options in the popup Vega-Embed options button (typically upper right circle with "..." content).
@@ -384,24 +387,32 @@ As an example, [Saite](https://github.com/jsa-aerial/saite) has an init function
 ```Clojure
 :USERDATA
 {:tab {:id :TID, :label :TLBL, :opts :TOPTS},
+ :frame {:fid :FID, :top :TOP, :bottom :BOTTOM, :left :LEFT, :right :RIGHT}
  :opts :OPTS,
  :vid :VID,
  :msgop :MSGOP,
  :session-name :SESSION-NAME}
 
-:OPTS
-{:export {:png true, :svg true},
- :scaleFactor :SCALEFACTOR
- :renderer :RENDERER,
- :mode :MODE}
-
+:OPTS (hc/default-opts :vgl)
 :SESSION-NAME "Exploring"
 :TID :expl1
 :TLBL #(-> :TID % name cljstr/capitalize)
-:TOPTS {:order :row, :eltsper 2, :size "auto"}
-
-:VID hc/RMV
+:TOPTS (hc/default-opts :tab)
 :MSGOP :tabs
+```
+
+Where `hc/default-opts` is:
+
+```Clojure
+{:vgl {:export {:png true, :svg true}
+       :scaleFactor :SCALEFACTOR
+       :editor true
+       :source false
+       :renderer :RENDERER ; either "canvas" or "svg" - see defaults
+       :mode :MODE}        ; either "vega-lite" or "vega" - see defaults
+ :tab {:order :ORDER       ; either :row or :col - see defaults
+       :eltsper :ELTSPER   ; count of elements per row/col - see defaults
+       :size "auto"}}
 ```
 
 
@@ -517,6 +528,7 @@ All of these are taken from `hc/_defaults` They are chosen so as to indicate how
 
 ```Clojure
          :USERDATA RMV, :MODE "vega-lite", :RENDERER "canvas", :SCALEFACTOR 1
+         :TOP RMV, :BOTTOM RMV, :LEFT RMV, :RIGHT RMV
          :BACKGROUND "floralwhite"
          :OPACITY RMV
 
@@ -725,7 +737,7 @@ The tab system of Hanami is intended to be a fairly general purpose document str
 
 As depicted in the [framework topology graphic](#framework-topology-graphic), the tab system has a dedicated area for the tab bar. Tabs are dynamically added to the tab bar from left to right. They may also be deleted. Any selected tab will have its body displayed in the dedicated content area. If you use Hanami's standard framework, the main components will drive all tab actions and updates.
 
-### Configuration and Behavior
+### Configuration and behavior
 
 To use tabs, the `:usermeta` field of specifications must contain the `:tab` key whose value must be a map. The keys and values of this map are detailed in the tab section of the [USERDATA](#meta-data-and-the-userdata-key) section of this documentation. The `:id` field is the primary key for identifying and manipulating a tab and its body. The `:label` field is for human readable naming of the tab. The `:opts` field details the auto layout format for the tab's body. It is worth noting that if the `:eltsper` field has a value of 1, the effect is to have the body layed out linearly from top to bottom in the order the specifications were given to the tab.
 
@@ -736,6 +748,14 @@ Tabs are added and updated via the [update-tabs](#tab-system) client core functi
 In addition to 'standard tabs', those described above, the tab system may be extended with 'extension tabs'. The defining characteristic of such tabs is that they have an extra field: `[:opts :extfn]`. The value of this field must be a [Reagent form](https://github.com/reagent-project/reagent/blob/master/doc/CreatingReagentComponents.md) function. Typically it will be a **form-2** and will implement the body of the tab. This functionality is seamlessly integrated with standard tabs and will be implicitly invoked when the tab is selected.
 
 Extension tabs are intended to be built and added on the client side. [add-tab](#tab-system) can be used to manually add such tabs, and the [:app-init user-msg](#connection) is a convenient place to perform this action (as part of any other application initialization). **NOTE** in [client only](#client-only-apps) you can explicitly fire this message as part of on page load code start.
+
+### Incremental bodies
+
+As of version 0.9.0, there is support for _incrementally_ adding to a tab's [content area](#framework-topology-graphic), which is also known as it's _body_. Previously the only way to effect a change on a standard (non extention) tab's body was to perform a full update on it via [update-tabs](#tab-system) or more directly via [vis-list](#tab-system). Both of these required the full list of specifications to be rendered. There are applications where this is simply too restrictive. You may want to simply insert a [picture frame](#picture-frames) at a given point in a page. Or simply extend it, without needing to manage the entire sequence of specifications. There are now two new client core functions [add-to-tab-body](#tab-system) and [remove-from-tab-body](#tab-system) which can adjust the content of a tab at the granularity of picture frames.
+
+### Wrapping functions
+
+As of version 0.9.0 there is now support for per tab user _wrapping functions_. This supports custom layout encompassing or encasing the tab's fully structured grid layout of the tab's sequence of specifications. Wrapping functions are configured by means of the `:wrapfn` key/value pair specifiable in the [tab's options](#meta-data-and-the-userdata-key). This provides a level of customization that is in between fully custom [extension tabs](#extension-tabs) and standard tabs. Wrapping functions must accept one argument, `gridhc`, which is the fully computed hiccup for the grid layout of the tab, and return a hiccup/re-com element which includes the `gridhc` element somewhere inside it (directly or in some child). The result will then be rendered in the tab's content area.
 
 
 ## Sessions
@@ -923,7 +943,8 @@ Picture frames are simply a way to automatically encase your visualizations with
 ```Clojure
 {...
  :USERDATA {...
-            :frame {:top ...
+            :frame {:fid ...
+                    :top ...
                     :bottom ...
                     :left ...
                     :right ...}
@@ -934,9 +955,17 @@ Picture frames are simply a way to automatically encase your visualizations with
 
 ![Hanami picture frame](resources/public/images/picture-frame-layout.png?raw=true)
 
-All of the quadrants are optional and `:frame {}` is legal. The value of a quadrant can be any legal mix of strings, hiccup, and / or active components. Where 'legal' here means 'yields a legal DOM branch'. A great resource for active components, which Hanami provides as part of its package, is [Re-Com](https://github.com/Day8/re-com). This is especially true if you are not a CSS/flex and / or component savant.
+All of the quadrants are optional and `:frame {}` is legal, which by the third [rule of transformation](#basic-transformation-rules) will result in its removal.
+
+The value of `:fid` should be a globally unique id (keyword or string). If it is not specified the field will be removed and the frame will not have an id. This id will be used as the frame's DOM id as well as the corresponding spec's id. So, if it is not supplied the frame will not be accessible (in particular, it won't be accessible when using [incremental bodies](#incremental-bodies).
+
+The value of a quadrant can be any legal mix of strings, hiccup, markdown (MD) and / or active components. Where 'legal' here means 'yields a legal DOM branch'. A great resource for active components, which Hanami provides as part of its package, is [Re-Com](https://github.com/Day8/re-com). This is especially true if you are not a CSS/flex and / or component savant.
 
 As of version 0.5.0, picture frames may be ['empty'](#empty-frames) in that they do not need to have an associated visualization. To make this a bit simpler, there is a new template for these cases `ht/empty-chart`.
+
+As of version 0.9.0, markdown is directly available via the `md` active component, as such it is an extension to the hiccup used by Hanami (from [Reagent](http://reagent-project.github.io/)). You would use this like / where you would use any other hiccup / re-com component. The form is `[md <optional style map> <string of markdown>]`. The string can include newlines. The style map is for things such as font-size, color, etc.
+
+**ASSIDE**: LaTex is specifically _not_ included in Hanami. This decision is based on three reasons: 1. Many (most?) applications do not need LaTex math rendering.  2. [MathJax](https://www.mathjax.org/) is the go to JS engine for this and is a heavy dependency that would not be used in these applications.  3) React (as of version 16+) has a 'bug' preventing proper running of engines like MathJax (and Google Translate and many many other such rendering engines). It is possible to get around issue 3. but it requires 'monkey patching' React. If you need LaTex, you should consider using [Saite](https://github.com/jsa-aerial/saite) which is an application (built on Hanami) which does include MathJax, fixes 3., and is an application for general graphics and live document creation and sharing. Of course, if you are creating your own domain specific application and need LaTex for it, you will need to navigate issue 3. in your app. However, **note** that the `md` tag (see above markdown discussion) supports LaTex, so you can include it in your markdown (again, see Saite for examples).
 
 You can specifiy frames from either the server or client side of your application. Working on the client side from within ClojureScript can make this more 'natural', as you are in the actual environment (browser/DOM) where things are running and rendering. However, specifying from the server side is fully supported, as long as Re-Com use is quoted (or more typical and useful, backquoted).
 
@@ -986,39 +1015,37 @@ A couple of examples. These are actually taken from [Saite](https://github.com/j
 
 ```Clojure
 (let [text "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quod si ita est, sequitur id ipsum, quod te velle video, omnes semper beatos esse sapientes. Tamen a proposito, inquam, aberramus."
-      frame {:frame
-             {:top `[[gap :size "150px"]
-                     [p "An example showing a "
-                      [:span.bold "picture "] [:span.italic.bold "frame"]
-                      ". This is the top 'board'"
-                      [:br] ~text]]
-              :left `[[gap :size "10px"]
-                      [p {:style {:width "100px" :min-width "50px"}}
-                       "Some text on the " [:span.bold "left:"] [:br] ~text]]
-              :right `[[gap :size "2px"]
-                       [p {:style {:width "200px" :min-width "50px"
-                                   :font-size "20px" :color "red"}}
-                        "Some large text on the " [:span.bold "right:"] [:br]
-                        ~(.substring text 0 180)]]
-              :bottom `[[gap :size "200px"]
-                        [title :level :level3
-                         :label [p {:style {:font-size "large"}}
-                                 "Some text on the "
-                                 [:span.bold "bottom"] [:br]
-                                 "With a cool info button "
-                                 [info-button
-                                  :position :right-center
-                                  :info
-                                  [:p "Check out Saite Visualizer!" [:br]
-                                   "Built with Hanami!" [:br]
-                                   [hyperlink-href
-                                    :label "Saite "
-                                    :href  "https://github.com/jsa-aerial/saite"
-                                    :target "_blank"]]]]]]}}]
+      top `[[gap :size "150px"]
+            [p "An example showing a "
+             [:span.bold "picture "] [:span.italic.bold "frame"]
+             ". This is the top 'board'"
+             [:br] ~text]]
+      left `[[gap :size "10px"]
+             [p {:style {:width "100px" :min-width "50px"}}
+              "Some text on the " [:span.bold "left:"] [:br] ~text]]
+      right `[[gap :size "2px"]
+              [p {:style {:width "200px" :min-width "50px"
+                          :font-size "20px" :color "red"}}
+               "Some large text on the " [:span.bold "right:"] [:br]
+               ~(.substring text 0 180)]]
+      bottom `[[gap :size "200px"]
+               [title :level :level3
+                :label [p {:style {:font-size "large"}}
+                        "Some text on the "
+                        [:span.bold "bottom"] [:br]
+                        "With a cool info button "
+                        [info-button
+                         :position :right-center
+                         :info
+                         [:p "Check out Saite Visualizer!" [:br]
+                          "Built with Hanami!" [:br]
+                          [hyperlink-href
+                           :label "Saite "
+                           :href  "https://github.com/jsa-aerial/saite"
+                           :target "_blank"]]]]]]]
   (->> [(hc/xform ht/point-chart
-          :USERDATA
-          (merge
-           (hc/get-default :USERDATA) frame)
+          :TID :picframes
+          :TOP top :BOTTOM bottom :LEFT left :RIGHT right
           :UDATA "data/cars.json"
           :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")]
        hmi/sv!))
@@ -1039,34 +1066,38 @@ This example shows an empty frame with all 4 picture frame elements (areas) with
 
 ```Clojure
 (let [text "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quod si ita est, sequitur id ipsum, quod te velle video, omnes semper beatos esse sapientes. Tamen a proposito, inquam, aberramus."
-      frame {:frame
-             {:top `[[gap :size "50px"]
-                     [p {:style {:width "600px" :min-width "50px"}}
-                      "An example empty picture frame showing all four areas."
-                      " This is the " [:span.bold "top"] " area. "
-                       ~text ~text ~text]]
-              :left `[[gap :size "50px"]
-                      [p {:style {:width "300px" :min-width "50px"}}
-                       "The " [:span.bold "left "] "area as a column of text. "
-                       ~text ~text ~text ~text]]
-              :right `[[gap :size "70px"]
-                      [p {:style {:width "300px" :min-width "50px"}}
-                       "The " [:span.bold "right "] "area as a column of text. "
-                       ~text ~text ~text ~text]]
-              :bottom `[[gap :size "50px"]
-                        [v-box
-                         :children
-                         [ [p {:style {:width "600px" :min-width "50px"}}
-                           "The " [:span.bold "bottom "]
-                           "area showing a variety of text. "
-                           [:span.italic ~text] [:span.bold ~text]]
-                          [p {:style {:width "600px" :min-width "50px"
-                                      :color "red"}}
-                           ~text]]]]}}]
-  (->> (hc/xform
-        ht/empty-chart
-        :TID :picframes
-        :USERDATA (merge (hc/get-default :USERDATA) frame))
+      top `[[gap :size "50px"]
+            [p {:style {:width "600px" :min-width "50px"}}
+             "An example empty picture frame showing all four areas."
+             " This is the " [:span.bold "top"] " area. "
+             ~text ~text ~text]]
+      left `[[gap :size "50px"]
+             [p {:style {:width "300px" :min-width "50px"}}
+              "The " [:span.bold "left "] "area as a column of text. "
+              ~text ~text ~text ~text]]
+      right `[[gap :size "70px"]
+              [p {:style {:width "300px" :min-width "50px"}}
+               "The " [:span.bold "right "] "area as a column of text. "
+               ~text ~text ~text ~text]]
+      bottom `[[gap :size "50px"]
+               [v-box
+                :children
+                [[p {:style {:width "600px" :min-width "50px"}}
+                  "The " [:span.bold "bottom "]
+                  "area showing a variety of text. "
+                  [:span.italic ~text] [:span.bold ~text]]
+                 [p {:style {:width "400px" :min-width "50px"
+                             :font-size "20px"}}
+                  "some TeX: " "\\(f(x) = \\sqrt x\\)"]
+                 [md {:style {:font-size "16px" :color "blue"}}
+                  "#### Some Markup
+* **Item 1** Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+* **Item 2** Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quod si ita est, sequitur id ipsum, quod te velle video, omnes semper beatos esse sapientes. Tamen a proposito, inquam, aberramus."]
+                 [p {:style {:width "600px" :min-width "50px"
+                             :color "red"}}
+                  ~text]]]]]
+  (->> (hc/xform ht/empty-chart
+        :TID :picframes :TOP top :BOTTOM bottom :LEFT left :RIGHT right)
        hmi/sv!))
 ```
 
@@ -1076,28 +1107,26 @@ This next eample shows a tab/page with two picture frames. The left being a fram
 
 ```Clojure
 (let [text "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quod si ita est, sequitur id ipsum, quod te velle video, omnes semper beatos esse sapientes. Tamen a proposito, inquam, aberramus."
-      frame1 {:frame
-              {:top `[[gap :size "50px"]
-                      [p "Here's a 'typical' chart/plot filled picture frame."
-                       "It only has the top area"
-                       [:br] ~text]]}}
-      frame2 {:frame
-              {:left `[[gap :size "20px"]
-                       [p {:style {:width "200px" :min-width "50px"}}
-                        "This is an empty frame with a " [:span.bold "left "]
-                        "column of text" [:br] ~text ~text ~text ~text]]
-               :right `[[gap :size "30px"]
-                        [p {:style {:width "200px" :min-width "50px"}}
-                         "And a " [:span.bold "right "]
-                         "column of text"
-                         [:br] ~text ~text ~text ~text]]}}]
+      top `[[gap :size "50px"]
+            [p "Here's a 'typical' chart/plot filled picture frame."
+             "It only has the top area"
+             [:br] ~text]]
+      left `[[gap :size "20px"]
+             [p {:style {:width "200px" :min-width "50px"}}
+              "This is an empty frame with a " [:span.bold "left "]
+              "column of text" [:br] ~text ~text ~text ~text]]
+      right `[[gap :size "30px"]
+              [p {:style {:width "200px" :min-width "50px"}}
+               "And a " [:span.bold "right "]
+               "column of text"
+               [:br] ~text ~text ~text ~text]]]
   (->> [(hc/xform ht/point-chart
-          :USERDATA (merge (hc/get-default :USERDATA) frame1)
           :TID :picframes :UDATA "data/cars.json"
+          :TOP top
           :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")
         (hc/xform ht/empty-chart
-          :USERDATA (merge (hc/get-default :USERDATA) frame2)
-          :TID :picframes)]
+          :TID :picframes
+          :LEFT left :RIGHT right)]
        hmi/sv!))
 ```
 
@@ -1248,7 +1277,7 @@ There are two main start functions. One each for the server and client.
                 :or {header-fn default-header-fn
                      instrumentor-fn default-instrumentor-fn
                      frame-cb default-frame-cb
-		     symxlate-cb identity}}]
+                     symxlate-cb identity}}]
   ...)
 ```
 
@@ -1346,9 +1375,13 @@ In both cases, the _receiving_ party will have their [user-msg](#user-msg) multi
 
 * `(defn del-tab [tid] ...)`: Delete the tab associated with tab id `tid`. If this is the current tab, set current tab to the first remaining tab. If this deletes the only tab, remove tab bar.
 
+* `(defn add-to-tab-body [tid picframe & {:keys [at position opts] :or {at :end position :after opts {}}}] ...)`: Adds to tab id `tid`'s body (content area) a new specification (with a defined picture frame) `picframe` at location `at`, either an existing frame id or special designator `:end`, positioned `position` (either `:before` or `:after`) relative to `at`. If `opts` is supplied it must be a map containing [tab options](#meta-data-and-the-userdata-key) which will override any existing options for the tab. The content area will properly reflect the grid layout for the tab. **Note**, if `opts` specifies a new grid layout, it will be used.
+
+* `(defn remove-from-tab-body [tid fid] ...)`: Removes the picture frame with frame id `fid` from the body (content area) of tab with id `tid`.
+
 * `(defn init-tabs [] ...)`: Initialize the tab system. This is called implcitly when using the client [start](#client-start), via the [:register](#connection) message. If you are building a client only application, and want to use the tab system, you need to call this as part of your initialization.
 
-* `(defn active-tabs [] ...)`: **Reagent component** that sets up the tab bar area.
+* `(defn active-tabs [] ...)`: **Reagent component** that sets up the tab bar area. The content area will properly reflect the grid layout for the tab.
 
 * `(defn tabs [] ...)`: **Reagent component** for driving the tab system. This is called impicitly when using [hanami main](#hanami-main) Reagent component. In particular, drives the update, rendering, and display of tab bodies. May be called manually or part of a different main component.
 

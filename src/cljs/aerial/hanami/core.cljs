@@ -222,10 +222,31 @@
   (update-tab-field (deref (get-adb [:tabs :current])) field value))
 
 
+(defn tab-pos [tid]
+  (let [tabvec (sp/select [sp/ATOM :tabs :active sp/ATOM sp/ALL] app-db)
+        cnt (count tabvec)]
+    [(sp/select-one [sp/INDEXED-VALS #(-> % second :id (= tid)) sp/FIRST]
+                    tabvec)
+     cnt tabvec]))
+
+(defn move-tab [tid dir]
+  (assert (#{:left :right} dir)
+          (str "dir '" dir "' must be :left or :right"))
+  (let [tabval (get-tab-field tid)
+        [idx cnt curtabs] (tab-pos tid)
+        f (cond (and (= dir :left) (= idx 0)) :nop
+                (and (= dir :right) (= idx (dec cnt))) :nop
+                (= dir :left) dec
+                (= dir :right) inc)]
+    (when (not= f :nop)
+      (let [v (sp/setval [sp/ALL #(= (% :id) tid)] hc/RMV curtabs)
+            v (sp/setval (sp/before-index (f idx)) tabval v)]
+        (sp/setval [sp/ATOM :tabs :active sp/ATOM] v app-db)
+        v))))
+
 (defn add-tab [tabval]
   (sp/setval [sp/ATOM :tabs :active sp/ATOM sp/AFTER-ELEM] tabval app-db)
-  (set-cur-tab (tabval :id))
-  #_(sp/setval [sp/ATOM :tabs :current sp/ATOM] (tabval :id) app-db))
+  (set-cur-tab (tabval :id)))
 
 (defn replace-tab [tid newdef]
   (sp/setval [sp/ATOM :tabs :active sp/ATOM sp/ALL #(= (% :id) tid)]
@@ -239,6 +260,7 @@
     (when (and (> cnt 0) (= tid curid))
       (set-cur-tab (-> (sp/select [sp/ATOM :tabs :active sp/ATOM sp/ALL] app-db)
                        first :id)))))
+
 
 (defn active-tabs []
   (printchan :ACTIVE-TABS " called")

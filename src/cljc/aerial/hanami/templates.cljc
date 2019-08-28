@@ -62,6 +62,7 @@
 (def xy-encoding
   {:x {:field :X
        :type :XTYPE
+       :bin :XBIN
        :timeUnit :XUNIT
        :axis :XAXIS
        :scale :XSCALE
@@ -69,6 +70,7 @@
        :aggregate :XAGG}
    :y {:field :Y
        :type :YTYPE
+       :bin :YBIN
        :timeUnit :YUNIT
        :axis :YAXIS
        :scale :YSCALE

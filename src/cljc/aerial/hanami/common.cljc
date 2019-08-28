@@ -22,6 +22,7 @@
 (def fdata-key :FDATA)
 (def color-key :COLOR)
 (def shape-key :SHAPE)
+(def opacity-key :OPACITY)
 (def title-key :TITLE)
 
 
@@ -60,6 +61,12 @@
          (fn[xkv subkey subval]
            (if (string? subval)
              (xform ht/default-mark-props (assoc xkv :MPFIELD subval))
+             subval))
+
+         opacity-key
+         (fn[xkv subkey subval]
+           (if (number? subval)
+             {:value subval}
              subval))
 
          title-key
@@ -128,10 +135,10 @@
          :AGG RMV, :XAGG RMV, :YAGG RMV
 
          ;; encodings
-         :X "x", :XTYPE, "quantitative", :XUNIT RMV, :XSORT RMV
+         :X "x", :XTYPE, "quantitative", :XBIN RMV, :XUNIT RMV, :XSORT RMV
          :XSCALE RMV, :XAXIS {:title :XTITLE, :grid :XGRID, :format :XFORMAT}
          :XTITLE RMV, :XGRID RMV, :XFORMAT RMV, :XTTITLE RMV, :XTFMT RMV
-         :Y "y", :YTYPE, "quantitative", :YUNIT RMV, :YSORT RMV
+         :Y "y", :YTYPE, "quantitative", :YBIN RMV, :YUNIT RMV, :YSORT RMV
          :YSCALE RMV, :YAXIS {:title :YTITLE, :grid :YGRID, :format :YFORMAT}
          :YTITLE RMV, :YGRID RMV, :YFORMAT RMV, :YTTITLE RMV, :YTFMT RMV
          :ROWDEF ht/default-row :ROW RMV, :ROWTYPE RMV

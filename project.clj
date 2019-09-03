@@ -21,10 +21,10 @@
                  [re-com "2.5.0"]
                  [reagent "0.8.1"]
 
-                 [cljsjs/vega "4.4.0-0"]
-                 [cljsjs/vega-lite "3.0.0-rc10-0"]
-                 [cljsjs/vega-embed "3.26.0-0"]
-                 [cljsjs/vega-tooltip "0.14.0-0"]
+                 [cljsjs/vega "5.4.0-0"]
+                 [cljsjs/vega-lite "3.4.0-0"]
+                 [cljsjs/vega-embed "4.0.0-0"]
+                 [cljsjs/vega-tooltip "0.18.1-0"]
                  ]
 
   :plugins [[lein-figwheel "0.5.16"]

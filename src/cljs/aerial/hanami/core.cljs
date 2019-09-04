@@ -741,9 +741,9 @@
     (printchan :CLIENT :WTF :op op :payload payload)))
 
 
-(defn connect [port]
+(defn connect [host port]
   (go
-    (let [uri (str "ws://localhost:" port "/ws")
+    (let [uri (str "ws://" host ":" port "/ws")
           ch (async/<! (cli/open-connection uri))]
       (printchan "Opening client, reading msgs from " ch)
       (loop [msg (<! ch)]
@@ -826,10 +826,11 @@
     (make-frame (spec :usermeta) (userfn m))))
 
 
-(defn start [& {:keys [elem port
+(defn start [& {:keys [elem host port
                        header-fn instrumentor-fn
                        frame-cb symxlate-cb]
-                :or {header-fn default-header-fn
+                :or {host js/location.hostname
+                     header-fn default-header-fn
                      instrumentor-fn default-instrumentor-fn
                      frame-cb default-frame-cb
                      symxlate-cb identity}}]
@@ -841,7 +842,7 @@
                 :frame-cb [frame-cb]
                 :instrumentor [instfn]
                 :header [header-fn])
-    (connect port)))
+    (connect host port)))
 
 
 (defn sv!

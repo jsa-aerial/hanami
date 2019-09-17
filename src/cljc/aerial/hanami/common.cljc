@@ -234,8 +234,9 @@
       sp/ALL
       (fn[v]
         (if (coll? v)
-          (let [xv (xform v xkv)]
-            (if (seq xv) xv RMV))
+          (let [xv (xform v xkv)
+                rmv? (xkv ::rmv-empty?)]
+            (if (seq xv) xv (if rmv? RMV xv)))
           (let [subval (get xkv v v)
                 subval (if (fn? subval) (subval xkv) subval)
                 subkeyfn (@subkeyfns v)

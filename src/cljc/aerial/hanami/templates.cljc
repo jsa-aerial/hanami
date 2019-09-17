@@ -27,7 +27,7 @@
   {:field :COLUMN :type :COLTYPE})
 
 (def data-options
-  {:values :VALDATA, :url :UDATA, :name :NDATA})
+  {:values :VALDATA, :url :UDATA, :name :NDATA :format :DFMT})
 
 
 (def interval-scales

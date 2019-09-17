@@ -360,6 +360,7 @@
 
 (defn vis-list [tabid spec-frame-pairs opts]
   (let [layout (if (= (get-in opts [:order]) :row) h-box v-box)
+        lgap   (if (= layout h-box) (opts :CGAP) (opts :RGAP))
         eltnum (get-in opts [:eltsper] 3)
         numspecs (count spec-frame-pairs)
         spec-chunks (->> spec-frame-pairs
@@ -369,7 +370,7 @@
     (for [sub-pairs spec-chunks]
       [layout
        :size (get-in opts [:size] "auto")
-       :gap "20px"
+       :gap lgap
        :children
        (for [[spec frame] sub-pairs]
          (do #_(js-delete spec "usermeta")
@@ -491,13 +492,15 @@
         extfn  (get-in opts [:extfn])
         size   (get-in opts [:size] "auto")
         order  (get-in opts [:order] :col)
-        layout (if (= order :row) v-box h-box)] (printchan :OPTS opts)
+        layout (if (= order :row) v-box h-box)
+        lgap   (if (= layout v-box) (opts :RGAP) (opts :CGAP))]
+    (printchan :OPTS opts)
     (if extfn
       (extfn tabval)
       (wrapfn
        [layout :attr {:id id}
         :size size
-        :gap "10px"
+        :gap lgap
         :children (hanami)]))))
 
 (defn hanami-main []

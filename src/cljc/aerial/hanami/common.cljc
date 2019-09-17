@@ -14,6 +14,8 @@
          :mode :MODE}        ; either "vega-lite" or "vega" - see defaults
    :tab {:order :ORDER       ; either :row or :col - see defaults
          :eltsper :ELTSPER   ; count of elements per row/col - see defaults
+         :rgap :RGAP         ; default gap between rows
+         :cgap :CGAP         ; default gap between columns
          :size "auto"}})
 
 
@@ -126,7 +128,7 @@
          :TITLE RMV, :TOFFSET RMV
          :HEIGHT 300, :WIDTH 400, :DHEIGHT 60
          :USERDATA RMV, :MODE "vega-lite", :RENDERER "canvas" :SCALEFACTOR 1
-         :ORDER :row, :ELTSPER 2
+         :ORDER :row, :ELTSPER 2, :RGAP "20px", :CGAP "20px"
 
          :TOP RMV, :BOTTOM RMV, :LEFT RMV, :RIGHT RMV
          :VID RMV :FID RMV :AT RMV :POS RMV

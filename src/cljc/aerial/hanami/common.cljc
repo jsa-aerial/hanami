@@ -116,20 +116,24 @@
           (not= fdata RMV) (if fdatafn (fdatafn xkv fdata-key fdata) RMV)
           :else RMV)))
 
+
 (def _defaults
-  (atom {;; General
+  (atom {;; Controls
+         ::rmv-empty? true ::use-defaults? true
+
+         ;; General
          :BACKGROUND "floralwhite"
          :TITLE RMV, :TOFFSET RMV
          :HEIGHT 300, :WIDTH 400, :DHEIGHT 60
          :USERDATA RMV, :MODE "vega-lite", :RENDERER "canvas" :SCALEFACTOR 1
          :ORDER :row, :ELTSPER 2
-         
+
          :TOP RMV, :BOTTOM RMV, :LEFT RMV, :RIGHT RMV
          :VID RMV :FID RMV :AT RMV :POS RMV
 
          ;; Data and transforms
          :VALDATA get-data-vals
-         :DATA RMV, :FDATA RMV, :SDATA RMV, :UDATA RMV, :NDATA RMV
+         :DATA RMV, :FDATA RMV, :SDATA RMV, :UDATA RMV, :NDATA RMV :DFMT RMV
          :TRANSFORM RMV
          :OPACITY RMV
          :AGG RMV, :XAGG RMV, :YAGG RMV
@@ -224,7 +228,8 @@
   ([spec xkv]
    (let [xkv (if (not (xkv ::spec)) (assoc xkv ::spec spec) xkv)
          defaults @_defaults
-         xkv (merge defaults xkv)]
+         use-defaults? (get xkv ::use-defaults? (defaults ::use-defaults?))
+         xkv (if use-defaults? (merge defaults xkv) xkv)]
      (sp/transform
       sp/ALL
       (fn[v]
@@ -250,8 +255,9 @@
               (recur subval)
 
               :else ;substitution val is coll
-              (let [xv (xform subval xkv)]
-                (if (seq xv) xv RMV))))))
+              (let [xv (xform subval xkv)
+                    rmv? (xkv ::rmv-empty?)]
+                (if (seq xv) xv (if rmv? RMV xv)))))))
       spec)))
 
   ([spec k v & kvs]
@@ -261,13 +267,4 @@
                      (mapv (fn[[k v]] [k v]))))))
 
   ([spec] (xform spec {})))
-
-
-
-
-
-
-
-
-
 

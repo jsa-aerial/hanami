@@ -360,7 +360,7 @@
 
 (defn vis-list [tabid spec-frame-pairs opts]
   (let [layout (if (= (get-in opts [:order]) :row) h-box v-box)
-        lgap   (if (= layout h-box) (opts :CGAP) (opts :RGAP))
+        lgap   (if (= layout h-box) (opts :cgap) (opts :rgap))
         eltnum (get-in opts [:eltsper] 3)
         numspecs (count spec-frame-pairs)
         spec-chunks (->> spec-frame-pairs
@@ -493,7 +493,7 @@
         size   (get-in opts [:size] "auto")
         order  (get-in opts [:order] :col)
         layout (if (= order :row) v-box h-box)
-        lgap   (if (= layout v-box) (opts :RGAP) (opts :CGAP))]
+        lgap   (if (= layout v-box) (opts :rgap) (opts :cgap))]
     (printchan :OPTS opts)
     (if extfn
       (extfn tabval)

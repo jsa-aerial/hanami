@@ -425,11 +425,9 @@
                     (when (-> item :usermeta :frame :fid (= fid))
                       idx)))
                  first)
-        newspec (assoc-in (nth specs pos)
-                          (if (= element :frame)
-                            [:usermeta :frame]
-                            [:usermeta :frame element])
-                          content)
+        newspec (if (= element :frame)
+                  content
+                  (assoc-in (nth specs pos) [:usermeta :frame element] content))
         newspecs (concat (take pos specs)
                          [newspec] ; splice in the updated spec
                          (drop (inc pos) specs))

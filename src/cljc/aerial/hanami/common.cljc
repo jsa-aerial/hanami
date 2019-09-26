@@ -25,6 +25,7 @@
 (def color-key :COLOR)
 (def shape-key :SHAPE)
 (def opacity-key :OPACITY)
+(def size-key :SIZE)
 (def title-key :TITLE)
 
 
@@ -38,6 +39,10 @@
        (alter-var-root (var color-key) (constantly key)))
      (defn set-shape-key! [key]
        (alter-var-root (var shape-key) (constantly key)))
+     (defn set-opacity-key! [key]
+       (alter-var-root (var opacity-key) (constantly key)))
+     (defn set-size-key! [key]
+       (alter-var-root (var size-key) (constantly key)))
      (defn set-title-key! [key]
        (alter-var-root (var title-key) (constantly key))))
    :cljs
@@ -46,6 +51,8 @@
      (defn set-fdata-key! [key] (set! fdata-key key))
      (defn set-color-key! [key] (set! color-key key))
      (defn set-shape-key! [key] (set! shape-key key))
+     (defn set-opacity-key! [key] (set! opacity-key key))
+     (defn set-size-key! [key] (set! size-key key))
      (defn set-title-key! [key] (set! title-key key))))
 
 
@@ -67,9 +74,21 @@
 
          opacity-key
          (fn[xkv subkey subval]
-           (if (number? subval)
-             {:value subval}
-             subval))
+           (cond
+             (string? subval)
+             (xform ht/default-mark-props (assoc xkv :MPFIELD subval))
+
+             (number? subval) {:value subval}
+             :else subval))
+
+         size-key
+         (fn[xkv subkey subval]
+           (cond
+             (string? subval)
+             (xform ht/default-mark-props (assoc xkv :MPFIELD subval))
+
+             (number? subval) {:value subval}
+             :else subval))
 
          title-key
          (fn[xkv subkey subval]

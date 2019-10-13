@@ -855,7 +855,8 @@
   call `update-tabs` on the vector of vg/vgl-maps."
   [vgl-maps]
   (let [vgl-maps (com/ev vgl-maps)]
-    (update-tabs vgl-maps)))
+    (update-tabs vgl-maps)
+    true))
 
 
 

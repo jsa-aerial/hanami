@@ -454,8 +454,10 @@
 (defn update-frame-element [fid element content]
   (let [fid (name fid)
         frame-element ((get-frame-elements fid) element)
-        component content]
-    (rgt/render component frame-element)))
+        component content
+        frame-cb (-> :frame-cb get-adb first)]
+    (rgt/render component frame-element)
+    (frame-cb {} {:frameid fid})))
 
 
 

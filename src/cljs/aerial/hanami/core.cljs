@@ -212,6 +212,17 @@
    (sp/setval [sp/ATOM :vgviews sp/ATOM tid vid]
               vgview app-db)))
 
+(defn del-vgviews
+  ([]
+   (sp/setval [sp/ATOM :vgviews sp/ATOM]
+              {} app-db) true)
+  ([tid]
+   (sp/setval [sp/ATOM :vgviews sp/ATOM tid]
+              sp/NONE app-db) true)
+  ([tid vid]
+   (sp/setval [sp/ATOM :vgviews sp/ATOM tid vid]
+              sp/NONE app-db) true))
+
 
 (defn get-tab-field
   ([tid]

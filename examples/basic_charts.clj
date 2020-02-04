@@ -107,7 +107,7 @@
                            :href  "https://github.com/jsa-aerial/saite"
                            :target "_blank"]]]]]]]
   (->> [(hc/xform ht/point-chart
-          :TID :picframes
+          :TID :picframes :VID :vscat2
           :TOP top :BOTTOM bottom :LEFT left :RIGHT right
           :UDATA "data/cars.json"
           :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")]
@@ -144,8 +144,10 @@ um, quod te velle video, omnes semper beatos esse sapientes. Tamen a proposito, 
                  [p {:style {:width "600px" :min-width "50px"
                              :color "red"}}
                   ~text]]]]]
-  (->> (hc/xform ht/empty-chart
-        :TID :picframes :TOP top :BOTTOM bottom :LEFT left :RIGHT right)
+  (->> (hc/xform
+        ht/empty-chart
+        :TID :picframes
+        :TOP top :BOTTOM bottom :LEFT left :RIGHT right)
        hmi/sv!))
 
 
@@ -167,7 +169,7 @@ um, quod te velle video, omnes semper beatos esse sapientes. Tamen a proposito, 
                [:br] ~text ~text ~text ~text]]]
   (->> [(hc/xform ht/point-chart
           :TID :picframes :UDATA "data/cars.json"
-          :TOP top :FID :f1
+          :TOP top :FID :f1 :VID :vscat3
           :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")
         (hc/xform ht/empty-chart
           :TID :picframes

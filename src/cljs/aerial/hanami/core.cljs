@@ -173,22 +173,44 @@
 
 
 
-(defn get-vspec [vid]
-  (sp/select-one [sp/ATOM :vspecs sp/ATOM vid]
-                 app-db))
+(declare get-cur-tab)
 
-(defn update-vspecs [vid vspec]
-  (sp/setval [sp/ATOM :vspecs sp/ATOM vid]
-             vspec app-db))
+(defn get-vspec
+  ([vid]
+   (get-vspec (get-cur-tab :id) vid))
+  ([tid vid]
+   (sp/select-one [sp/ATOM :vspecs sp/ATOM tid vid]
+                  app-db)))
+
+(defn update-vspecs
+  ([vid vspec]
+   (update-vspecs (get-cur-tab :id) vid vspec))
+  ([tid vid vspec]
+   (sp/setval [sp/ATOM :vspecs sp/ATOM tid vid]
+              vspec app-db)))
 
 
-(defn get-vgview [vid]
-  (sp/select-one [sp/ATOM :vgviews sp/ATOM vid]
-                 app-db))
+(defn get-vgview
+  ([vid]
+   (get-vgview (get-cur-tab :id) vid))
+  ([tid vid]
+   (sp/select-one [sp/ATOM :vgviews sp/ATOM tid vid]
+                  app-db)))
 
-(defn update-vgviews [vid vgview]
-  (sp/setval [sp/ATOM :vgviews sp/ATOM vid]
-             vgview app-db))
+(defn get-vgviews
+  ([]
+   (sp/select-any [sp/ATOM :vgviews sp/ATOM]
+                  app-db))
+  ([tid]
+   (sp/select-any [sp/ATOM :vgviews sp/ATOM tid]
+                  app-db)))
+
+(defn update-vgviews
+  ([vid vgview]
+   (update-vgviews (get-cur-tab :id) vid vgview))
+  ([tid vid vgview]
+   (sp/setval [sp/ATOM :vgviews sp/ATOM tid vid]
+              vgview app-db)))
 
 
 (defn get-tab-field
@@ -282,7 +304,8 @@
 (defn visualize
   [spec elem] (print-when [:vis :vis] :SPEC spec)
   (when spec
-    (let [vid (-> spec :usermeta :vid) _ (printchan :VID vid)
+    (let [tid (-> spec :usermeta :tab :id)
+          vid (-> spec :usermeta :vid) _ (printchan :VID vid)
           vopts (-> spec :usermeta :opts)
           vmode (get vopts :mode)
           default-hover (if (= vmode "vega-lite") false js/undefined)
@@ -299,7 +322,7 @@
           vega (if (= vmode "vega-lite") (->> spec js/vl.compile .-spec) spec)]
       (-> (js/vegaEmbed elem vega (clj->js opts))
           (.then (fn [res]
-                   (when vid (update-vgviews vid res.view))
+                   (when vid (update-vgviews tid vid res.view))
                    #_(js/vegaTooltip.vega res.view spec)
                    #_(js/vegaTooltip.vegaLite res.view spec)))
           (.catch (fn [err]

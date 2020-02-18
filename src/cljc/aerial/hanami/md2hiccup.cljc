@@ -40,7 +40,8 @@
    {:name :inline-link
     :regex #"^(https?://[^ ]+)"
     :f (fn [[_ txt]]
-         (into [:a {:href txt} txt]))}
+         (into [:a {:target "_blank" :rel "noopener noreferrer"
+                    :href txt} txt]))}
 
 
    {:name :auto-link
@@ -70,16 +71,21 @@
     :regex #"^(\[([^\]]+)\]\(([^)]*)\))"
     :f (fn [[_ _ txt ref]]
          (let [[ref title & _] (str/split ref #"\s\"")
-               attrs (if title {:href ref :title (str/replace title #"\"$\s*" "")}
-                         {:href ref})]
+               attrs (if title
+                       {:target "_blank" :rel "noopener noreferrer"
+                        :href ref :title (str/replace title #"\"$\s*" "")}
+                       {:target "_blank" :rel "noopener noreferrer"
+                        :href ref})]
            (into [:a attrs] (parse-inline txt))))}
 
    {:name :img
     :regex #"^(!\[([^\]]+)\]\(([^)]*)\))"
     :f (fn [[_ _ txt ref]]
          (let [[ref title & _] (str/split ref #"\s\"")
-               attrs (if title {:src ref :alt txt :title (str/replace title #"\"$\s*" "")}
-                         {:src ref :alt txt})]
+               attrs (if title
+                       {:src ref :alt txt
+                        :title (str/replace title #"\"$\s*" "")}
+                       {:src ref :alt txt})]
            [:img attrs]))}
 
    ])

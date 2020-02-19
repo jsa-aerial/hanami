@@ -1,11 +1,10 @@
-(defproject aerial.hanami "0.12.0"
+(defproject aerial.hanami "0.12.1"
   :description "Clojure(Script) client/server vega/vega-lite based dynamic interactive plots and charts"
   :url "https://github.com/jsa-aerial/hanami"
   :license {:name "The MIT License (MIT)"
             :url "http://opensource.org/licenses/MIT"}
-  :dependencies [[org.clojure/clojure "1.9.0"]
-                 [org.clojure/clojurescript "1.10.238"]
-                 #_[org.clojure/clojurescript "1.10.339"]
+  :dependencies [[org.clojure/clojure "1.10.1"]
+                 [org.clojure/clojurescript "1.10.439"]
                  [org.clojure/core.async "0.4.474"]
                  [org.clojure/data.csv "0.1.3"]
 
@@ -13,9 +12,9 @@
                  [bk/ring-gzip "0.2.1"]
                  [ring-cljsjs "0.1.0"]
 
-                 [com.rpl/specter "1.1.1"]
+                 [com.rpl/specter "1.1.3"]
 
-                 [aerial.hanasu "0.2.3"]
+                 [aerial.hanasu "0.2.4"]
 
                  [com.andrewmcveigh/cljs-time "0.5.2"]
                  [re-com "2.5.0"]

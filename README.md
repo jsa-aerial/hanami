@@ -94,7 +94,7 @@ Hence, templates are a means to abstract all manner of visualization aspects and
 
 To install, add the following to your project `:dependencies`:
 
-    [aerial.hanami "0.11.1"]
+    [aerial.hanami "0.12.1"]
 
 
 

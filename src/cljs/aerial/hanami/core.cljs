@@ -57,6 +57,29 @@
 
 
 
+;;; Need a _data_ database :/
+;;;
+;;; This is needed to handle state NOT associated with component state
+;;; or updates. In particular, to avoid triggering their renderings on
+;;; completely irrelevant changes.
+;;;
+;;; First and foremost, no state _directly associated_ with the
+;;; messaging system should have any impact on components!!
+;;;
+(defonce data-db (atom {:dbg {}}))
+
+(defn update-ddb
+  ([] (com/update-db data-db {}))
+  ([keypath vorf]
+   (com/update-db data-db keypath vorf))
+  ([kp1 vof1 kp2 vof2 & kps-vs]
+   (apply com/update-db data-db kp1 vof1 kp2 vof2 kps-vs)))
+
+(defn get-ddb
+  ([] (com/get-db data-db []))
+  ([key-path]
+   (com/get-db data-db key-path)))
+
 
 (defonce app-db (rgt/atom {:dbg {}}))
 
@@ -565,11 +588,11 @@
 
 
 (defn get-ws []
-  (->> (get-adb []) keys (filter #(-> % type (= js/WebSocket))) first))
+  (->> (get-ddb []) keys (filter #(-> % type (= js/WebSocket))) first))
 
 (defn get-chan []
   (let [ws (get-ws)
-        ch (when ws (get-adb [ws :chan]))]
+        ch (when ws (get-ddb [ws :chan]))]
     ch))
 
 ;; Send server msg
@@ -716,7 +739,7 @@
 
 (defn on-msg [ch ws hanami-msg]
   (let [{:keys [op data]} hanami-msg]
-    (update-adb [ws :line-info :rcvcnt] inc)
+    (update-ddb [ws :line-info :rcvcnt] inc)
     (case op
 
       :register
@@ -740,7 +763,7 @@
 
 
 (defn on-open [ch ws]
-  (update-adb
+  (update-ddb
    ws {:chan ch, :line-info {:rcvcnt 0, :sntcnt 0, :errcnt 0}}))
 
 
@@ -767,17 +790,17 @@
 
     :sent (let [{:keys [ws msg]} payload]
             (print-when [:msg :sent] :CLIENT "Sent msg " msg)
-            (update-adb [ws :line-info :lastsnt] msg,
+            (update-ddb [ws :line-info :lastsnt] msg,
                         [ws :line-info :sntcnt] inc))
 
     :stop (let [{:keys [ws cause]} payload]
             (print-when [:msg :stop] :CLIENT "Stopping reads... Cause " cause)
             (cli/close-connection ws)
-            (update-adb ws :rm))
+            (update-ddb ws :rm))
 
     :error (let [{:keys [ws err]} payload]
              (printchan :CLIENT :error :payload payload)
-             (update-adb [ws :line-info :errcnt] inc))
+             (update-ddb [ws :line-info :errcnt] inc))
 
     (printchan :CLIENT :WTF :op op :payload payload)))
 

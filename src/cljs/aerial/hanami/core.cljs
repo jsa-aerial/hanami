@@ -33,7 +33,8 @@
             single-dropdown selection-list
             checkbox radio-button slider progress-bar throbber
             horizontal-bar-tabs vertical-bar-tabs
-            modal-panel popover-content-wrapper popover-anchor-wrapper]
+            modal-panel popover-content-wrapper popover-anchor-wrapper
+            datepicker datepicker-dropdown]
     :refer-macros [handler-fn]]
    [re-com.box
     :refer [flex-child-style]]
@@ -165,6 +166,7 @@
               horizontal-bar-tabs vertical-bar-tabs
               modal-panel popover-content-wrapper popover-anchor-wrapper
               filter-choices-by-keyword single-dropdown-args-desc
+              datepicker datepicker-dropdown
               md]
             [h-box v-box box border gap line h-split v-split scroller
              flex-child-style
@@ -176,6 +178,7 @@
              horizontal-bar-tabs vertical-bar-tabs
              modal-panel popover-content-wrapper popover-anchor-wrapper
              filter-choices-by-keyword single-dropdown-args-desc
+             datepicker datepicker-dropdown
              md])))
 
 (defn xform-recom

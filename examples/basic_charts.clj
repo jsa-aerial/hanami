@@ -57,8 +57,8 @@
 
 
 ;;; Simple scatter with template
+;;: DATA (->> "http://localhost:3003/data/cars.json" slurp json/read-str)
 (->> (hc/xform ht/point-chart
-       ;;:DATA (->> "http://localhost:3003/data/cars.json" slurp json/read-str)
        :UDATA "data/cars.json"
        :VID :vscat1 :FID :fscat1
        :X "Horsepower" :Y "Miles_per_Gallon" :COLOR "Origin")

@@ -10,7 +10,10 @@
     :as hmi
     :refer [printchan user-msg
             re-com-xref xform-recom
-            default-header-fn default-instrumentor-fn make-instrumentor start
+            default-header-fn
+            default-frame-cb
+            default-instrumentor-fn
+            make-instrumentor start
             update-adb get-adb
             get-vspec update-vspecs
             init-tabs
@@ -49,6 +52,8 @@
               [:main :img] img
               [:main :opts] (hc/xform opts)
               [:main :session-name] (rgt/atom "Test")
+              [:vgl-as-vg] :rm
+              [:vgviews] (atom {}) ; This should not have any reactive update
               [:vspecs] (rgt/atom {}))
   (init-tabs)
   (rgt/render [hanami-main]
@@ -63,6 +68,8 @@
   (let [instfn (make-instrumentor default-instrumentor-fn)]
     (printchan "Element 'app' available ...")
     (update-adb :elem elem
+                :symxlate-cb [identity]
+                :frame-cb [default-frame-cb]
                 :instrumentor [instfn]
                 :header [default-header-fn])
     (setup {:uid {:uuid "testing", :name "clientex"}
@@ -77,12 +84,16 @@
   (hc/add-defaults
    :HEIGHT 400 :WIDTH 450
    :USERDATA {:tab {:id :TID, :label :TLBL, :opts :TOPTS}
+              :frame {:top :TOP, :bottom :BOTTOM,
+                      :left :LEFT, :right :RIGHT
+                      :fid :FID :at :AT :pos :POS}
               :opts :OPTS
               :vid :VID, :msgop :MSGOP, :session-name :SESSION-NAME}
+   :AT :end :POS :after
    :VID RMV, :MSGOP :tabs, :SESSION-NAME "Exploring"
    :TID :expl1, :TLBL #(-> :TID % name cljstr/capitalize)
    :OPTS (hc/default-opts :vgl)
-   :TOPTS {:order :row, :eltsper 2 :size "auto"})
+   :TOPTS (hc/default-opts :tab))
   (app-init elem))
 
 ;;; We will run this one visualization upon page load!

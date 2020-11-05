@@ -3,14 +3,14 @@
   :url "https://github.com/jsa-aerial/hanami"
   :license {:name "The MIT License (MIT)"
             :url "http://opensource.org/licenses/MIT"}
-  :dependencies [[org.clojure/clojure "1.9.0"]
-                 [org.clojure/clojurescript "1.10.238"]
+  :dependencies [[org.clojure/clojure "1.10.1"]
+                 [org.clojure/clojurescript "1.10.439"]
                  [org.clojure/core.async "0.4.474"]
                  [org.clojure/data.csv "0.1.3"]
 
-                 [com.rpl/specter "1.1.1"]
+                 [com.rpl/specter "1.1.3"]
 
-                 [aerial.hanami "0.8.0"]
+                 [aerial.hanami "0.12.4"]
                  ]
 
   :plugins [[lein-figwheel "0.5.16"]

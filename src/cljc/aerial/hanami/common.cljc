@@ -104,21 +104,7 @@
                       (vector? subval)
                       (data/get-data (first subval) (second subval))
 
-                      :else (data/get-data subval)))])
-
-         ;; Hack for broken VGL 3.0.0-rc6 - incorrect grouping by TT fields
-         :TOOLTIP
-         (fn[xkv subkey subval]
-           (when-let [spec (xkv ::spec)]
-             (let [mark (spec :mark)
-                   mtype (cond (map? mark) (mark :type)
-                               (string? mark) mark
-                               (keyword? mark) (get xkv mark)
-                               :else nil)
-                   point (when (map? mark) (get xkv :POINT))]
-               (if (and (not= point true) (#{:line "line"} mtype))
-                 RMV
-                 subval))))}))
+                      :else (data/get-data subval)))])}))
 
 (defn update-subkeyfns
   ([new-subkeyfn-map]
@@ -169,6 +155,7 @@
          :ROWDEF ht/default-row :ROW RMV, :ROWTYPE RMV
          :COLDEF ht/default-col :COLUMN RMV, :COLTYPE RMV
          :POINT RMV, :MSIZE RMV, :MCOLOR RMV, :MFILLED RMV
+         :STROKE RMV, :SDASH RMV
          :ENCODING ht/xy-encoding
          :RESOLVE RMV
          :XRL-COLOR "red", :YRL-COLOR "green"
@@ -196,6 +183,8 @@
          :MPTYPE "nominal"
          :SHAPE RMV
          :SIZE RMV
+         :MSTROKE RMV, :MSDASH RMV
+         :MTOOLTIP RMV
          ;; color
          :COLOR RMV
          :CFIELD :X, :CTYPE :XTYPE, :LTYPE "symbol" :LTITLE "" :LOFFSET 0
@@ -238,9 +227,8 @@
   ([new-default-map]
    (swap! _defaults #(merge % new-default-map)))
   ([k v & kvs]
-   (add-defaults
-    (into {k v} (->> kvs (partition-all 2)
-                     (mapv (fn[[k v]] [k v])))))))
+    (->> kvs (partition-all 2) (mapv vec) (into {k v}) add-defaults)))
+
 
 
 

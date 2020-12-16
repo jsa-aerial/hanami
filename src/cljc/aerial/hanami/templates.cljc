@@ -82,6 +82,8 @@
    :color :COLOR
    :size :SIZE
    :shape :SHAPE
+   :stroke :STROKE
+   :strokeDash :SDASH
    :tooltip :TOOLTIP})
 
 
@@ -151,6 +153,7 @@
 (def mark-base
   {:type :MARK, :point :POINT,
    :size :MSIZE, :color :MCOLOR,
+   :stroke :MSTROKE :strokeDash :MSDASH
    :filled :MFILLED})
 
 

@@ -154,6 +154,7 @@
   {:type :MARK, :point :POINT,
    :size :MSIZE, :color :MCOLOR,
    :stroke :MSTROKE :strokeDash :MSDASH
+   :tooltip :MTOOLTIP
    :filled :MFILLED})
 
 

@@ -199,6 +199,12 @@
          :CSCHEME "greenblue"
          :FONTSIZE 9, :BASELINE "middle"
          :SIGNALS RMV
+
+         ;; stroke short cuts
+         :solid [1 0], "-" :solid
+         :dash [10 10], "--" :dash
+         :dashdot [2 5 5 5], "-." :dashdot
+         :dot [2 2], ":" :dot
          }))
 
 ;;; :SIGNALS

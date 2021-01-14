@@ -12,7 +12,7 @@
    {:field :Y, :type :YTYPE, :title :YTTITLE, :format :YTFMT}])
 
 (def default-mark-props
-  {:field :MPFIELD :type :MPTYPE})
+  {:field :MPFIELD :type :MPTYPE :scale :MPSCALE})
 
 (def default-color
   {:field :CFIELD :type :CTYPE :scale :CSCALE})

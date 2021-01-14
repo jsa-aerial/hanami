@@ -23,6 +23,7 @@
 (def data-key :DATA)
 (def fdata-key :FDATA)
 (def color-key :COLOR)
+(def strokedash-key :SDASH)
 (def shape-key :SHAPE)
 (def opacity-key :OPACITY)
 (def size-key :SIZE)
@@ -37,6 +38,8 @@
        (alter-var-root (var fdata-key) (constantly key)))
      (defn set-color-key! [key]
        (alter-var-root (var color-key) (constantly key)))
+     (defn set-strokedash-key! [key]
+       (alter-var-root (var strokedash-key) (constantly key)))
      (defn set-shape-key! [key]
        (alter-var-root (var shape-key) (constantly key)))
      (defn set-opacity-key! [key]
@@ -50,6 +53,7 @@
      (defn set-data-key!  [key] (set! data-key  key))
      (defn set-fdata-key! [key] (set! fdata-key key))
      (defn set-color-key! [key] (set! color-key key))
+     (defn set-strokedash-key! [key] (set! strokedash-key key))
      (defn set-shape-key! [key] (set! shape-key key))
      (defn set-opacity-key! [key] (set! opacity-key key))
      (defn set-size-key! [key] (set! size-key key))
@@ -61,6 +65,12 @@
 
 (def subkeyfns
   (atom {color-key
+         (fn[xkv subkey subval]
+           (if (string? subval)
+             (xform ht/default-mark-props (assoc xkv :MPFIELD subval))
+             subval))
+
+         strokedash-key
          (fn[xkv subkey subval]
            (if (string? subval)
              (xform ht/default-mark-props (assoc xkv :MPFIELD subval))
@@ -181,6 +191,7 @@
 
          ;; Mark Properties
          :MPTYPE "nominal"
+         :MPSCALE RMV
          :SHAPE RMV
          :SIZE RMV
          :MSTROKE RMV, :MSDASH RMV
@@ -202,7 +213,7 @@
 
          ;; stroke short cuts
          :solid [1 0], "-" :solid
-         :dash [10 10], "--" :dash
+         :dashed [10 10], "--" :dashed
          :dashdot [2 5 5 5], "-." :dashdot
          :dot [2 2], ":" :dot
          }))
@@ -223,7 +234,9 @@
   ([k v & kvs]
    (update-defaults
     (doseq [[k v] (-> k (cons (cons v kvs)) (->> (partition-all 2)))]
-      (sp/setval [sp/ATOM k] v _defaults)))))
+      (if (= v ::RMV)
+        (swap! _defaults #(assoc % k RMV))
+        (sp/setval [sp/ATOM k] v _defaults))))))
 
 (defn get-default [k] (@_defaults k))
 

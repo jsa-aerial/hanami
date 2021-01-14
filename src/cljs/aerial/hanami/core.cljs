@@ -356,7 +356,9 @@
                            :source (get vopts :source false),
                            :editor (get vopts :editor false),
                            :compiled false}}
-          vega (if (= vmode "vega-lite") (->> spec js/vl.compile .-spec) spec)]
+          vega (if (= vmode "vega-lite")
+                 (->> spec js/vegaLite.compile .-spec)
+                 spec)]
       (-> (js/vegaEmbed elem vega (clj->js opts))
           (.then (fn [res]
                    (when vid (update-vgviews tid vid res.view))

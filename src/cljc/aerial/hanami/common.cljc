@@ -142,6 +142,7 @@
          :BACKGROUND "floralwhite"
          :TITLE RMV, :TOFFSET RMV
          :HEIGHT 300, :WIDTH 400, :DHEIGHT 60
+         :CFGBAR RMV, :CGFVIEW RMV, :CFGAXIS RMV, :CFGRANGE RMV
          :USERDATA RMV, :MODE "vega-lite", :RENDERER "canvas" :SCALEFACTOR 1
          :ORDER :row, :ELTSPER 2, :RGAP "20px", :CGAP "20px"
 
@@ -150,18 +151,20 @@
 
          ;; Data and transforms
          :VALDATA get-data-vals
+         :DATASETS RMV
          :DATA RMV, :FDATA RMV, :SDATA RMV, :UDATA RMV, :NDATA RMV :DFMT RMV
          :TRANSFORM RMV
          :OPACITY RMV
          :AGG RMV, :XAGG RMV, :YAGG RMV
 
          ;; encodings
-         :X "x", :XTYPE, "quantitative", :XBIN RMV, :XUNIT RMV, :XSORT RMV
+         :X "x", :XTYPE "quantitative", :XBIN RMV, :XUNIT RMV, :XSORT RMV
          :XSCALE RMV, :XAXIS {:title :XTITLE, :grid :XGRID, :format :XFORMAT}
          :XTITLE RMV, :XGRID RMV, :XFORMAT RMV, :XTTITLE RMV, :XTFMT RMV
          :Y "y", :YTYPE, "quantitative", :YBIN RMV, :YUNIT RMV, :YSORT RMV
          :YSCALE RMV, :YAXIS {:title :YTITLE, :grid :YGRID, :format :YFORMAT}
          :YTITLE RMV, :YGRID RMV, :YFORMAT RMV, :YTTITLE RMV, :YTFMT RMV
+         :TXT RMV, :TTYPE RMV, :TAXIS RMV, :TSCALE RMV
          :ROWDEF ht/default-row :ROW RMV, :ROWTYPE RMV
          :COLDEF ht/default-col :COLUMN RMV, :COLTYPE RMV
          :POINT RMV, :MSIZE RMV, :MCOLOR RMV, :MFILLED RMV
@@ -201,6 +204,12 @@
          :CFIELD :X, :CTYPE :XTYPE, :LTYPE "symbol" :LTITLE "" :LOFFSET 0
          :CSCALE {:scheme {:name "greenblue" :extent [0.4 1]}}
          :CLEGEND {:type :LTYPE :offset :LOFFSET :title :LTITLE}
+         ;; text
+         :DX RMV, :DY RMV, :XOFFSET RMV, :YOFFSET RMV
+         :ANGLE RMV, :ALIGN RMV, :BASELINE RMV
+         :FONT RMV, :FONTSIZE RMV, :LIMIT RMV
+         :FONTSTYLE RMV, :FONTWEIGHT RMV, :TCOLOR RMV
+         :LINEHEIGHT RMV
 
          ;; Vega layout transforms
          :KEY "id", :PARENTKEY "parent", :NAME "name"
@@ -208,7 +217,6 @@
          :TREESIZE [{:signal "height"} {:signal "width - 100"}]
          :TREEAS ["y" "x" "depth" "children"]
          :CSCHEME "greenblue"
-         :FONTSIZE 9, :BASELINE "middle"
          :SIGNALS RMV
 
          ;; stroke short cuts
@@ -235,10 +243,14 @@
    (update-defaults
     (doseq [[k v] (-> k (cons (cons v kvs)) (->> (partition-all 2)))]
       (if (= v ::RMV)
-        (swap! _defaults #(assoc % k RMV))
+        (swap! _defaults #(dissoc % k))
         (sp/setval [sp/ATOM k] v _defaults))))))
 
 (defn get-default [k] (@_defaults k))
+(defn get-defaults [k & ks]
+  (if (seq ks)
+    (mapv #(vector % (@_defaults %)) (cons k ks))
+    (get-default k)))
 
 ;;; Not properly general - use update-defaults
 (defn add-defaults
@@ -251,13 +263,17 @@
 
 
 
-
 (defn xform
   ([spec xkv]
    (let [xkv (if (not (xkv ::spec)) (assoc xkv ::spec spec) xkv)
          defaults @_defaults
          use-defaults? (get xkv ::use-defaults? (defaults ::use-defaults?))
-         xkv (if use-defaults? (merge defaults xkv) xkv)]
+         xkv (if use-defaults? (merge defaults xkv) xkv)
+         template-defaults (if (map? spec) (spec ::ht/defaults) false)
+         spec (if template-defaults (dissoc spec ::ht/defaults) spec)
+         xkv (if template-defaults
+               (merge xkv template-defaults (xkv ::user-kvs))
+               xkv)]
      (sp/transform
       sp/ALL
       (fn[v]
@@ -290,10 +306,12 @@
       spec)))
 
   ([spec k v & kvs]
-   (xform spec (into
-                {k v}
-                (->> kvs (partition-all 2)
-                     (mapv (fn[[k v]] [k v]))))))
+   (let [user-kv-map (into {k v}
+                        (->> kvs (partition-all 2)
+                             (mapv (fn[[k v]] [k v]))))
+         ;; Need to keep these to override new template defaults
+         start-kv-map (assoc user-kv-map ::user-kvs user-kv-map)]
+     (xform spec start-kv-map)))
 
   ([spec] (xform spec {})))
 

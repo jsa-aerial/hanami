@@ -1,8 +1,16 @@
 (ns aerial.hanami.templates
   #?(:cljs
      (:require [aerial.hanami.utils :as hu :refer [format]]))
-  )
+  (:require
+   [com.rpl.specter :as sp]))
 
+
+(def RMV sp/NONE)
+
+
+
+(def default-config
+  {:bar :CFGBAR :view :CGFVIEW :axis :CFGAXIS :range :CFGRANGE})
 
 
 (def ttdef {:field :TTFIELD, :type :TTTYPE, :title :TTTITLE, :format :TTFMT})
@@ -27,7 +35,8 @@
   {:field :COLUMN :type :COLTYPE})
 
 (def data-options
-  {:values :VALDATA, :url :UDATA, :name :NDATA :format :DFMT})
+  {:values :VALDATA, :url :UDATA, :sequence :SDATA
+   :name :NDATA :format :DFMT})
 
 
 (def interval-scales
@@ -59,8 +68,21 @@
     :mark :SMDWN-MARK}})
 
 
+(def encoding-base
+  {:opacity :OPACITY
+   :row :ROWDEF
+   :column :COLDEF
+   :color :COLOR
+   :size :SIZE
+   :shape :SHAPE
+   :stroke :STROKE
+   :strokeDash :SDASH
+   :tooltip :TOOLTIP})
+
 (def xy-encoding
-  {:x {:field :X
+  (assoc
+   encoding-base
+   :x {:field :X
        :type :XTYPE
        :bin :XBIN
        :timeUnit :XUNIT
@@ -75,18 +97,35 @@
        :axis :YAXIS
        :scale :YSCALE
        :sort :YSORT
-       :aggregate :YAGG}
-   :opacity :OPACITY
-   :row :ROWDEF
-   :column :COLDEF
-   :color :COLOR
-   :size :SIZE
-   :shape :SHAPE
-   :stroke :STROKE
-   :strokeDash :SDASH
-   :tooltip :TOOLTIP})
+       :aggregate :YAGG}))
 
+(def text-encoding
+  (-> encoding-base
+      (dissoc :tooltip)
+      (assoc
+       :text {:field :TXT
+              :type :TTYPE
+              :axis :TAXIS
+              :scale :TSCALE}
+       :color :TCOLOR)))
 
+(def view-base
+  {:usermeta :USERDATA
+   :title :TITLE
+   :height :HEIGHT
+   :width :WIDTH
+   :background :BACKGROUND
+   :selection :SELECTION
+   :data data-options
+   :transform :TRANSFORM
+   :encoding :ENCODING})
+
+(def mark-base
+  {:type :MARK, :point :POINT,
+   :size :MSIZE, :color :MCOLOR,
+   :stroke :MSTROKE :strokeDash :MSDASH
+   :tooltip :MTOOLTIP
+   :filled :MFILLED})
 
 
 (def xrule-layer
@@ -126,6 +165,27 @@
    :transform :TRANSFORM
    :encoding :ENCODING})
 
+(def text-layer
+  {:mark (assoc mark-base :type "text")
+   :encoding text-encoding
+   :dx :DX
+   :dy :DY
+   :xOffset :XOFFSET
+   :yOffset :YOFFSET
+   :angle :ANGLE
+   :align :ALIGN
+   :baseline :BASELINE
+   :font :FONT
+   :fontStyle :FONTSTYLE
+   :fontWeight :FONTWEIGHT
+   :fontSize :FONTSIZE
+   :lineHeight :LINEHEIGHT
+   :limit :LIMIT})
+
+(def rect-layer
+  {:mark (assoc mark-base :type "rect")
+   :encoding (dissoc encoding-base :tooltip)})
+
 (def area-layer
   {:mark "area"
    :selection :SELECTION
@@ -138,24 +198,6 @@
    :transform :TRANSFORM
    :selection :SELECTION
    :encoding :ENCODING})
-
-(def view-base
-  {:usermeta :USERDATA
-   :title :TITLE
-   :height :HEIGHT
-   :width :WIDTH
-   :background :BACKGROUND
-   :selection :SELECTION
-   :data data-options
-   :transform :TRANSFORM
-   :encoding :ENCODING})
-
-(def mark-base
-  {:type :MARK, :point :POINT,
-   :size :MSIZE, :color :MCOLOR,
-   :stroke :MSTROKE :strokeDash :MSDASH
-   :tooltip :MTOOLTIP
-   :filled :MFILLED})
 
 
 (def empty-chart
@@ -185,13 +227,29 @@
    :width :WIDTH
    :background :BACKGROUND
    :layer :LAYER
+   :transform :TRANSFORM
    :resolve :RESOLVE
    :data data-options
-   :config {:bar {:binSpacing 1
-                  :discreteBandSize 5
-                  :continuousBandSize 5}
-            #_:view #_{:stroke "transparent"},
-            #_:axis #_{:domainWidth 1}}})
+   :config default-config})
+
+(def heatmap-chart
+  (assoc layer-chart
+         :encoding xy-encoding
+         :layer [rect-layer text-layer]))
+
+(def corr-heatmap
+  (assoc heatmap-chart
+         ::defaults
+         {:X :COL1, :XSORT :COLS :XTYPE RMV
+          :Y :COL2, :YSORT :COLS :YTYPE RMV
+          :COLOR default-color
+          :CFIELD :CORR :CTYPE "quantitative" :CSCALE :COLORSCALE
+          :TXT :CORR :TTYPE "quantitative"
+          :TCOLOR {:value "black"
+                   :condition {:test :TEST :value "white"}}
+          :COLORSCALE {:scheme "redgrey" :reverse true}}))
+
+
 
 
 (def hconcat-chart
@@ -203,9 +261,7 @@
    :hconcat :HCONCAT
    :resolve :RESOLVE
    :data data-options
-   :config {:bar {:binSpacing 1
-                  :discreteBandSize 5
-                  :continuousBandSize 5}}})
+   :config default-config})
 
 (def vconcat-chart
   {:usermeta :USERDATA
@@ -216,9 +272,7 @@
    :vconcat :VCONCAT
    :resolve :RESOLVE
    :data data-options
-   :config {:bar {:binSpacing 1
-                  :discreteBandSize 5
-                  :continuousBandSize 5}}})
+   :config default-config})
 
 (def overview-detail
   {:usermeta :USERDATA
@@ -234,22 +288,9 @@
 
 
 (def grouped-bar-chart
-  {:usermeta :USERDATA
-   :title  :TITLE
-   :height :HEIGHT
-   :width  :WIDTH
-   :background :BACKGROUND
-   :selection :SELECTION
-   :data data-options
-
-   :mark "bar"
-   :encoding :ENCODING
-
-   :config {:bar {:binSpacing 0
-                  :discreteBandSize 1
-                  :continuousBandSize 1}
-            :view {:stroke "transparent"},
-            :axis {:domainWidth 1}}})
+  (assoc view-base
+         :mark (merge mark-base {:type "bar"})
+         :config default-config))
 
 
 
@@ -258,11 +299,12 @@
 
 
 (def contour-plot
-  {:usermeta :USERDATA
+  {::defaults {:CFGRANGE {:heatmap {:scheme "greenblue"}}}
+   :usermeta :USERDATA
    :$schema "https://vega.github.io/schema/vega/v4.json",
    :autosize "pad",
    :legends [{:fill "color", :type "gradient"}],
-   :config {:range {:heatmap {:scheme "greenblue"}}},
+   :config default-config,
    :height :HEIGHT, :width :WIDTH,
    :padding 5,
    :axes [{:scale "x",
@@ -318,7 +360,7 @@
               :value true,
               :bind {:input "checkbox"}}],
    :data [{:name "source",
-           :values :DATA :url :UDATA
+           :values :VALDATA :url :UDATA :sequence :SDATA
            :transform [{:type "filter",
                         :expr :XFORM-EXPR}]}
           {:name "contours",
@@ -332,6 +374,7 @@
 
 (def tree-layout
   {:usermeta :USERDATA
+   ::defaults {:FONTSIZE 9, :BASELINE "middle"}
    :$schema "https://vega.github.io/schema/vega/v4.json",
    :width :WIDTH,
    :height :HEIGHT,

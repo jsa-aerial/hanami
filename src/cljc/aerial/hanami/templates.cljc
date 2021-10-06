@@ -1,8 +1,7 @@
 (ns aerial.hanami.templates
-  #?(:cljs
-     (:require [aerial.hanami.utils :as hu :refer [format]]))
   (:require
-   [com.rpl.specter :as sp]))
+   [com.rpl.specter :as sp]
+   #?(:cljs [aerial.hanami.utils :as hu :refer [format]])))
 
 
 (def RMV sp/NONE)

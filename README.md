@@ -1,3 +1,5 @@
+[![Clojars Project](https://img.shields.io/clojars/v/aerial.hanami.svg)](https://clojars.org/aerial.hanami)
+
 # Hanami
 
 Interactive arts and charts visualizations with Clojure(Script), Vega-lite, and Vega. Flower viewing 花見 (hanami)

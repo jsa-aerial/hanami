@@ -1195,7 +1195,7 @@ You will need to code your application setup and initialization functions. If yo
 
 #### Landing page - index.html
 
-The most typical way of getting the application loaded is via an explict `index.html` file which is correctly located in the directory `resources/public` of your application. The example application uses this [index.html](https://github.com/jsa-aerial/hanami/blob/master/examples/ClientOnly/resources/public/index.html)
+The most typical way of getting the application loaded is via an explict `index.html` file which is correctly located in the directory `resources/public` of your application. The example application uses this [index.html](https://github.com/jsa-aerial/hanami/blob/master/examples/ClientOnly/resources/public/Fig/index.html)
 
 Once you have your code compiled and located per the `<script ...>` tag in your `index.html`, you can simply use a browser to navigate to this file and your application will be active. If you want to have an interactive session(s) with the application you will need to run [figwheel](https://github.com/bhauman/lein-figwheel) or an equivalent type of capability. The client only [example app](https://github.com/jsa-aerial/hanami/tree/master/examples/ClientOnly) is set up to use figwheel (plus cljs-repl and piggyback)
 

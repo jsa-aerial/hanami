@@ -175,7 +175,7 @@
 
 
 (defn landing-page [request index-path]
-  #_(printchan request)
+  ;;(printchan request :INDEX-PATH index-path)
   (content-type
    {:status 200
     :body (io/input-stream (io/resource index-path))}

@@ -23,6 +23,7 @@
    [cljsjs.vega-tooltip]
 
    [reagent.core :as rgt]
+   [reagent.dom :as rgtd]
 
    [re-com.core
     :as rcm
@@ -378,7 +379,7 @@
     (fn [comp]
       (let [argv (rest (rgt/argv comp))]
         (printchan "Did-Mount: called")
-        (visualize spec (rgt/dom-node comp))))
+        (visualize spec (rgtd/dom-node comp))))
 
     :component-did-update
     (fn [comp old-useless-argv]
@@ -392,7 +393,7 @@
             new-spec (-> new-argv-2nd-way rest first)]
         (print-when [:vis :vgl :update]
                     :ARGV1 new-useful-argv :ARGV2 (rest new-argv-2nd-way))
-        (visualize new-spec (rgt/dom-node comp))))
+        (visualize new-spec (rgtd/dom-node comp))))
 
     :reagent-render
     (fn [spec]
@@ -518,7 +519,7 @@
         frame-element ((get-frame-elements fid) element)
         component content
         frame-cb (-> :frame-cb get-adb first)]
-    (rgt/render component frame-element)
+    (rgtd/render component frame-element)
     (frame-cb {} {:frameid fid})))
 
 
@@ -657,9 +658,9 @@
               [:vgviews] (atom {}) ; This should not have any reactive update
               [:vspecs] (rgt/atom {}))
   (init-tabs)
-  (rgt/render [hanami-main]
-              (get-adb :elem)
-              #_(js/document.querySelector "#app")))
+  (rgtd/render [hanami-main]
+               (get-adb :elem)
+               #_(js/document.querySelector "#app")))
 
 
 (defn update-opts [{:keys [main tab opts]}]
@@ -1140,7 +1141,7 @@ Here we have corrected the mean by properly including item weights"]]))
 * Two
 * Three"]]]]
     (.appendChild lastchild div)
-    (rgt/render component lastchild.lastChild)
+    (rgtd/render component lastchild.lastChild)
     (js/console.log lastchild)
     (js/console.log lastchild.lastChild))
 

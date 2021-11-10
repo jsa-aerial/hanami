@@ -718,7 +718,7 @@ As an example [Saite](https://github.com/jsa-aerial/saite) makes use of the fram
 
 ## Resource requirements
 
-The basic resource requirements are the various stylesheets, mostly in support of [re-com](https://github.com/Day8/re-com), that are shown in the development 'landing page' [index.html](https://github.com/jsa-aerial/hanami/blob/master/resources/public/index.html). When you create your own `index.html` landing page - or generate it dynamically - you will need to include these resources.
+The basic resource requirements are the various stylesheets, mostly in support of [re-com](https://github.com/Day8/re-com), that are shown in the development 'landing page' [index.html](https://github.com/jsa-aerial/hanami/blob/master/resources/public/Fig/index.html). When you create your own `index.html` landing page - or generate it dynamically - you will need to include these resources.
 
 Also, as indicated in the development `index.html`, you will need to indicate where your final compiled JavaScript implementing your application will be and what it is called.
 

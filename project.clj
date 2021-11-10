@@ -1,24 +1,24 @@
-(defproject aerial.hanami "0.12.11"
+(defproject aerial.hanami "0.15.0"
   :description "Clojure(Script) client/server vega/vega-lite based dynamic interactive plots and charts"
   :url "https://github.com/jsa-aerial/hanami"
   :license {:name "The MIT License (MIT)"
             :url "http://opensource.org/licenses/MIT"}
-  :dependencies [[org.clojure/clojure "1.10.1"]
+  :dependencies [[org.clojure/clojure "1.10.3"]
                  [org.clojure/clojurescript "1.10.439"]
-                 [org.clojure/core.async "0.4.474"]
-                 [org.clojure/data.csv "0.1.3"]
+                 [org.clojure/core.async "1.4.627"]
+                 [org.clojure/data.csv "1.0.0"]
 
-                 [ring/ring-defaults "0.3.1"]
-                 [bk/ring-gzip "0.2.1"]
-                 [ring-cljsjs "0.1.0"]
+                 [ring/ring-defaults "0.3.3"]
+                 [bk/ring-gzip "0.3.0"]
+                 [ring-cljsjs "0.2.0"]
 
                  [com.rpl/specter "1.1.3"]
 
-                 [aerial.hanasu "0.2.4"]
+                 [aerial.hanasu "0.2.7"]
 
                  [com.andrewmcveigh/cljs-time "0.5.2"]
-                 [re-com "2.5.0"]
-                 [reagent "0.8.1"]
+                 [reagent "0.10.0"]
+                 [re-com "2.13.2"]
 
                  [cljsjs/vega "5.20.2-0"]
                  [cljsjs/vega-lite "5.1.1-0"]
@@ -31,7 +31,7 @@
 
   :source-paths ["src/cljc" "src/clj" "src/cljs"]
 
-  :prep-tasks ["compile" ["cljsbuild" "once" "min"]]
+  ;;:prep-tasks ["compile" ["cljsbuild" "once" "min"]]
 
   :cljsbuild {:builds
               [{:id "dev"

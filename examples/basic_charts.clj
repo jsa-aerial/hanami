@@ -100,7 +100,7 @@
                         [info-button
                          :position :right-center
                          :info
-                         [:p "Check out Saite Visualizer!" [:br]
+                         [p "Check out Saite Visualizer!" [:br]
                           "Built with Hanami!" [:br]
                           [hyperlink-href
                            :label "Saite "
@@ -323,7 +323,7 @@ um, quod te velle video, omnes semper beatos esse sapientes. Tamen a proposito, 
 
 
 hc/subkeyfns
-(hc/update-subkeyfns :TOOLTIP hc/RMV)
+
 
 (->
  (let [data (->> (range 0.005 0.999 0.001)
@@ -385,7 +385,7 @@ hc/subkeyfns
 (->>
  [(hc/xform ht/layer-chart
             :TID :dists :FID :dex1
-            :TITLE "A Real (obvserved) distribution with incorrect simple mean"
+            :TITLE "A Real (obvserved) distribution with incorrect sample mean"
             :HEIGHT 400 :WIDTH 450
             :LAYER
             [(hc/xform ht/bar-layer :XTITLE "Count" :YTITLE "Probability")

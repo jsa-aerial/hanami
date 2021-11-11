@@ -269,6 +269,9 @@
    [:id :opts :specs]))
 
 
+(defn get-last-tid []
+  (deref (get-adb [:tabs :last])))
+
 (defn get-cur-tab
   ([]
    (get-tab-field (deref (get-adb [:tabs :current]))))
@@ -276,7 +279,9 @@
    (get-tab-field (deref (get-adb [:tabs :current])) field)))
 
 (defn set-cur-tab [tid]
-  (sp/setval [sp/ATOM :tabs :current sp/ATOM] tid app-db))
+  (let [last-tid (get-cur-tab :id)]
+    (sp/setval [sp/ATOM :tabs :last sp/ATOM] last-tid app-db)
+    (sp/setval [sp/ATOM :tabs :current sp/ATOM] tid app-db)))
 
 (defn update-cur-tab [field value]
   (update-tab-field (deref (get-adb [:tabs :current])) field value))
@@ -313,13 +318,20 @@
              newdef app-db))
 
 (defn del-tab [tid]
-  (let [curid ((get-cur-tab) :id)
-        cnt (count (sp/select [sp/ATOM :tabs :active sp/ATOM sp/ALL] app-db))]
-    (sp/setval [sp/ATOM :tabs :active sp/ATOM sp/ALL #(= (% :id) tid)]
-               hc/RMV app-db)
-    (when (and (> cnt 0) (= tid curid))
-      (set-cur-tab (-> (sp/select [sp/ATOM :tabs :active sp/ATOM sp/ALL] app-db)
-                       first :id)))))
+  (let [curid (get-cur-tab :id)
+        lastid (get-last-tid)
+        cnt (count (sp/select [sp/ATOM :tabs :active sp/ATOM sp/ALL] app-db))
+        [idx cnt tvec] (tab-pos curid)] ; get vec B4 removal
+    (when (and tid curid)
+      (sp/setval [sp/ATOM :tabs :active sp/ATOM sp/ALL #(= (% :id) tid)]
+                 hc/RMV app-db)
+      (when (and (> cnt 1) (= tid curid))
+        (let [prev (dec idx)
+              next (inc idx)
+              newid (or (and (not= lastid curid) lastid)
+                        (when (>= prev 0) (-> prev tvec :id))
+                        (when (< next cnt) (-> next tvec :id)))]
+          (set-cur-tab newid) :ok)))))
 
 
 (defn active-tabs []
@@ -638,13 +650,15 @@
 (defn init-tabs []
   (update-adb
    [:tabs] (let [cur-ratom (rgt/atom nil)
+                 last-ratom (rgt/atom nil)
                  tabs-ratom (rgt/atom [])]
              {:current cur-ratom
+              :last last-ratom
               :active tabs-ratom
               :bars [horizontal-bar-tabs
                      :model cur-ratom
                      :tabs tabs-ratom
-                     :on-change #(reset! cur-ratom %)]})))
+                     :on-change #(set-cur-tab %)]})))
 
 (defn register [{:keys [uid title logo img opts]}]
   (printchan "Registering " uid)

@@ -23,6 +23,7 @@ Table of Contents
    * [Templates, Substitution Keys and Transformations](#templates-substitution-keys-and-transformations)
       * [Function values for substitution keys](#function-values-for-substitution-keys)
       * [Subtitution Key Functions](#subtitution-key-functions)
+      * [Template local defaults](#template-local-defaults)
       * [Basic transformation rules](#basic-transformation-rules)
       * [Meta data and the :USERDATA key](#meta-data-and-the-userdata-key)
       * [Example predefined templates](#example-predefined-templates)
@@ -96,7 +97,7 @@ Hence, templates are a means to abstract all manner of visualization aspects and
 
 To install, add the following to your project `:dependencies`:
 
-    [aerial.hanami "0.12.1"]
+    [aerial.hanami "0.15.1"]
 
 
 
@@ -331,6 +332,70 @@ These functions can be very useful in providing a further level of abstractions 
 ```
 
 There is a default set of such keys provided with this particular case being one of them. There are a few others, including one which implements the [file](#file-data-source) data source capability for specifications.
+
+
+## Template local defaults
+
+As of version `0.12.9` there is support for default parameterization per template (where 'template' here means any map whatsoever).  A new transformation control key is introduced, `:aerial.hanami.templates/defaults` which can be used to  supply a map, local to the template, containing default values of substitution keys.  The substitution keys may be those specific only to the template or any other enclosing template, or for changing global defaults.  The values are in effect for the duration of the template's processing, unless a more nested template has its own local defaults which override some of the outer's values.  In all cases, the in line (point of call) user specified values to [hc/xform](#templates-and-substitution-keys) take precedent over any template local defaults.
+
+Local defaults can be a nice way to deliver new templates without any need to setup new substitution keys in the global registry or require users to add many key-value pairs to their call to [hc/xform](#templates-and-substitution-keys) using the new templates.  Addtionally they can automatically parameterize the underlying templates (those used in constructing a new template) to reflect the value of them required for the form of a new template.  As an example, let's look at the following, which will show the construction of a new `trend-chart` for plotting base data along with a smoothed trend line for it.
+
+```Clojure
+;;; Base layer for trend-chart
+(def trend-layer
+  (assoc ht/line-chart
+         :aerial.hanami.templates/defaults
+         {:X :data/x> :XTYPE :xtype>
+          :Y :data/y> :YTYPE :ytype>
+          :YSCALE {:zero false}
+          :DATA hc/RMV
+          :WIDTH :width> :HEIGHT :height>
+          :USERDATA hc/RMV}))
+
+```
+
+This gives the base form for what the two layers will look like.  It is simply the base `ht/line-chart` parameterized to give the default value of each layer when transformed.  The new trend chart will use `:data/x>` and `:data/y>` as the parameters for x and y data fields, along with corresponding parameters for the types of the fields `:xtype>` and `:ytype>`.  Next we use this base layer template to create the `trend-chart` template:
+
+```Clojure
+;;; Trend chart - two layers.  1. base data, 2. loess trend line
+;;; Parameters :data/x for x-axis data. :data/y> for y-axis data
+;;;            :xtype> and :ytype> for axis types, will default to :XTYPE :YTYPE
+;;;            :width>, will default to 700
+;;;            :height>, will default to :HEIGHT default
+;;;            :trend-color> for loess line, defaults to "firebrick"
+(def trend-chart
+  (assoc ht/layer-chart
+         :description "A two layer plot of base data and its smoothed trend line given by loess transform"
+         :aerial.hanami.templates/defaults
+         {:LAYER [(hc/xform trend-layer)
+                  (hc/xform
+                   trend-layer
+                   :TRANSFORM [{:loess :data/y> :on :data/x>}]
+                   :MCOLOR :trend-color>)]
+          :trend-color> "firebrick"
+          :xtype> :XTYPE :ytype> :YTYPE
+          :width> 700
+          :height> (hc/get-defaults :HEIGHT)}))
+```
+
+Here we use the underlying templates of the predefined `ht/layer-chart` and the new `trend-layer`.  The layer structure is given by the default for `:LAYER as being the two transformed cases for `trend-layer`. The first layer transform just ensures the result has all the new parameters in place.  The second also gives the loess transform and provides for a new `trend-color` for custom coloring the trend line, with a default of "firebrick".  The width of the chart gets a new default of 700 while the height defaults to the global `:HEIGHT` default.  The new `:xtype>` and `:ytype>` axis types get defaults of whatever the global `:XTYPE` and `:YTYPE` values are.
+
+This can now be used in a highly simplified form such as the following:
+
+```Clojure
+(let [[cols data] (get-trend-data file)]
+ (hc/xform
+  trend-chart
+  :DATA (mapv #(zipmap cols %) data)
+  :data/x> :year :xtype> :temporal
+  :data/y> :C))
+
+```
+
+Resulting in this output:
+
+![trend-chart](resources/public/images/trend-chart.png?raw=true)
+
 
 
 ## Basic transformation rules
@@ -1226,11 +1291,24 @@ This applies across both the server and client - the facilities are available in
 
 * `(defn update-subkeyfns [k vfn & kvfns])`: Updates the [substitution key function map](#subtitution-key-functions). `k` is a substitution key, `vfn` is either a function `(fn [submap, subkey, subval] ...)` or the special `hc/RMV` value. The latter case will _remove_ any current key `k` and its value.
 
-* `(defn update-defaults [k v & kvs])`: Updates the default [substitution key map](#example-predefined-substitution-keys). `k` is a substitution key, `v` is some appropriate value, including `hc/RMV`, which will remove the key.
+* `(defn update-defaults [k v & kvs])`: Updates the default [substitution key map](#example-predefined-substitution-keys). `k` is a substitution key, `v` is some appropriate value including `hc/RMV`.  To remove a key from the global register use the namespace key `::ht/RMV` = `:aerial.hanami.templates/RMV` for `v` which will remove the key.
 
 * `(defn get-default [k])`: Returns the current default value of substitution key `k`.
 
-* `(defn xform ([spec submap]) ([spec k v & kvs]) ([spec]))`: The template/specification transformation function. Generally, you will only call the second two arity signatures. The first is used for recursive transformation actions, so in the first signature, `spec` is generally the current value of a recursive transformation. In the second and third signatures, `spec` is a template. [Recall](#templates-substitution-keys-and-transformations) legal templates may be already complete fully realized Vega or Vega-Lite specifications - this latter case is for what the third signature is intended. The second signature is what you will use in nearly all cases. `k` is a substitution key and `v` is the value it will have in the transformation. Hence you can override defaults and add specific keys for just a given transformation. Returns the fully transformed final value.
+* `(defn get-defaults [k & ks])`: Returns the current default value of substitution key `k` or a vector of [k v] pairs if given two or more ks.
+
+* `(defn xform ([spec submap]) ([spec k v & kvs]) ([spec]))`: The template/specification transformation function. Generally, you will only call the second two arity signatures. The first is used for recursive transformation actions, so in the first signature, `spec` is generally the current value of a recursive transformation and submap the current state of the transformation.
+
+In the second and third signatures, `spec` is a template. [Recall](#templates-substitution-keys-and-transformations) legal templates may be already complete fully realized Vega or Vega-Lite specifications - this latter case is for what the third signature is intended. The second signature is what you will use in nearly all cases. `k` is a substitution key and `v` is the value it will have in the transformation. Hence you can override defaults and [template local defaults](#template-local-defaults) and add specific keys for just a given transformation. Returns the fully transformed final value.
+
+Their are currently (as of V0.15.1) three transformation control keys.  These keys affect the transformation process by changing the flow or state of the transformation.
+
+  - `:aerial.hanami.common/use-defaults?` : if given as `true` (the default value) the global register is used as a starting set of default substitution keys and values.  If `false` only the in line kvs and any template local defaults are used.
+
+  - `:aerial.hanami.common/rmv-empty?` : If `true`, the default, follow the [third rule](#basic-transformation-rules) of transformations.  If `false` do **not** remove empty collections.
+
+  - `:aerial.hanami.templates/defaults` : If a template (actually, any map) has this key defined, the value map for it is merged into the current state.  This effects the behaivor of [template local defaults](#template-local-defaults)
+
 
 
 ### Startup

@@ -378,7 +378,7 @@ This gives the base form for what the two layers will look like.  It is simply t
           :height> (hc/get-defaults :HEIGHT)}))
 ```
 
-Here we use the underlying templates of the predefined `ht/layer-chart` and the new `trend-layer`.  The layer structure is given by the default for `:LAYER as being the two transformed cases for `trend-layer`. The first layer transform just ensures the result has all the new parameters in place.  The second also gives the loess transform and provides for a new `trend-color` for custom coloring the trend line, with a default of "firebrick".  The width of the chart gets a new default of 700 while the height defaults to the global `:HEIGHT` default.  The new `:xtype>` and `:ytype>` axis types get defaults of whatever the global `:XTYPE` and `:YTYPE` values are.
+Here we use the underlying templates of the predefined `ht/layer-chart` and the new `trend-layer`.  The layer structure is given by the default for `:LAYER` as being the two transformed cases for `trend-layer`. The first layer transform just ensures the result has all the new parameters in place.  The second also gives the loess transform and provides for a new `trend-color` for custom coloring the trend line, with a default of "firebrick".  The width of the chart gets a new default of 700 while the height defaults to the global `:HEIGHT` default.  The new `:xtype>` and `:ytype>` axis types get defaults of whatever the global `:XTYPE` and `:YTYPE` values are.
 
 This can now be used in a highly simplified form such as the following:
 

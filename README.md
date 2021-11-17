@@ -1299,15 +1299,15 @@ This applies across both the server and client - the facilities are available in
 
 * `(defn xform ([spec submap]) ([spec k v & kvs]) ([spec]))`: The template/specification transformation function. Generally, you will only call the second two arity signatures. The first is used for recursive transformation actions, so in the first signature, `spec` is generally the current value of a recursive transformation and submap the current state of the transformation.
 
-In the second and third signatures, `spec` is a template. [Recall](#templates-substitution-keys-and-transformations) legal templates may be already complete fully realized Vega or Vega-Lite specifications - this latter case is for what the third signature is intended. The second signature is what you will use in nearly all cases. `k` is a substitution key and `v` is the value it will have in the transformation. Hence you can override defaults and [template local defaults](#template-local-defaults) and add specific keys for just a given transformation. Returns the fully transformed final value.
+  In the second and third signatures, `spec` is a template. [Recall](#templates-substitution-keys-and-transformations) legal templates may be already complete fully realized Vega or Vega-Lite specifications - this latter case is for what the third signature is intended. The second signature is what you will use in nearly all cases. `k` is a substitution key and `v` is the value it will have in the transformation. Hence you can override defaults and [template local defaults](#template-local-defaults) and add specific keys for just a given transformation. Returns the fully transformed final value.
 
-Their are currently (as of V0.15.1) three transformation control keys.  These keys affect the transformation process by changing the flow or state of the transformation.
+  There are currently (as of V0.15.1) three transformation control keys.  These keys affect the transformation process by changing the flow or state of the transformation.
 
-  - `:aerial.hanami.common/use-defaults?` : if given as `true` (the default value) the global register is used as a starting set of default substitution keys and values.  If `false` only the in line kvs and any template local defaults are used.
+    - `:aerial.hanami.common/use-defaults?` : if given as `true` (the default value) the global register is used as a starting set of default substitution keys and values.  If `false` only the in line kvs and any template local defaults are used.
 
-  - `:aerial.hanami.common/rmv-empty?` : If `true`, the default, follow the [third rule](#basic-transformation-rules) of transformations.  If `false` do **not** remove empty collections.
+    - `:aerial.hanami.common/rmv-empty?` : If `true`, the default, follow the [third rule](#basic-transformation-rules) of transformations.  If `false` do **not** remove empty collections.
 
-  - `:aerial.hanami.templates/defaults` : If a template (actually, any map) has this key defined, the value map for it is merged into the current state.  This effects the behaivor of [template local defaults](#template-local-defaults)
+    - `:aerial.hanami.templates/defaults` : If a template (actually, any map) has this key defined, the value map for it is merged into the current state.  This effects the behaivor of [template local defaults](#template-local-defaults)
 
 
 

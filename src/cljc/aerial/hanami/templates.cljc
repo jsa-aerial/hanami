@@ -87,6 +87,7 @@
        :timeUnit :XUNIT
        :axis :XAXIS
        :scale :XSCALE
+       :stack :XSTACK
        :sort :XSORT
        :aggregate :XAGG}
    :y {:field :Y
@@ -95,6 +96,7 @@
        :timeUnit :YUNIT
        :axis :YAXIS
        :scale :YSCALE
+       :stack :YSTACK
        :sort :YSORT
        :aggregate :YAGG}))
 

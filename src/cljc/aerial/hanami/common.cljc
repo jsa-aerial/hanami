@@ -159,10 +159,12 @@
 
          ;; encodings
          :X "x", :XTYPE "quantitative", :XBIN RMV, :XUNIT RMV, :XSORT RMV
-         :XSCALE RMV, :XAXIS {:title :XTITLE, :grid :XGRID, :format :XFORMAT}
+         :XSCALE RMV, :XSTACK RMV
+         :XAXIS {:title :XTITLE, :grid :XGRID, :format :XFORMAT}
          :XTITLE RMV, :XGRID RMV, :XFORMAT RMV, :XTTITLE RMV, :XTFMT RMV
          :Y "y", :YTYPE, "quantitative", :YBIN RMV, :YUNIT RMV, :YSORT RMV
-         :YSCALE RMV, :YAXIS {:title :YTITLE, :grid :YGRID, :format :YFORMAT}
+         :YSCALE RMV, :YSTACK RMV
+         :YAXIS {:title :YTITLE, :grid :YGRID, :format :YFORMAT}
          :YTITLE RMV, :YGRID RMV, :YFORMAT RMV, :YTTITLE RMV, :YTFMT RMV
          :TXT RMV, :TTYPE RMV, :TAXIS RMV, :TSCALE RMV
          :ROWDEF ht/default-row :ROW RMV, :ROWTYPE RMV

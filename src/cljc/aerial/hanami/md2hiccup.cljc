@@ -3,7 +3,9 @@
   https://github.com/niquola/md-to-hiccup
   "
 
-  (:require [clojure.string :as str]))
+  (:require
+   [clojure.string :as str]
+    #?(:cljs [aerial.hanami.utils :as hu :refer [format]])))
 
 (declare parse-inline)
 
@@ -12,8 +14,8 @@
       (str/replace #"&" "&amp;")
       (str/replace #"&amp;copy;" "©")
       (str/replace #"\t$" "    ")
-      (str/replace #"<" "&lt;")
-      (str/replace #">" "&gt;")))
+      #_(str/replace #"<" "&lt;")
+      #_(str/replace #">" "&gt;")))
 
 (defn escape-code [s]
   (-> s
@@ -24,7 +26,8 @@
 
 (def inline-rules
   [{:name :escapes
-    :regex #"^(\\\\|\\`|\\\*|\\_|\\\{|\\}|\\\[|\\]|\\\(|\\\)|\\#|\\\+|\\-|\\\.|\\!)"
+    :regex
+    #"^(\\\\|\\`|\\\*|\\_|\\\{|\\}|\\\[|\\]|\\\(|\\\)|\\#|\\\+|\\-|\\\.|\\!)"
     :f (fn [[_ txt]]
          (subs txt 1))}
 
@@ -88,6 +91,11 @@
                        {:src ref :alt txt})]
            [:img attrs]))}
 
+   {:name :latex
+    :regex #"^((\@\()([^@]+)(\@\)))"
+    :f (fn[[_ _ _ txt]] (format "\\\\(%s\\\\)" txt))
+    }
+
    ])
 
 
@@ -107,12 +115,16 @@
           [next-char-idx new-elem] (apply-rules char-idx txt-tail)]
       (cond
         (= "" txt-tail) (if (> char-idx from-char-idx)
-                          (conj acc (inline-transformers (subs txt from-char-idx char-idx)))
+                          (conj acc
+                                (inline-transformers
+                                 (subs txt from-char-idx char-idx)))
                           acc)
 
         new-elem (recur
                   (if (> char-idx from-char-idx)
-                    (conj acc (inline-transformers (subs txt from-char-idx char-idx)) new-elem)
+                    (conj acc
+                          (inline-transformers
+                           (subs txt from-char-idx char-idx)) new-elem)
                     (conj acc new-elem))
                   next-char-idx next-char-idx)
 
@@ -127,9 +139,12 @@
   (re-find (:regex (first inline-rules)) "\\.")
   (re-find (:regex (second inline-rules)) "* some text * and some more text")
 
-  (parse-inline "text **bold** [my super **link** !!](the-url) ![image](http://theurl)")
-  (parse-inline "text **bold** *emph* [my super *emph-link* !!](the-url) ![image](http://theurl)")
-  (parse-inline "text _emph_ [my super _link_ !!](the-url) ![image](http://theurl)")
+  (parse-inline
+   "text **bold** [my super **link** !!](the-url) ![image](http://theurl)")
+  (parse-inline
+   "text **bold** *emph* [my super *emph-link* !!](the-url) ![image](http://theurl)")
+  (parse-inline
+   "text _emph_ [my super _link_ !!](the-url) ![image](http://theurl)")
   )
 
 
@@ -182,9 +197,13 @@
          acc []]
     (cond
       (and (nil? x) (nil? prev)) acc
-      (and (nil? x) prev) (conj acc (if (and start (string? prev)) (str/triml prev) prev))
+
+      (and (nil? x) prev)
+      (conj acc (if (and start (string? prev)) (str/triml prev) prev))
+
       (and prev (string? prev) (string? x))
       (recur false xs (str (str/triml prev) x) acc)
+
       :else
       (recur false xs x (conj acc prev)))))
 
@@ -193,7 +212,9 @@
 (defn- parse-paragraph [lis]
   (let [inline-parsed (mapcat parse-inline
                               (if (< 1 (count lis))
-                                (conj (mapv #(str % "\n") (butlast (filterv identity lis))) (last (filterv identity lis)))
+                                (conj (mapv #(str % "\n")
+                                            (butlast (filterv identity lis)))
+                                      (last (filterv identity lis)))
                                 lis))
         res (concat-strings inline-parsed)]
     (into [:p ] res)))
@@ -204,14 +225,16 @@
         [prefix pre-sps sym sps] (re-find #"^(\s*)(\*|-|\+)(\s\s*)" fl)
         max-indent (count sps)
         escapes {"*" "\\*", "+" "\\+", "-" "-"}
-        cut-prefix-regex (re-pattern (str "^" pre-sps "(" (get escapes sym) "| )"
-                                          " {0," max-indent "}"))
+        cut-prefix-regex (re-pattern
+                          (str "^" pre-sps "(" (get escapes sym) "| )"
+                               " {0," max-indent "}"))
         cut-fn (fn [x] (str/replace x cut-prefix-regex ""))
         flash-buf (fn [acc buf]
                     (if-not buf
                       acc
                       (let [item-parsed (*parse buf)]
-                        (if (and (= 1 (count item-parsed)) (= :p (ffirst item-parsed)))
+                        (if (and (= 1 (count item-parsed))
+                                 (= :p (ffirst item-parsed)))
                           (conj acc (into [:li] (rest (first item-parsed))))
                           (conj acc (into [:li] item-parsed))))))]
     (loop [acc [:ul]
@@ -243,13 +266,15 @@
   (let [fl (first lns)
         [_ prefix] (re-find #"^(\d.\s*)" fl)
         max-indent (count prefix)
-        cut-prefix-regex (re-pattern (str "^(\\d\\.|  ) {0," (- max-indent 2) "}"))
+        cut-prefix-regex (re-pattern
+                          (str "^(\\d\\.|  ) {0," (- max-indent 2) "}"))
         cut-fn (fn [x] (str/replace x cut-prefix-regex ""))
         flash-buf (fn [acc buf]
                     (if-not buf
                       acc
                       (let [item-parsed (*parse buf)]
-                        (if (and (= 1 (count item-parsed)) (= :p (ffirst item-parsed)))
+                        (if (and (= 1 (count item-parsed))
+                                 (= :p (ffirst item-parsed)))
                           (conj acc (into [:li] (rest (first item-parsed))))
                           (conj acc (into [:li] item-parsed))))))]
     (loop [acc [:ol]
@@ -267,7 +292,9 @@
 
 (defn- parse-code [[ln & lns :as prev-lns]]
   (let [lang (second (str/split ln #"```" 2))
-        attrs (if (and lang (not (str/blank? lang))) {:lang lang :class lang} {})]
+        attrs (if (and lang (not (str/blank? lang)))
+                {:lang lang :class lang}
+                {})]
     (loop [acc []
            [ln & lns :as prev-lns] lns]
       (if-not ln
@@ -292,7 +319,10 @@
   (let [[_ rep] (re-matches #"^(>\s*).*" (first lis))
         sp-lengh (- (count rep) 1)]
     (-> [:blockquote  ]
-        (into (*parse (mapv #(str/replace % (re-pattern (str "^> {0," sp-lengh "}"))  "") lis))))))
+        (into (*parse (mapv
+                       #(str/replace
+                         % (re-pattern (str "^> {0," sp-lengh "}")) "")
+                       lis))))))
 
 
 (defn- *parse [lns]
@@ -302,7 +332,9 @@
          block-acc []]
 
     (let [transition (string-tag ln)]
-      ;; (println "..." [state  transition] ln "; block acc: " block-acc "; acc " acc)
+      #_(println "..." [state  transition] ln
+                 "; block acc: " block-acc
+                 "; acc " acc)
       (let [with-paragraph (fn [acc]
                              (if (not (empty? block-acc))
                                (conj acc (parse-paragraph block-acc))
@@ -318,22 +350,40 @@
 
 
           ;; blockquote
-          (and (not (or (= state :blockquote-em) (= state :blockquote))) (= transition :blockquote))
+          (and (not (or (= state :blockquote-em)
+                        (= state :blockquote)))
+               (= transition :blockquote))
           (recur :blockquote lns (with-paragraph acc) [ln])
 
           (= state :blockquote)
           (cond
-            (= transition :blockquote)   (recur :blockquote lns acc (conj block-acc ln))
-            (= transition :empty-line)   (recur :blockquote-em lns acc (conj block-acc ln))
-            (= transition :text)         (recur :blockquote lns acc (conj block-acc ln))
-            (= transition :end-of-file)  (conj acc (parse-blockquote block-acc))
-            :else (recur :default prev-lns (conj acc (parse-blockquote block-acc)) []))
+            (= transition :blockquote)
+            (recur :blockquote lns acc (conj block-acc ln))
+
+            (= transition :empty-line)
+            (recur :blockquote-em lns acc (conj block-acc ln))
+
+            (= transition :text)
+            (recur :blockquote lns acc (conj block-acc ln))
+
+            (= transition :end-of-file)
+            (conj acc (parse-blockquote block-acc))
+
+            :else
+            (recur :default prev-lns
+                   (conj acc (parse-blockquote block-acc)) []))
 
           (= state :blockquote-em)
           (cond
-            (= transition :empty-line)   (recur :blockquote-em lns acc block-acc)
-            (= transition :blockquote)   (recur :blockquote lns acc (conj block-acc ln))
-            :else (recur :default prev-lns (conj acc (parse-blockquote block-acc)) []))
+            (= transition :empty-line)
+            (recur :blockquote-em lns acc block-acc)
+
+            (= transition :blockquote)
+            (recur :blockquote lns acc (conj block-acc ln))
+
+            :else
+            (recur :default prev-lns
+                   (conj acc (parse-blockquote block-acc)) []))
 
 
           ;; ulist
@@ -351,8 +401,11 @@
 
           (= state :pre)
           (cond
-            (= transition :pre) (recur :pre lns acc (conj block-acc ln))
-            :else (recur :default prev-lns (conj acc (parse-pre block-acc)) []))
+            (= transition :pre)
+            (recur :pre lns acc (conj block-acc ln))
+
+            :else
+            (recur :default prev-lns (conj acc (parse-pre block-acc)) []))
 
 
           (= [:default :empty-line] [state transition])
@@ -371,12 +424,26 @@
           (= state :paragraph)
           (do
             (cond
-              (= :old-header-1 transition)   (recur :default lns (conj acc (parse-old-header :h1 block-acc)) [])
-              (= :old-header-2 transition)   (recur :default lns (conj acc (parse-old-header :h2 block-acc)) [])
-              (= :text transition)           (recur :paragraph lns acc (conj block-acc ln))
-              (= :end-of-file transition)    (conj acc (parse-paragraph block-acc))
-              (= :empty-line transition)     (recur :default lns (conj acc (parse-paragraph block-acc)) [])
-              :else (recur :default prev-lns (conj acc (parse-paragraph block-acc)) [])))
+              (= :old-header-1 transition)
+              (recur :default lns
+                     (conj acc (parse-old-header :h1 block-acc)) [])
+
+              (= :old-header-2 transition)
+              (recur :default lns
+                     (conj acc (parse-old-header :h2 block-acc)) [])
+
+              (= :text transition)
+              (recur :paragraph lns acc (conj block-acc ln))
+
+              (= :end-of-file transition)
+              (conj acc (parse-paragraph block-acc))
+
+              (= :empty-line transition)
+              (recur :default lns (conj acc (parse-paragraph block-acc)) [])
+
+              :else
+              (recur :default prev-lns
+                     (conj acc (parse-paragraph block-acc)) [])))
 
           (= transition :empty-line)
           (recur state lns (with-paragraph acc) block-acc)

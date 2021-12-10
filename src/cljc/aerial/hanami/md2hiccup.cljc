@@ -93,7 +93,7 @@
 
    {:name :latex
     :regex #"^((\@\()([^@]+)(\@\)))"
-    :f (fn[[_ _ _ txt]] (format "\\\\(%s\\\\)" txt))
+    :f (fn[[_ _ _ txt]] (format "\\(%s\\)" txt))
     }
 
    ])

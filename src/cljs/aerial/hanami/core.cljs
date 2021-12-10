@@ -30,12 +30,14 @@
     :refer [h-box v-box box border gap line h-split v-split scroller
             button row-button md-icon-button md-circle-icon-button info-button
             input-text input-password input-textarea
-            label title hyperlink-href p
-            single-dropdown selection-list
+            label title alert-box alert-list hyperlink hyperlink-href p
+            single-dropdown selection-list multi-select tag-dropdown typeahead
+            simple-v-table v-table
             checkbox radio-button slider progress-bar throbber
-            horizontal-bar-tabs vertical-bar-tabs
+            horizontal-tabs horizontal-bar-tabs horizontal-pill-tabs
+            vertical-bar-tabs vertical-pill-tabs
             modal-panel popover-content-wrapper popover-anchor-wrapper
-            datepicker datepicker-dropdown]
+            datepicker datepicker-dropdown progress-bar input-time]
     :refer-macros [handler-fn]]
    [re-com.box
     :refer [flex-child-style]]
@@ -161,25 +163,29 @@
               flex-child-style
               button row-button md-icon-button md-circle-icon-button info-button
               input-text input-password input-textarea
-              label title hyperlink-href p
-              single-dropdown selection-list
+              label title alert-box alert-list hyperlink hyperlink-href p
+              single-dropdown selection-list multi-select tag-dropdown typeahead
+              simple-v-table v-table
               checkbox radio-button slider progress-bar throbber
-              horizontal-bar-tabs vertical-bar-tabs
+              horizontal-tabs horizontal-bar-tabs horizontal-pill-tabs
+              vertical-bar-tabs vertical-pill-tabs
               modal-panel popover-content-wrapper popover-anchor-wrapper
               filter-choices-by-keyword single-dropdown-args-desc
-              datepicker datepicker-dropdown
+              datepicker datepicker-dropdown progress-bar input-time
               md]
             [h-box v-box box border gap line h-split v-split scroller
              flex-child-style
              button row-button md-icon-button md-circle-icon-button info-button
              input-text input-password input-textarea
-             label title hyperlink-href p
-             single-dropdown selection-list
+             label title alert-box alert-list hyperlink hyperlink-href p
+             single-dropdown selection-list multi-select tag-dropdown typeahead
+             simple-v-table v-table
              checkbox radio-button slider progress-bar throbber
-             horizontal-bar-tabs vertical-bar-tabs
+             horizontal-tabs horizontal-bar-tabs horizontal-pill-tabs
+             vertical-bar-tabs vertical-pill-tabs
              modal-panel popover-content-wrapper popover-anchor-wrapper
              filter-choices-by-keyword single-dropdown-args-desc
-             datepicker datepicker-dropdown
+             datepicker datepicker-dropdown progress-bar input-time
              md])))
 
 (defn xform-recom

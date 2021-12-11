@@ -11,8 +11,10 @@
 
 (defn inline-transformers [s]
   (-> s
-      (str/replace #"&" "&amp;")
       (str/replace #"&amp;copy;" "©")
+      (str/replace #"&copy;" "©")
+      (str/replace #"@copy;" "©")
+      (str/replace #"@c;" "©")
       (str/replace #"\t$" "    ")
       #_(str/replace #"<" "&lt;")
       #_(str/replace #">" "&gt;")))

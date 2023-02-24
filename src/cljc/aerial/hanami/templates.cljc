@@ -234,12 +234,14 @@
    :config default-config})
 
 (def heatmap-chart
+  "deprecated - see https://github.com/jsa-aerial/aerosaite/blob/main/resources/Code/Templates/ml-charts.clj"
   (assoc layer-chart
          :encoding xy-encoding
          :layer [rect-layer text-layer]
          ::defaults {:MTOOLTIP RMV}))
 
 (def corr-heatmap
+  "deprecated - seehttps://github.com/jsa-aerial/aerosaite/blob/main/resources/Code/Templates/ml-charts.clj"
   (assoc heatmap-chart
          ::defaults
          {:X :COL1, :XSORT :COLS :XTYPE RMV

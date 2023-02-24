@@ -236,7 +236,8 @@
 (def heatmap-chart
   (assoc layer-chart
          :encoding xy-encoding
-         :layer [rect-layer text-layer]))
+         :layer [rect-layer text-layer]
+         ::defaults {:MTOOLTIP RMV}))
 
 (def corr-heatmap
   (assoc heatmap-chart

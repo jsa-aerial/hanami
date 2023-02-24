@@ -177,7 +177,7 @@
          :RTYPE "quantitative"
 
          ;; tooltips
-         :TOOLTIP ht/default-tooltip
+         :TOOLTIP RMV ;;; No longer use ht/default-tooltip, see MTOOLTIP
          :XTTIP #(xform ht/ttdef
                         :TTFIELD (% :X) :TTTYPE (% :XTYPE)
                         :TTTITLE (% :XTTITLE) :TTFMT (% :XTFMT))
@@ -200,7 +200,7 @@
          :SHAPE RMV
          :SIZE RMV
          :MSTROKE RMV, :MSDASH RMV
-         :MTOOLTIP RMV
+         :MTOOLTIP true ; VGL default for all fields in encoding
          ;; color
          :COLOR RMV
          :CFIELD :X, :CTYPE :XTYPE, :LTYPE "symbol" :LTITLE "" :LOFFSET 0

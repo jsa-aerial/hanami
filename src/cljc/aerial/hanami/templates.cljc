@@ -130,7 +130,7 @@
 
 
 (def xrule-layer
-  {:mark "rule"
+  {:mark (assoc ht/mark-base :type "rule")
    :transform :TRANSFORM
    :encoding {:x {:field :X
                   :type :XTYPE
@@ -139,7 +139,7 @@
               :color {:value :XRL-COLOR}}})
 
 (def yrule-layer
-  {:mark "rule"
+  {:mark (assoc ht/mark-base :type "rule")
    :transform :TRANSFORM
    :encoding {:y {:field :Y
                   :type :YTYPE
@@ -149,39 +149,39 @@
 
 
 (def bar-layer
-  {:mark "bar"
+  {:mark (assoc ht/mark-base :type "bar")
    :selection :SELECTION
    :transform :TRANSFORM
    :encoding :ENCODING})
 
 (def line-layer
-  {:mark {:type "line", :point :POINT}
+  {:mark (assoc ht/mark-base :type "line")
    :selection :SELECTION
    :transform :TRANSFORM
    :encoding :ENCODING})
 
 (def point-layer
-  {:mark "circle"
+  {:mark (assoc ht/mark-base :type "circle")
    :selection :SELECTION
    :transform :TRANSFORM
    :encoding :ENCODING})
 
 (def text-layer
-  {:mark (assoc mark-base :type "text")
-   :encoding text-encoding
-   :dx :DX
-   :dy :DY
-   :xOffset :XOFFSET
-   :yOffset :YOFFSET
-   :angle :ANGLE
-   :align :ALIGN
-   :baseline :BASELINE
-   :font :FONT
-   :fontStyle :FONTSTYLE
-   :fontWeight :FONTWEIGHT
-   :fontSize :FONTSIZE
-   :lineHeight :LINEHEIGHT
-   :limit :LIMIT})
+ {:mark (assoc ht/mark-base :type "text"
+               :dx :DX
+               :dy :DY
+               :xOffset :XOFFSET
+               :yOffset :YOFFSET
+               :angle :ANGLE
+               :align :ALIGN
+               :baseline :BASELINE
+               :font :FONT
+               :fontStyle :FONTSTYLE
+               :fontWeight :FONTWEIGHT
+               :fontSize :FONTSIZE
+               :lineHeight :LINEHEIGHT
+               :limit :LIMIT)
+  :encoding ht/text-encoding} )
 
 (def rect-layer
   {:mark (assoc mark-base :type "rect")

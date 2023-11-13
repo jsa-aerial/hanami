@@ -154,7 +154,6 @@
          :DATASETS RMV
          :DATA RMV, :FDATA RMV, :SDATA RMV, :UDATA RMV, :NDATA RMV :DFMT RMV
          :TRANSFORM RMV
-         :OPACITY RMV
          :AGG RMV, :XAGG RMV, :YAGG RMV
 
          ;; encodings
@@ -169,7 +168,11 @@
          :TXT RMV, :TTYPE RMV, :TAXIS RMV, :TSCALE RMV
          :ROWDEF ht/default-row :ROW RMV, :ROWTYPE RMV
          :COLDEF ht/default-col :COLUMN RMV, :COLTYPE RMV
-         :POINT RMV, :MSIZE RMV, :MCOLOR RMV, :MFILLED RMV
+         :POINT RMV
+         :ORDER> RMV
+         :COLOR RMV
+         :OPACITY RMV
+         :SHAPE RMV, :SIZE RMV
          :STROKE RMV, :SDASH RMV
          :ENCODING ht/xy-encoding
          :RESOLVE RMV
@@ -196,13 +199,13 @@
 
          ;; Mark Properties
          :MPTYPE "nominal"
+         :MSIZE RMV
+         :MCOLOR RMV
+         :MFILLED RMV
          :MPSCALE RMV
-         :SHAPE RMV
-         :SIZE RMV
          :MSTROKE RMV, :MSDASH RMV
          :MTOOLTIP true ; VGL default for all fields in encoding
          ;; color
-         :COLOR RMV
          :CFIELD :X, :CTYPE :XTYPE, :LTYPE "symbol" :LTITLE "" :LOFFSET 0
          :CSCALE {:scheme {:name "greenblue" :extent [0.4 1]}}
          :CLEGEND {:type :LTYPE :offset :LOFFSET :title :LTITLE}

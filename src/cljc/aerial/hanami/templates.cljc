@@ -130,7 +130,7 @@
 
 
 (def xrule-layer
-  {:mark (assoc ht/mark-base :type "rule")
+  {:mark (assoc mark-base :type "rule")
    :transform :TRANSFORM
    :encoding {:x {:field :X
                   :type :XTYPE
@@ -139,7 +139,7 @@
               :color {:value :XRL-COLOR}}})
 
 (def yrule-layer
-  {:mark (assoc ht/mark-base :type "rule")
+  {:mark (assoc mark-base :type "rule")
    :transform :TRANSFORM
    :encoding {:y {:field :Y
                   :type :YTYPE
@@ -149,25 +149,25 @@
 
 
 (def bar-layer
-  {:mark (assoc ht/mark-base :type "bar")
+  {:mark (assoc mark-base :type "bar")
    :selection :SELECTION
    :transform :TRANSFORM
    :encoding :ENCODING})
 
 (def line-layer
-  {:mark (assoc ht/mark-base :type "line")
+  {:mark (assoc mark-base :type "line")
    :selection :SELECTION
    :transform :TRANSFORM
    :encoding :ENCODING})
 
 (def point-layer
-  {:mark (assoc ht/mark-base :type "circle")
+  {:mark (assoc mark-base :type "circle")
    :selection :SELECTION
    :transform :TRANSFORM
    :encoding :ENCODING})
 
 (def text-layer
- {:mark (assoc ht/mark-base :type "text"
+ {:mark (assoc mark-base :type "text"
                :dx :DX
                :dy :DY
                :xOffset :XOFFSET
@@ -181,14 +181,14 @@
                :fontSize :FONTSIZE
                :lineHeight :LINEHEIGHT
                :limit :LIMIT)
-  :encoding ht/text-encoding} )
+  :encoding text-encoding} )
 
 (def rect-layer
   {:mark (assoc mark-base :type "rect")
    :encoding (dissoc encoding-base :tooltip)})
 
 (def area-layer
-  {:mark "area"
+  {:mark (assoc mark-base :type "area")
    :selection :SELECTION
    :transform :TRANSFORM
    :encoding :ENCODING})

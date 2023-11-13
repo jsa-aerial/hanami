@@ -73,6 +73,7 @@
    :column :COLDEF
    :color :COLOR
    :size :SIZE
+   :order :ORDER>
    :shape :SHAPE
    :stroke :STROKE
    :strokeDash :SDASH

@@ -194,6 +194,12 @@
    :transform :TRANSFORM
    :encoding :ENCODING})
 
+(def boxplot-layer
+  {:mark (assoc mark-base :type "boxplot")
+   :selection :SELECTION
+   :transform :TRANSFORM
+   :encoding :ENCODING})
+
 (def gen-encode-layer
   {:height :HEIGHT, :width :WIDTH
    :mark :MARK
@@ -221,6 +227,9 @@
   (assoc view-base
          :mark (merge mark-base {:type "area"})))
 
+(def boxplot-chart
+  (assoc view-base
+         :mark (merge mark-base {:type "boxplot"})))
 
 (def layer-chart
   {:usermeta :USERDATA

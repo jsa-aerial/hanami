@@ -99,7 +99,9 @@
        :scale :YSCALE
        :stack :YSTACK
        :sort :YSORT
-       :aggregate :YAGG}))
+       :aggregate :YAGG}
+   :x2 :X2ENCODING
+   :y2 :Y2ENCODING))
 
 (def text-encoding
   (-> encoding-base

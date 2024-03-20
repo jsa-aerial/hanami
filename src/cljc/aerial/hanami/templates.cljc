@@ -208,12 +208,6 @@
    :transform :TRANSFORM
    :encoding :ENCODING})
 
-(def rect-layer
-  {:mark (assoc mark-base :type "rect")
-   :selection :SELECTION
-   :transform :TRANSFORM
-   :encoding :ENCODING})
-
 (def gen-encode-layer
   {:height :HEIGHT, :width :WIDTH
    :mark :MARK

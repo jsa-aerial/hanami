@@ -203,13 +203,13 @@
    :encoding :ENCODING})
 
 (def rule-layer
-  {:mark (assoc ht/mark-base :type "rule")
+  {:mark (assoc mark-base :type "rule")
    :selection :SELECTION
    :transform :TRANSFORM
    :encoding :ENCODING})
 
 (def rect-layer
-  {:mark (assoc ht/mark-base :type "rect")
+  {:mark (assoc mark-base :type "rect")
    :selection :SELECTION
    :transform :TRANSFORM
    :encoding :ENCODING})
@@ -246,11 +246,11 @@
          :mark (merge mark-base {:type "boxplot"})))
 
 (def rule-chart
-  (assoc ht/view-base
+  (assoc view-base
          :mark "rule"))
 
 (def rect-chart
-  (assoc ht/view-base
+  (assoc view-base
          :mark "rect"))
 
 (def layer-chart

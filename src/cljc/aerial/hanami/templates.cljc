@@ -99,7 +99,9 @@
        :scale :YSCALE
        :stack :YSTACK
        :sort :YSORT
-       :aggregate :YAGG}))
+       :aggregate :YAGG}
+   :x2 :X2ENCODING
+   :y2 :Y2ENCODING))
 
 (def text-encoding
   (-> encoding-base
@@ -230,6 +232,14 @@
 (def boxplot-chart
   (assoc view-base
          :mark (merge mark-base {:type "boxplot"})))
+
+(def rule-chart
+  (assoc view-base
+         :mark "rule"))
+
+(def rect-chart
+  (assoc view-base
+         :mark "rect"))
 
 (def layer-chart
   {:usermeta :USERDATA

@@ -165,6 +165,28 @@
          :YSCALE RMV, :YSTACK RMV
          :YAXIS {:title :YTITLE, :grid :YGRID, :format :YFORMAT}
          :YTITLE RMV, :YGRID RMV, :YFORMAT RMV, :YTTITLE RMV, :YTFMT RMV
+         :X2TYPE (fn [ctx]
+                   (if (:X2 ctx)
+                     (:XTYPE ctx)
+                     RMV))
+         :Y2TYPE (fn [ctx]
+                   (if (:Y2 ctx)
+                     (:YTYPE ctx)
+                     RMV))
+         :X2ENCODING (fn [ctx]
+                       (if (:X2 ctx)
+                         (-> ht/xy-encoding
+                             :x
+                             (assoc :field :X2
+                                    :type :X2TYPE))
+                         RMV))
+         :Y2ENCODING (fn [ctx]
+                       (if (:Y2 ctx)
+                         (-> ht/xy-encoding
+                             :y
+                             (assoc :field :Y2
+                                    :type :Y2TYPE))
+                         RMV))
          :TXT RMV, :TTYPE RMV, :TAXIS RMV, :TSCALE RMV
          :ROWDEF ht/default-row :ROW RMV, :ROWTYPE RMV
          :COLDEF ht/default-col :COLUMN RMV, :COLTYPE RMV
@@ -193,8 +215,8 @@
                      :fillOpacity 0.125,
                      :stroke "white"},
          :SMDWN-MARK {:fill "#333",
-                     :fillOpacity 0.125,
-                     :stroke "white"}
+                      :fillOpacity 0.125,
+                      :stroke "white"}
          :SELECTION RMV, :ENCODINGS ["x", "y"], :IRESOLVE "global"
 
          ;; Mark Properties
@@ -319,4 +341,3 @@
      (xform spec start-kv-map)))
 
   ([spec] (xform spec {})))
-

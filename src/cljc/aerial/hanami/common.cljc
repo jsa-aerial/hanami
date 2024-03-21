@@ -166,22 +166,22 @@
          :YAXIS {:title :YTITLE, :grid :YGRID, :format :YFORMAT}
          :YTITLE RMV, :YGRID RMV, :YFORMAT RMV, :YTTITLE RMV, :YTFMT RMV
          :X2TYPE (fn [ctx]
-                   (if (-> ctx :X2 (not= RMV))
+                   (if (:X2 ctx)
                      (:XTYPE ctx)
                      RMV))
          :Y2TYPE (fn [ctx]
-                   (if (-> ctx :Y2 (not= RMV))
+                   (if (:Y2 ctx)
                      (:YTYPE ctx)
                      RMV))
          :X2ENCODING (fn [ctx]
-                       (if (-> ctx :X2 (not= RMV))
+                       (if (:X2 ctx)
                          (-> ht/xy-encoding
                              :x
                              (assoc :field :X2
                                     :type :X2TYPE))
                          RMV))
          :Y2ENCODING (fn [ctx]
-                       (if (-> ctx :Y2 (not= RMV))
+                       (if (:Y2 ctx)
                          (-> ht/xy-encoding
                              :y
                              (assoc :field :Y2
